@@ -1,0 +1,3606 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>فلاحين - منصتك للفلاحة الذكية</title>
+    <meta name="description" content="فلاحين - منصة تونسية للاستشارات الزراعية ومتجر المنتجات الفلاحية">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary-green: #2d8659;
+            --dark-green: #1e5f42;
+            --light-green: #3ea672;
+            --accent-orange: #f49d37;
+            --dark-orange: #d67d1f;
+            --warm-beige: #f5f1e8;
+            --text-dark: #2c3e2f;
+            --text-light: #5a6c5b;
+            --white: #ffffff;
+            --light-gray: #e8e8e8;
+            --shadow: rgba(45, 134, 89, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: linear-gradient(135deg, #f5f1e8 0%, #e8dcc8 100%);
+            min-height: 100vh;
+            padding: 0;
+            direction: rtl;
+            line-height: 1.7;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(45, 134, 89, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(244, 157, 55, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Header */
+        .main-header {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.95) 100%);
+            padding: 25px 0;
+            box-shadow: 0 5px 30px var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--primary-green) 0%, var(--light-green) 100%);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+            box-shadow: 0 5px 20px rgba(45, 134, 89, 0.3);
+            animation: pulse 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .logo-text h1 {
+            font-size: 2.5em;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--primary-green) 0%, var(--light-green) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 2px;
+            font-family: 'Amiri', serif;
+        }
+
+        .logo-text p {
+            font-size: 0.9em;
+            color: var(--text-light);
+            font-weight: 500;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .header-btn {
+            padding: 12px 25px;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Tajawal', sans-serif;
+            font-size: 1em;
+        }
+
+        .btn-login {
+            background: transparent;
+            border: 2px solid var(--primary-green);
+            color: var(--primary-green);
+        }
+
+        .btn-login:hover {
+            background: var(--primary-green);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .btn-register {
+            background: linear-gradient(135deg, var(--accent-orange) 0%, var(--dark-orange) 100%);
+            border: none;
+            color: white;
+            box-shadow: 0 5px 15px rgba(244, 157, 55, 0.3);
+        }
+
+        .btn-register:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(244, 157, 55, 0.4);
+        }
+
+        /* Hero Section */
+        .hero-section {
+            padding: 80px 0;
+            text-align: center;
+            position: relative;
+        }
+
+        .hero-title {
+            font-size: 3.5em;
+            font-weight: 900;
+            color: var(--text-dark);
+            margin-bottom: 20px;
+            line-height: 1.2;
+            font-family: 'Amiri', serif;
+        }
+
+        .hero-subtitle {
+            font-size: 1.4em;
+            color: var(--text-light);
+            margin-bottom: 40px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hero-stats {
+            display: flex;
+            justify-content: center;
+            gap: 50px;
+            margin-top: 50px;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: 900;
+            color: var(--primary-green);
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 1.1em;
+            color: var(--text-light);
+            font-weight: 600;
+        }
+
+        /* Navigation Tabs */
+        .nav-tabs {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            margin: 40px 0;
+            display: flex;
+            gap: 12px;
+            box-shadow: 0 10px 40px var(--shadow);
+            flex-wrap: wrap;
+        }
+
+        .nav-tab {
+            flex: 1;
+            min-width: 180px;
+            padding: 20px 25px;
+            background: var(--warm-beige);
+            border: 2px solid transparent;
+            border-radius: 12px;
+            font-size: 1.15em;
+            font-weight: 700;
+            color: var(--text-dark);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Tajawal', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            flex-direction: row-reverse;
+        }
+
+        .nav-tab i {
+            font-size: 1.2em;
+        }
+
+        .nav-tab:hover {
+            background: white;
+            border-color: var(--primary-green);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 20px var(--shadow);
+        }
+
+        .nav-tab.active {
+            background: linear-gradient(135deg, var(--primary-green) 0%, var(--light-green) 100%);
+            color: white;
+            border-color: var(--primary-green);
+            box-shadow: 0 8px 25px rgba(45, 134, 89, 0.3);
+        }
+
+        /* Content Area */
+        .content-area {
+            background: white;
+            border-radius: 25px;
+            padding: 60px;
+            box-shadow: 0 15px 50px var(--shadow);
+            margin-bottom: 50px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeInUp 0.6s ease;
+            position: relative;
+            z-index: 1;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Smart Consultation Styles */
+        .consultation-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--light-gray);
+            border-radius: 10px;
+            margin-bottom: 40px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, var(--primary-green) 0%, var(--light-green) 100%);
+            width: 0%;
+            transition: width 0.5s ease;
+            border-radius: 10px;
+        }
+
+        .progress-text {
+            text-align: center;
+            color: var(--text-light);
+            margin-top: 10px;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        .question-card {
+            display: none;
+            animation: fadeIn 0.5s ease;
+            margin-bottom: 30px;
+        }
+
+        .question-card.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .question-title {
+            font-size: 1.8em;
+            color: var(--text-dark);
+            margin-bottom: 30px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .question-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--primary-green) 0%, var(--light-green) 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5em;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .option-card {
+            padding: 20px;
+            border: 2px solid var(--light-gray);
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            background: var(--warm-beige);
+        }
+
+        .option-card:hover {
+            border-color: var(--primary-green);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px var(--shadow);
+        }
+
+        .option-card.selected {
+            border-color: var(--primary-green);
+            background: linear-gradient(135deg, var(--primary-green) 0%, var(--light-green) 100%);
+            color: white;
+            box-shadow: 0 8px 20px rgba(45, 134, 89, 0.3);
+        }
+
+        .option-icon {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .option-label {
+            font-weight: 700;
+            font-size: 1.1em;
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border: 2px solid var(--light-gray);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: var(--warm-beige);
+        }
+
+        .checkbox-item:hover {
+            border-color: var(--primary-green);
+            background: white;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 24px;
+            height: 24px;
+            margin-left: 15px;
+            cursor: pointer;
+        }
+
+        .checkbox-item.checked {
+            border-color: var(--primary-green);
+            background: rgba(45, 134, 89, 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 1.1em;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 10px;
+        }
+
+        .form-group label i {
+            margin-left: 8px;
+            color: var(--primary-green);
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid var(--light-gray);
+            border-radius: 12px;
+            font-size: 1.05em;
+            font-family: 'Tajawal', sans-serif;
+            transition: all 0.3s ease;
+            background: var(--warm-beige);
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary-green);
+            box-shadow: 0 0 0 4px rgba(45, 134, 89, 0.1);
+            background: white;
+        }
+
+        .form-group textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            justify-content: space-between;
+            margin-top: 30px;
+        }
+
+        .btn {
+            padding: 16px 35px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Tajawal', sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-back {
+            background: var(--light-gray);
+            color: var(--text-dark);
+        }
+
+        .btn-back:hover {
+            background: #d0d0d0;
+            transform: translateX(5px);
+        }
+
+        .btn-next,
+        .btn-submit {
+            background: linear-gradient(135deg, var(--primary-green) 0%, var(--light-green) 100%);
+            color: white;
+            box-shadow: 0 5px 15px rgba(45, 134, 89, 0.3);
+            flex: 1;
+        }
+
+        .btn-next:hover,
+        .btn-submit:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(45, 134, 89, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Instant Response Box */
+        .response-box {
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            border: 3px solid var(--primary-green);
+            border-radius: 20px;
+            padding: 35px;
+            margin-top: 40px;
+            display: none;
+            animation: slideDown 0.6s ease;
+        }
+
+        .response-box.show {
+            display: block;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .response-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .response-icon {
+            width: 60px;
+            height: 60px;
+            background: var(--primary-green);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2em;
+        }
+
+        .response-header h3 {
+            font-size: 1.8em;
+            color: var(--text-dark);
+            font-weight: 900;
+        }
+
+        .response-content {
+            font-size: 1.15em;
+            line-height: 1.9;
+            color: var(--text-dark);
+        }
+
+        .response-content h4 {
+            color: var(--primary-green);
+            font-size: 1.4em;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            font-weight: 800;
+        }
+
+        .response-content ul {
+            margin-right: 25px;
+            margin-bottom: 20px;
+        }
+
+        .response-content li {
+            margin-bottom: 12px;
+            color: var(--text-dark);
+        }
+
+        .response-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .response-btn {
+            padding: 14px 28px;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Tajawal', sans-serif;
+            font-size: 1em;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .response-btn-primary {
+            background: var(--primary-green);
+            color: white;
+            border: none;
+        }
+
+        .response-btn-primary:hover {
+            background: var(--dark-green);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(45, 134, 89, 0.3);
+        }
+
+        .response-btn-secondary {
+            background: white;
+            color: var(--primary-green);
+            border: 2px solid var(--primary-green);
+        }
+
+        .response-btn-secondary:hover {
+            background: var(--primary-green);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        /* Section Title */
+        .section-title {
+            font-size: 2.5em;
+            color: var(--text-dark);
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 900;
+            font-family: 'Amiri', serif;
+        }
+
+        .section-subtitle {
+            font-size: 1.2em;
+            color: var(--text-light);
+            text-align: center;
+            margin-bottom: 50px;
+            line-height: 1.8;
+        }
+
+        /* Feature Cards */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .feature-card {
+            background: linear-gradient(135deg, white 0%, var(--warm-beige) 100%);
+            border-radius: 20px;
+            padding: 40px 30px;
+            text-align: center;
+            border: 2px solid var(--light-gray);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--primary-green) 0%, var(--light-green) 100%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 20px 50px var(--shadow);
+            border-color: var(--primary-green);
+        }
+
+        .feature-card:hover::before {
+            opacity: 0.95;
+        }
+
+        .feature-card:hover .feature-icon,
+        .feature-card:hover .feature-title,
+        .feature-card:hover .feature-description {
+            color: white;
+            position: relative;
+            z-index: 1;
+        }
+
+        .feature-icon {
+            font-size: 3.5em;
+            margin-bottom: 20px;
+            display: inline-block;
+            transition: all 0.4s ease;
+        }
+
+        .feature-title {
+            font-size: 1.6em;
+            font-weight: 800;
+            margin-bottom: 15px;
+            color: var(--text-dark);
+            transition: all 0.4s ease;
+        }
+
+        .feature-description {
+            font-size: 1.05em;
+            line-height: 1.7;
+            color: var(--text-light);
+            transition: all 0.4s ease;
+        }
+
+        /* Responsive */
+        @media (max-width: 968px) {
+            .hero-title {
+                font-size: 2.5em;
+            }
+
+            .logo-text h1 {
+                font-size: 2em;
+            }
+
+            .content-area {
+                padding: 40px 25px;
+            }
+
+            .nav-tabs {
+                flex-direction: column;
+            }
+
+            .nav-tab {
+                min-width: 100%;
+            }
+
+            .header-actions {
+                display: none;
+            }
+
+            .options-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .hero-title {
+                font-size: 2em;
+            }
+
+            .section-title {
+                font-size: 2em;
+            }
+
+            .question-title {
+                font-size: 1.4em;
+            }
+        }
+
+        /* Product Grid Styles */
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 35px;
+            margin-top: 40px;
+        }
+
+        .product-card {
+            background: white;
+            border: 2px solid var(--light-gray);
+            border-radius: 20px;
+            overflow: hidden;
+            transition: all 0.4s ease;
+            position: relative;
+        }
+
+        .product-card:hover {
+            border-color: var(--primary-green);
+            box-shadow: 0 15px 45px var(--shadow);
+            transform: translateY(-8px);
+        }
+
+        .product-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: var(--accent-orange);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.9em;
+            z-index: 10;
+            box-shadow: 0 3px 10px rgba(244, 157, 55, 0.4);
+        }
+
+        .product-image {
+            width: 100%;
+            height: 220px;
+            background: linear-gradient(135deg, var(--warm-beige) 0%, var(--light-gray) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4em;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .product-image::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, transparent 0%, rgba(45, 134, 89, 0.1) 100%);
+        }
+
+        .product-content {
+            padding: 25px;
+        }
+
+        .product-title {
+            font-size: 1.4em;
+            font-weight: 800;
+            color: var(--text-dark);
+            margin-bottom: 12px;
+        }
+
+        .product-description {
+            font-size: 1.05em;
+            color: var(--text-light);
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .product-rating {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 15px;
+            font-size: 0.95em;
+        }
+
+        .stars {
+            color: var(--accent-orange);
+        }
+
+        .rating-count {
+            color: var(--text-light);
+        }
+
+        .product-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 20px;
+            border-top: 2px solid var(--light-gray);
+        }
+
+        .product-price {
+            font-size: 1.6em;
+            font-weight: 900;
+            color: var(--primary-green);
+        }
+
+        .add-to-cart {
+            padding: 12px 25px;
+            background: linear-gradient(135deg, var(--primary-green) 0%, var(--light-green) 100%);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Tajawal', sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1em;
+        }
+
+        .add-to-cart:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(45, 134, 89, 0.3);
+        }
+
+        /* Search and Filter */
+        .search-container {
+            max-width: 600px;
+            margin: 0 auto 40px;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 18px 55px 18px 20px;
+            border: 2px solid var(--light-gray);
+            border-radius: 50px;
+            font-size: 1.1em;
+            font-family: 'Tajawal', sans-serif;
+            transition: all 0.3s ease;
+            background: var(--warm-beige);
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary-green);
+            box-shadow: 0 0 0 4px rgba(45, 134, 89, 0.1);
+            background: white;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-light);
+            font-size: 1.3em;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 12px 25px;
+            background: white;
+            border: 2px solid var(--light-gray);
+            border-radius: 25px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Tajawal', sans-serif;
+            color: var(--text-dark);
+        }
+
+        .filter-btn:hover,
+        .filter-btn.active {
+            background: var(--primary-green);
+            color: white;
+            border-color: var(--primary-green);
+            transform: translateY(-2px);
+        }
+
+        /* Testimonials */
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .testimonial-card {
+            background: linear-gradient(135deg, white 0%, var(--warm-beige) 100%);
+            border-radius: 20px;
+            padding: 35px;
+            border: 2px solid var(--light-gray);
+            position: relative;
+        }
+
+        .quote-icon {
+            font-size: 3em;
+            color: var(--primary-green);
+            opacity: 0.2;
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+
+        .testimonial-text {
+            font-size: 1.1em;
+            color: var(--text-dark);
+            line-height: 1.8;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .author-avatar {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--primary-green) 0%, var(--light-green) 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5em;
+            font-weight: 700;
+        }
+
+        .author-info h4 {
+            color: var(--text-dark);
+            font-weight: 700;
+            margin-bottom: 3px;
+        }
+
+        .author-info p {
+            color: var(--text-light);
+            font-size: 0.95em;
+        }
+
+        /* Cart Styles */
+        .cart-item {
+            display: flex;
+            align-items: center;
+            padding: 25px;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, white 0%, var(--warm-beige) 100%);
+            border: 2px solid var(--light-gray);
+            border-radius: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .cart-item:hover {
+            border-color: var(--primary-green);
+            box-shadow: 0 5px 20px var(--shadow);
+        }
+
+        .cart-item-icon {
+            font-size: 2.5em;
+            margin-left: 25px;
+        }
+
+        .cart-item-details {
+            flex: 1;
+        }
+
+        .cart-item-title {
+            margin-bottom: 8px;
+            color: var(--text-dark);
+            font-weight: 800;
+            font-size: 1.2em;
+        }
+
+        .cart-item-price {
+            color: var(--primary-green);
+            font-weight: 700;
+            font-size: 1.1em;
+        }
+
+        .cart-item-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .qty-btn {
+            width: 38px;
+            height: 38px;
+            border: none;
+            background: var(--light-gray);
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1.2em;
+            transition: all 0.3s ease;
+        }
+
+        .qty-btn:hover {
+            background: var(--primary-green);
+            color: white;
+        }
+
+        .qty-display {
+            min-width: 40px;
+            text-align: center;
+            font-weight: 800;
+            font-size: 1.2em;
+            color: var(--text-dark);
+        }
+
+        .remove-btn {
+            width: 38px;
+            height: 38px;
+            border: none;
+            background: #dc3545;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-right: 15px;
+            font-size: 1.2em;
+            transition: all 0.3s ease;
+        }
+
+        .remove-btn:hover {
+            background: #c82333;
+        }
+
+        .cart-total {
+            padding: 35px;
+            background: linear-gradient(135deg, var(--warm-beige) 0%, white 100%);
+            border-radius: 20px;
+            text-align: center;
+            border: 3px solid var(--primary-green);
+            box-shadow: 0 10px 30px var(--shadow);
+            margin-top: 30px;
+        }
+
+        .cart-total h3 {
+            font-size: 1.8em;
+            color: var(--text-dark);
+            margin-bottom: 15px;
+            font-weight: 800;
+        }
+
+        .cart-total-price {
+            font-size: 2.5em;
+            color: var(--primary-green);
+            font-weight: 900;
+            margin-bottom: 30px;
+        }
+
+        .empty-cart {
+            text-align: center;
+            padding: 80px 20px;
+        }
+
+        .empty-cart i {
+            font-size: 4em;
+            color: var(--text-light);
+            opacity: 0.3;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .empty-cart p {
+            font-size: 1.4em;
+            color: var(--text-light);
+        }
+    </style>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    
+    <script>
+        // Firebase Configuration - CONFIGURED FOR FLA7IN PROJECT ✅
+        const firebaseConfig = {
+            apiKey: "AIzaSyC-z9igQOo7PbKiTzhi2fIRrHHuUXhN6AU",
+            authDomain: "fla7in.firebaseapp.com",
+            projectId: "fla7in",
+            storageBucket: "fla7in.firebasestorage.app",
+            messagingSenderId: "463607450723",
+            appId: "1:463607450723:web:04d95f04873d15634bfc56",
+            measurementId: "G-WXN72JJ5DP"
+        };
+
+        // Initialize Firebase
+        let firebaseApp, auth, db;
+        let isFirebaseConfigured = false;
+
+        // Check if config is set
+        if (firebaseConfig.apiKey !== "YOUR_API_KEY") {
+            firebaseApp = firebase.initializeApp(firebaseConfig);
+            auth = firebase.auth();
+            db = firebase.firestore();
+            isFirebaseConfigured = true;
+            console.log("✅ Firebase initialized successfully!");
+            console.log("🔥 Project: fla7in");
+            console.log("📊 Ready for Authentication and Firestore!");
+        } else {
+            console.warn("⚠️ Firebase not configured. Using demo mode.");
+            console.log("📝 To enable Firebase:");
+            console.log("1. Go to https://console.firebase.google.com");
+            console.log("2. Create a new project");
+            console.log("3. Enable Authentication (Google, Facebook, Email)");
+            console.log("4. Enable Firestore Database");
+            console.log("5. Replace the firebaseConfig above with your config");
+        }
+    </script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="main-header">
+        <div class="header-content">
+            <div class="logo-section">
+                <div class="logo-icon">
+                    <img src="data:image/webp;base64,UklGRvIEAABXRUJQVlA4WAoAAAAgAAAAQgAAUAAASUNDUMgBAAAAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAAAAYpkAALeFAAAY2lhZWiAAAAAAAAAkqAAA+EQAALbPWFlaIAAAAAAAAPbWAAEAAAAA0y1wYXJhAAAAAAAEAAAAAmZmAADypwAADVkAABPQAAAKWwAAAAAAAAAAbWx1YwAAAAAAAAABAAAADGVuVVMAAAAgAAAAHABHAG8AbwBnAGwAZQAgAEkAbgBjAC4AIAAyADAAMQA2VlA4IAQDAACQDwCdASpDAFEAPkEikEWjoiEUSQXQOAUEsQBn6kJrNwFwR9tF5gP109aP0GecXd1B3oAfrN1r3lD3QCRRLKCLgng6rKOcDlPoKEOdaZAc7zw+G7OpS0MzRL8HQI9/xfkadsO3uwSCCJ4EPj2IWdzNeRtla6gAAd5fVLlHjxn7r9wYfcaklIAA/v8jC45Oxm5w0oXUtdDV/RrpIj9Hr5YdWrsJGQHvhbR3LT/rnDrXYn+lxBnmA2szSTJa6pYsEgqoamDUlDsyNEI+cUxoR4IY3AmccShMTaXXRQfhLPfyp1Mh5P0P5NvWrcAMgXUsFlMBL8c2BJRrkCW3U4r4MT+/WXE76Xsz7pkdvhK1/oaKyXn153QIZZy0qnenOKGdOvvJ3XIv/nlA/rfbMTKDKC55pvf7z09eFb7MokdOeeQHtIUfDeUs7CrlvHL5sZZ7nbbLDdN9dS/XT+QvxOzHt3O+8Oj/qLucvP/i7neKeGVyZ7hfcgCewSBcexggW5NlRoN6Xh1BPm2Jtuf+GAIVp92m2gz/MC4pg/YgGZcYqRKQ+rR0txHvJHU8ondcM2D8JFlaqqLfuU6XCFnOYMaAhHeHaDBDPU7nBmH+v85D/u7/WS+I0+5SmaEUpA/UgxDfZfg7ql4tvAa9oX3N3PUZHXaqE+GuH9gV9FTU/EnHWyRVFEHiCp2z0Yjq48TrGWF+N09oeQPLvkNju3g+W0Si6xfzljkSBkYI3rIDhE3OnU86ZJOqDbBDyMuXf7UJGiNoqlRPvRnjmUfB42c/38GNdg6pG9wDW8hcL8SH1CzwDTN0/KCEwQzsMRnOblduBacmZ4rd5v6t5zXI8M+H3RbFRpw7Z9Hmk0RkhJ6X6rKPnncuZ9+vjbYnEIO+YBMWz5cLFhyqth75qLFuvc7435RDryZDuGNNmUEsw/8yzIoFYYBdb4Sf7wHetbZF4g/pTA2Y/lytYxZYNzJWwTi4oXMWnTlU/JjZ++g0sI0Z5Es1GEZ1uLFlfkNjy+l5H4ANrRQEZ/NJrgAAAA" alt="فلاحين" style="width: 100%; height: 100%; object-fit: contain;">
+                </div>
+                <div class="logo-text">
+                    <h1>فلاحين</h1>
+                    <p>منصتك للفلاحة الذكية</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <a href="#" class="header-btn btn-login" onclick="showLoginModal(); return false;">
+                    <i class="fas fa-user"></i>
+                    دخول
+                </a>
+                <a href="#" class="header-btn btn-register" onclick="showSignupModal(); return false;">
+                    <i class="fas fa-user-plus"></i>
+                    سجل توّة
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Hero Section -->
+        <div class="hero-section">
+            <h2 class="hero-title">مرحبا بيك في فلاحين 🌱</h2>
+            <p class="hero-subtitle">منصة تونسية 100% - نساعدوك في فلاحتك باستشارات ذكية فورية ومنتجات عالية الجودة</p>
+            
+            <div class="hero-stats">
+                <div class="stat-item">
+                    <span class="stat-number">1200+</span>
+                    <span class="stat-label">فلاح راضي</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">500+</span>
+                    <span class="stat-label">استشارة ناجحة</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">50+</span>
+                    <span class="stat-label">منتج متوفر</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="nav-tabs">
+            <button class="nav-tab active" data-tab="home">
+                الرئيسية
+                <i class="fas fa-home"></i>
+            </button>
+            <button class="nav-tab" data-tab="consultation">
+                استشارة ذكية فورية
+                <i class="fas fa-robot"></i>
+            </button>
+            <button class="nav-tab" data-tab="products">
+                المتجر
+                <i class="fas fa-shopping-bag"></i>
+            </button>
+            <button class="nav-tab" data-tab="testimonials">
+                آراء الفلاحين
+                <i class="fas fa-comments"></i>
+            </button>
+            <button class="nav-tab" data-tab="cart">
+                السلة
+                <i class="fas fa-shopping-cart"></i>
+            </button>
+        </div>
+
+        <!-- Content Area -->
+        <div class="content-area">
+            <!-- Home Tab -->
+            <div class="tab-content active" id="home">
+                <h2 class="section-title">شنوّة نقدموا لك؟</h2>
+                <p class="section-subtitle">خدماتنا الكل مصمّمة خصيصاً باش نسهّلوا عليك فلاحتك ونزيدوا في إنتاجك</p>
+                
+                <div class="feature-grid">
+                    <div class="feature-card" onclick="switchTab('consultation')">
+                        <div class="feature-icon">🤖</div>
+                        <h3 class="feature-title">ردود فورية ذكية</h3>
+                        <p class="feature-description">جاوب على أسئلة بسيطة واحصل على حلول فورية بالذكاء الاصطناعي</p>
+                    </div>
+                    
+                    <div class="feature-card" onclick="switchTab('consultation')">
+                        <div class="feature-icon">🎯</div>
+                        <h3 class="feature-title">حلول مخصصة</h3>
+                        <p class="feature-description">كل مشكلة تاخو حلها الخاص حسب فلاحتك ومشكلتك</p>
+                    </div>
+                    
+                    <div class="feature-card" onclick="switchTab('products')">
+                        <div class="feature-icon">🛒</div>
+                        <h3 class="feature-title">منتجات أصلية</h3>
+                        <p class="feature-description">كل المنتجات الفلاحية اللي تحتاجها بأفضل الأسعار</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">🚚</div>
+                        <h3 class="feature-title">توصيل سريع</h3>
+                        <p class="feature-description">نوصّلوا لك لين عندك في كل الولايات</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Smart Consultation Tab -->
+            <div class="tab-content" id="consultation">
+                <div class="consultation-container">
+                    <h2 class="section-title">استشارة ذكية فورية 🤖</h2>
+                    <p class="section-subtitle">جاوب على أسئلة بسيطة واحصل على الحل في ثواني</p>
+                    
+                    <!-- Progress Bar -->
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <div class="progress-text" id="progressText">سؤال 1 من 8</div>
+
+                    <form id="consultationForm">
+                        <!-- Question 1: Crop Selection -->
+                        <div class="question-card active" data-question="1">
+                            <div class="question-title">
+                                <div class="question-icon">🌱</div>
+                                شنيّة الفلاحة متاعك؟
+                            </div>
+                            <div class="options-grid">
+                                <div class="option-card" data-crop="tomato">
+                                    <span class="option-icon">🍅</span>
+                                    <div class="option-label">طماطم</div>
+                                </div>
+                                <div class="option-card" data-crop="pepper">
+                                    <span class="option-icon">🌶️</span>
+                                    <div class="option-label">فلفل</div>
+                                </div>
+                                <div class="option-card" data-crop="carrot">
+                                    <span class="option-icon">🥕</span>
+                                    <div class="option-label">سفنارية</div>
+                                </div>
+                                <div class="option-card" data-crop="fennel">
+                                    <span class="option-icon">🌿</span>
+                                    <div class="option-label">بسباس</div>
+                                </div>
+                                <div class="option-card" data-crop="potato">
+                                    <span class="option-icon">🥔</span>
+                                    <div class="option-label">بطاطا</div>
+                                </div>
+                                <div class="option-card" data-crop="watermelon">
+                                    <span class="option-icon">🍉</span>
+                                    <div class="option-label">بطيخ</div>
+                                </div>
+                                <div class="option-card" data-crop="zucchini">
+                                    <span class="option-icon">🥒</span>
+                                    <div class="option-label">كوسة</div>
+                                </div>
+                                <div class="option-card" data-crop="eggplant">
+                                    <span class="option-icon">🍆</span>
+                                    <div class="option-label">بذنجان</div>
+                                </div>
+                                <div class="option-card" data-crop="wheat">
+                                    <span class="option-icon">🌾</span>
+                                    <div class="option-label">قمح</div>
+                                </div>
+                                <div class="option-card" data-crop="olive">
+                                    <span class="option-icon">🫒</span>
+                                    <div class="option-label">زيتون</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Question 2: Farm Area -->
+                        <div class="question-card" data-question="2">
+                            <div class="question-title">
+                                <div class="question-icon">📏</div>
+                                قداش مساحة المزرعة متاعك؟
+                            </div>
+                            <div class="options-grid">
+                                <div class="option-card" data-area="small">
+                                    <span class="option-icon">🏡</span>
+                                    <div class="option-label">أقل من 1 هكتار</div>
+                                </div>
+                                <div class="option-card" data-area="medium">
+                                    <span class="option-icon">🌾</span>
+                                    <div class="option-label">من 1 إلى 3 هكتار</div>
+                                </div>
+                                <div class="option-card" data-area="large">
+                                    <span class="option-icon">🚜</span>
+                                    <div class="option-label">من 3 إلى 5 هكتار</div>
+                                </div>
+                                <div class="option-card" data-area="very-large">
+                                    <span class="option-icon">🌍</span>
+                                    <div class="option-label">أكثر من 5 هكتار</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Question 3: Water Availability -->
+                        <div class="question-card" data-question="3">
+                            <div class="question-title">
+                                <div class="question-icon">💧</div>
+                                شنوّة نوعية الفلاحة متاعك؟
+                            </div>
+                            <div class="options-grid">
+                                <div class="option-card" data-water="irrigated">
+                                    <span class="option-icon">💦</span>
+                                    <div class="option-label">سقوية</div>
+                                    <div style="font-size: 0.85em; color: #666; margin-top: 5px;">فيها ماء متوفر</div>
+                                </div>
+                                <div class="option-card" data-water="rainfed">
+                                    <span class="option-icon">🌧️</span>
+                                    <div class="option-label">بعلية</div>
+                                    <div style="font-size: 0.85em; color: #666; margin-top: 5px;">تعتمد على المطر</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Question 4: Soil Type -->
+                        <div class="question-card" data-question="4">
+                            <div class="question-title">
+                                <div class="question-icon">🌱</div>
+                                ماهو نوع التربة؟
+                            </div>
+                            <div class="options-grid">
+                                <div class="option-card" data-soil="sandy">
+                                    <span class="option-icon">🏖️</span>
+                                    <div class="option-label">رملية</div>
+                                    <div style="font-size: 0.85em; color: #666; margin-top: 5px;">خفيفة وسريعة التصريف</div>
+                                </div>
+                                <div class="option-card" data-soil="clay">
+                                    <span class="option-icon">🧱</span>
+                                    <div class="option-label">طينية</div>
+                                    <div style="font-size: 0.85em; color: #666; margin-top: 5px;">ثقيلة وتحتفظ بالماء</div>
+                                </div>
+                                <div class="option-card" data-soil="mixed">
+                                    <span class="option-icon">🌾</span>
+                                    <div class="option-label">مختلطة</div>
+                                    <div style="font-size: 0.85em; color: #666; margin-top: 5px;">رملية طينية متوازنة</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Question 5: Cultivation Period -->
+                        <div class="question-card" data-question="5">
+                            <div class="question-title">
+                                <div class="question-icon">📅</div>
+                                كم فترة الزراعة؟
+                            </div>
+                            <div class="options-grid">
+                                <div class="option-card" data-period="short">
+                                    <span class="option-icon">⚡</span>
+                                    <div class="option-label">من 15 إلى 45 يوم</div>
+                                    <div style="font-size: 0.85em; color: #666; margin-top: 5px;">زراعة سريعة</div>
+                                </div>
+                                <div class="option-card" data-period="medium">
+                                    <span class="option-icon">🌱</span>
+                                    <div class="option-label">من 45 إلى 60 يوم</div>
+                                    <div style="font-size: 0.85em; color: #666; margin-top: 5px;">زراعة متوسطة</div>
+                                </div>
+                                <div class="option-card" data-period="long">
+                                    <span class="option-icon">🌾</span>
+                                    <div class="option-label">من 60 إلى 90 يوم</div>
+                                    <div style="font-size: 0.85em; color: #666; margin-top: 5px;">زراعة طويلة</div>
+                                </div>
+                                <div class="option-card" data-period="very-long">
+                                    <span class="option-icon">🌳</span>
+                                    <div class="option-label">أكثر من 90 يوم</div>
+                                    <div style="font-size: 0.85em; color: #666; margin-top: 5px;">زراعة طويلة جداً</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Question 6: Problem Type -->
+                        <div class="question-card" data-question="6">
+                            <div class="question-title">
+                                <div class="question-icon">⚠️</div>
+                                شنيّة المشكلة اللي عندك؟
+                            </div>
+                            <div class="options-grid" id="problemOptions">
+                                <!-- Will be populated dynamically -->
+                            </div>
+                        </div>
+
+                        <!-- Question 7: Symptoms -->
+                        <div class="question-card" data-question="7">
+                            <div class="question-title">
+                                <div class="question-icon">🔍</div>
+                                شنوّة الأعراض اللي تشوفها؟
+                            </div>
+                            <div class="checkbox-group" id="symptomsCheckboxes">
+                                <!-- Will be populated dynamically -->
+                            </div>
+                        </div>
+
+                        <!-- Question 8: User Data Collection -->
+                        <div class="question-card" data-question="8">
+                            <div style="text-align: center; margin-bottom: 30px;">
+                                <div style="font-size: 3em; margin-bottom: 15px;">🎉</div>
+                                <h3 style="color: var(--primary-green); font-size: 1.8em; margin-bottom: 10px;">نتيجتك جاهزة!</h3>
+                                <p style="font-size: 1.1em; color: var(--text-light);">قبل التمتع بها، اعطينا معلوماتك باش نخدموك أحسن</p>
+                            </div>
+                            
+                            <div style="max-width: 500px; margin: 0 auto;">
+                                <div style="margin-bottom: 20px;">
+                                    <label style="display: block; margin-bottom: 8px; font-weight: 700; color: var(--text-dark);">
+                                        <i class="fas fa-user"></i> الاسم الكامل
+                                    </label>
+                                    <input type="text" id="userName" placeholder="مثال: محمد بن علي" 
+                                        style="width: 100%; padding: 15px; border: 2px solid var(--light-gray); border-radius: 10px; font-size: 1.05em; font-family: 'Tajawal', sans-serif; transition: all 0.3s ease;">
+                                </div>
+                                
+                                <div style="margin-bottom: 20px;">
+                                    <label style="display: block; margin-bottom: 8px; font-weight: 700; color: var(--text-dark);">
+                                        <i class="fas fa-phone"></i> رقم الهاتف
+                                    </label>
+                                    <input type="tel" id="userPhone" placeholder="مثال: 20123456" 
+                                        style="width: 100%; padding: 15px; border: 2px solid var(--light-gray); border-radius: 10px; font-size: 1.05em; font-family: 'Tajawal', sans-serif; transition: all 0.3s ease;">
+                                </div>
+                                
+                                <div style="margin-bottom: 25px;">
+                                    <label style="display: block; margin-bottom: 8px; font-weight: 700; color: var(--text-dark);">
+                                        <i class="fas fa-map-marker-alt"></i> المنطقة
+                                    </label>
+                                    <select id="userRegion" 
+                                        style="width: 100%; padding: 15px; border: 2px solid var(--light-gray); border-radius: 10px; font-size: 1.05em; font-family: 'Tajawal', sans-serif; transition: all 0.3s ease; background: white;">
+                                        <option value="">اختار المنطقة متاعك...</option>
+                                        <option value="tunis">تونس</option>
+                                        <option value="ariana">أريانة</option>
+                                        <option value="ben-arous">بن عروس</option>
+                                        <option value="manouba">منوبة</option>
+                                        <option value="nabeul">نابل</option>
+                                        <option value="zaghouan">زغوان</option>
+                                        <option value="bizerte">بنزرت</option>
+                                        <option value="beja">باجة</option>
+                                        <option value="jendouba">جندوبة</option>
+                                        <option value="kef">الكاف</option>
+                                        <option value="siliana">سليانة</option>
+                                        <option value="kairouan">القيروان</option>
+                                        <option value="kasserine">القصرين</option>
+                                        <option value="sidi-bouzid">سيدي بوزيد</option>
+                                        <option value="sousse">سوسة</option>
+                                        <option value="monastir">المنستير</option>
+                                        <option value="mahdia">المهدية</option>
+                                        <option value="sfax">صفاقس</option>
+                                        <option value="gafsa">قفصة</option>
+                                        <option value="tozeur">توزر</option>
+                                        <option value="kebili">قبلي</option>
+                                        <option value="gabes">قابس</option>
+                                        <option value="medenine">مدنين</option>
+                                        <option value="tataouine">تطاوين</option>
+                                    </select>
+                                </div>
+                                
+                                <div style="background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 2px solid var(--primary-green);">
+                                    <p style="margin: 0; font-size: 0.95em; color: var(--text-dark);">
+                                        <i class="fas fa-lock" style="color: var(--primary-green);"></i>
+                                        معلوماتك آمنة ومحمية - نستخدموها برك باش نحسّنو الخدمة متاعنا
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Navigation Buttons -->
+                        <div class="button-group">
+                            <button type="button" class="btn btn-back" id="btnBack" style="display: none;">
+                                <i class="fas fa-arrow-right"></i>
+                                رجوع
+                            </button>
+                            <button type="button" class="btn btn-next" id="btnNext">
+                                التالي
+                                <i class="fas fa-arrow-left"></i>
+                            </button>
+                            <button type="button" class="btn btn-submit" id="btnSubmit" style="display: none;">
+                                <i class="fas fa-magic"></i>
+                                اعطيني الحل توّة!
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Instant Response Box -->
+                    <div class="response-box" id="responseBox">
+                        <div class="response-header">
+                            <div class="response-icon">
+                                <i class="fas fa-lightbulb"></i>
+                            </div>
+                            <h3>الحل متاعك جاهز! 🎉</h3>
+                        </div>
+                        <div class="response-content" id="responseContent">
+                            <!-- Will be populated with AI response -->
+                        </div>
+                        <div class="response-actions">
+                            <button class="response-btn response-btn-primary" onclick="location.reload()">
+                                <i class="fas fa-redo"></i>
+                                استشارة جديدة
+                            </button>
+                            <button class="response-btn response-btn-secondary" onclick="switchTab('products')">
+                                <i class="fas fa-shopping-cart"></i>
+                                تسوّق المنتجات
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Products Tab -->
+            <div class="tab-content" id="products">
+                <h2 class="section-title">متجر المنتجات الفلاحية</h2>
+                <p class="section-subtitle">كل اللي تحتاجو لفلاحتك - جودة عالية وأسعار معقولة</p>
+                
+                <!-- Search Bar -->
+                <div class="search-container">
+                    <input type="text" class="search-input" id="productSearch" placeholder="دوّر على منتج...">
+                    <i class="fas fa-search search-icon"></i>
+                </div>
+                
+                <!-- Filter Buttons -->
+                <div class="filter-buttons">
+                    <button class="filter-btn active" data-filter="all">الكل</button>
+                    <button class="filter-btn" data-filter="fertilizers">أسمدة</button>
+                    <button class="filter-btn" data-filter="pesticides">مبيدات</button>
+                    <button class="filter-btn" data-filter="seeds">بذور</button>
+                    <button class="filter-btn" data-filter="equipment">معدات</button>
+                </div>
+                
+                <div class="product-grid">
+                    <div class="product-card" data-category="fertilizers">
+                        <div class="product-badge">جديد</div>
+                        <div class="product-image">🌱</div>
+                        <div class="product-content">
+                            <h3 class="product-title">سماد NPK متوازن</h3>
+                            <div class="product-rating">
+                                <span class="stars">⭐⭐⭐⭐⭐</span>
+                                <span class="rating-count">(89 تقييم)</span>
+                            </div>
+                            <p class="product-description">سماد متكامل فيه نيتروجين وفوسفور وبوتاسيوم - يزيد في الإنتاج ويحسّن الجودة</p>
+                            <div class="product-footer">
+                                <span class="product-price">45 دينار</span>
+                                <button class="add-to-cart" data-product-name="سماد NPK متوازن" data-product-price="45" data-product-icon="🌱">
+                                    <i class="fas fa-cart-plus"></i>
+                                    زيد للسلة
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="product-card" data-category="pesticides">
+                        <div class="product-badge">الأكثر مبيعاً</div>
+                        <div class="product-image">🦠</div>
+                        <div class="product-content">
+                            <h3 class="product-title">مبيد حشري طبيعي</h3>
+                            <div class="product-rating">
+                                <span class="stars">⭐⭐⭐⭐⭐</span>
+                                <span class="rating-count">(156 تقييم)</span>
+                            </div>
+                            <p class="product-description">مبيد عضوي آمن وفعّال ضد أغلب الحشرات - ما يضرش البيئة</p>
+                            <div class="product-footer">
+                                <span class="product-price">32 دينار</span>
+                                <button class="add-to-cart" data-product-name="مبيد حشري طبيعي" data-product-price="32" data-product-icon="🦠">
+                                    <i class="fas fa-cart-plus"></i>
+                                    زيد للسلة
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="product-card" data-category="seeds">
+                        <div class="product-image">🌾</div>
+                        <div class="product-content">
+                            <h3 class="product-title">بذور قمح محسّنة</h3>
+                            <div class="product-rating">
+                                <span class="stars">⭐⭐⭐⭐⭐</span>
+                                <span class="rating-count">(203 تقييم)</span>
+                            </div>
+                            <p class="product-description">بذور عالية الإنتاجية ومقاومة للأمراض - مناسبة للمناخ التونسي</p>
+                            <div class="product-footer">
+                                <span class="product-price">28 دينار</span>
+                                <button class="add-to-cart" data-product-name="بذور قمح محسّنة" data-product-price="28" data-product-icon="🌾">
+                                    <i class="fas fa-cart-plus"></i>
+                                    زيد للسلة
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="product-card" data-category="equipment">
+                        <div class="product-image">💧</div>
+                        <div class="product-content">
+                            <h3 class="product-title">نظام ري بالتنقيط</h3>
+                            <div class="product-rating">
+                                <span class="stars">⭐⭐⭐⭐⭐</span>
+                                <span class="rating-count">(67 تقييم)</span>
+                            </div>
+                            <p class="product-description">نظام ري حديث يوفّر في الماء ويزيد في الإنتاجية - سهل التركيب</p>
+                            <div class="product-footer">
+                                <span class="product-price">120 دينار</span>
+                                <button class="add-to-cart" data-product-name="نظام ري بالتنقيط" data-product-price="120" data-product-icon="💧">
+                                    <i class="fas fa-cart-plus"></i>
+                                    زيد للسلة
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="product-card" data-category="fertilizers">
+                        <div class="product-image">🧪</div>
+                        <div class="product-content">
+                            <h3 class="product-title">محسّن تربة عضوي</h3>
+                            <div class="product-rating">
+                                <span class="stars">⭐⭐⭐⭐⭐</span>
+                                <span class="rating-count">(124 تقييم)</span>
+                            </div>
+                            <p class="product-description">يحسّن بنية التربة ويزيد في الخصوبة بطريقة طبيعية 100%</p>
+                            <div class="product-footer">
+                                <span class="product-price">38 دينار</span>
+                                <button class="add-to-cart" data-product-name="محسّن تربة عضوي" data-product-price="38" data-product-icon="🧪">
+                                    <i class="fas fa-cart-plus"></i>
+                                    زيد للسلة
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="product-card" data-category="equipment">
+                        <div class="product-image">🔧</div>
+                        <div class="product-content">
+                            <h3 class="product-title">طقم أدوات يدوية</h3>
+                            <div class="product-rating">
+                                <span class="stars">⭐⭐⭐⭐</span>
+                                <span class="rating-count">(98 تقييم)</span>
+                            </div>
+                            <p class="product-description">طقم كامل من الأدوات الفلاحية اليدوية - جودة ممتازة ومتينة</p>
+                            <div class="product-footer">
+                                <span class="product-price">55 دينار</span>
+                                <button class="add-to-cart" data-product-name="طقم أدوات يدوية" data-product-price="55" data-product-icon="🔧">
+                                    <i class="fas fa-cart-plus"></i>
+                                    زيد للسلة
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="product-card" data-category="pesticides">
+                        <div class="product-image">🍃</div>
+                        <div class="product-content">
+                            <h3 class="product-title">مبيد فطري مانكوزيب</h3>
+                            <div class="product-rating">
+                                <span class="stars">⭐⭐⭐⭐⭐</span>
+                                <span class="rating-count">(142 تقييم)</span>
+                            </div>
+                            <p class="product-description">فعّال ضد أمراض الصدأ والبياض الدقيقي - للطماطم والقمح</p>
+                            <div class="product-footer">
+                                <span class="product-price">36 دينار</span>
+                                <button class="add-to-cart" data-product-name="مبيد فطري مانكوزيب" data-product-price="36" data-product-icon="🍃">
+                                    <i class="fas fa-cart-plus"></i>
+                                    زيد للسلة
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="product-card" data-category="seeds">
+                        <div class="product-image">🍅</div>
+                        <div class="product-content">
+                            <h3 class="product-title">بذور طماطم هجينة</h3>
+                            <div class="product-rating">
+                                <span class="stars">⭐⭐⭐⭐⭐</span>
+                                <span class="rating-count">(187 تقييم)</span>
+                            </div>
+                            <p class="product-description">إنتاجية عالية ومقاومة للأمراض - مناسبة للصوبات والحقل</p>
+                            <div class="product-footer">
+                                <span class="product-price">42 دينار</span>
+                                <button class="add-to-cart" data-product-name="بذور طماطم هجينة" data-product-price="42" data-product-icon="🍅">
+                                    <i class="fas fa-cart-plus"></i>
+                                    زيد للسلة
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="product-card" data-category="fertilizers">
+                        <div class="product-image">⚡</div>
+                        <div class="product-content">
+                            <h3 class="product-title">سماد فوسفاتي DAP</h3>
+                            <div class="product-rating">
+                                <span class="stars">⭐⭐⭐⭐</span>
+                                <span class="rating-count">(76 تقييم)</span>
+                            </div>
+                            <p class="product-description">غني بالفوسفور - يقوّي الجذور ويزيد في الإزهار والعقد</p>
+                            <div class="product-footer">
+                                <span class="product-price">48 دينار</span>
+                                <button class="add-to-cart" data-product-name="سماد فوسفاتي DAP" data-product-price="48" data-product-icon="⚡">
+                                    <i class="fas fa-cart-plus"></i>
+                                    زيد للسلة
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Testimonials Tab -->
+            <div class="tab-content" id="testimonials">
+                <h2 class="section-title">شنوّة قالوا الفلاحين علينا؟</h2>
+                <p class="section-subtitle">آراء حقيقية من فلاحين تونسيين استخدموا خدماتنا</p>
+                
+                <div class="testimonials-grid">
+                    <div class="testimonial-card">
+                        <i class="fas fa-quote-right quote-icon"></i>
+                        <p class="testimonial-text">"والله خدمة ممتازة! الاستشارة الذكية حلّتلي مشكلة الصدأ في القمح متاعي وزاد الإنتاج بـ 30%. ننصح بيهم برشا"</p>
+                        <div class="testimonial-author">
+                            <div class="author-avatar">م</div>
+                            <div class="author-info">
+                                <h4>محمد الفلاحي</h4>
+                                <p>القيروان - فلاح قمح</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="testimonial-card">
+                        <i class="fas fa-quote-right quote-icon"></i>
+                        <p class="testimonial-text">"المنتجات متاعهم أصلية ومضمونة. والأسعار معقولة. والتوصيل وصلني في وقتو. شكراً فلاحين!"</p>
+                        <div class="testimonial-author">
+                            <div class="author-avatar">ف</div>
+                            <div class="author-info">
+                                <h4>فاطمة بن علي</h4>
+                                <p>سوسة - فلاحة طماطم</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="testimonial-card">
+                        <i class="fas fa-quote-right quote-icon"></i>
+                        <p class="testimonial-text">"الردود الفورية حاجة رائعة! جاوبت على 4 أسئلة برك ولقيت الحل توّة. وفّرتلي وقت ومصاريف"</p>
+                        <div class="testimonial-author">
+                            <div class="author-avatar">ك</div>
+                            <div class="author-info">
+                                <h4>كمال السالمي</h4>
+                                <p>صفاقس - فلاح زيتون</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="testimonial-card">
+                        <i class="fas fa-quote-right quote-icon"></i>
+                        <p class="testimonial-text">"منصة محترمة وخدمة راقية. نظام الري بالتنقيط اللي شريتو مريح برشا ووفّرلي في الماء"</p>
+                        <div class="testimonial-author">
+                            <div class="author-avatar">ي</div>
+                            <div class="author-info">
+                                <h4>يوسف المرزوقي</h4>
+                                <p>نابل - فلاح حوامض</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="testimonial-card">
+                        <i class="fas fa-quote-right quote-icon"></i>
+                        <p class="testimonial-text">"أحسن حاجة الاستشارة بالمجّان والفورية! ساعدوني نحل مشكلة المنّ في الفلفل وعطاوني الحل في دقايق"</p>
+                        <div class="testimonial-author">
+                            <div class="author-avatar">ر</div>
+                            <div class="author-info">
+                                <h4>رشيد الهمامي</h4>
+                                <p>بنزرت - فلاح خضراوات</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="testimonial-card">
+                        <i class="fas fa-quote-right quote-icon"></i>
+                        <p class="testimonial-text">"فريق محترف ويفهم في الفلاحة مليح. البذور اللي شريتهم عطاوني محصول قوي وصحي. شكراً على كل شيء"</p>
+                        <div class="testimonial-author">
+                            <div class="author-avatar">س</div>
+                            <div class="author-info">
+                                <h4>سمير الشابي</h4>
+                                <p>المهدية - فلاح طماطم</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cart Tab -->
+            <div class="tab-content" id="cart">
+                <h2 class="section-title">سلة المشتريات</h2>
+                <div id="cartContent">
+                    <div class="empty-cart">
+                        <i class="fas fa-shopping-cart"></i>
+                        <p>السلة فارغة توّة</p>
+                        <button class="btn btn-next" onclick="switchTab('products')" style="max-width: 350px; margin: 30px auto 0;">
+                            <i class="fas fa-shopping-bag"></i>
+                            ابدا تسوّق
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Crop data with problems and solutions
+        const cropDatabase = {
+            tomato: {
+                problems: [
+                    { value: 'diseases', label: 'أمراض', icon: '🦠' },
+                    { value: 'pests', label: 'حشرات', icon: '🐛' },
+                    { value: 'yellowing', label: 'اصفرار', icon: '🟡' },
+                    { value: 'wilting', label: 'ذبول', icon: '😵' }
+                ],
+                symptoms: {
+                    diseases: ['بقع على الورق', 'عفن الثمار', 'بياض على الورق', 'تلون بني على الساق'],
+                    pests: ['حشرات صغيرة على الورق', 'ثقوب في الورق', 'ديدان في الثمار', 'الورق ملفوف'],
+                    yellowing: ['اصفرار الورق القديم', 'اصفرار الورق الجديد', 'اصفرار مع بقع'],
+                    wilting: ['ذبول في الصباح', 'ذبول دائم', 'ذبول مع اسوداد']
+                },
+                solutions: {
+                    diseases: {
+                        title: 'حل مشكلة الأمراض في الطماطم',
+                        diagnosis: 'حسب الأعراض اللي ذكرتها، يبدو أنو عندك مرض فطري على الطماطم متاعك.',
+                        causes: ['رطوبة عالية', 'سقي زايد', 'قلة التهوية بين النباتات', 'تراكم المياه'],
+                        solutions: [
+                            'استخدم مبيد فطري مثل "مانكوزيب" أو "كوبروكسات" - رشّو كل 10 أيام',
+                            'قلّل من السقي - اسقي الصباح الباكر باش الورق ينشف نهار',
+                            'احذف الورق المصاب وارميه بعيد',
+                            'حسّن التهوية بين النباتات',
+                            'ما تزيدش تسقي على الورق - اسقي على الأرض برك'
+                        ],
+                        prevention: [
+                            'زرع أصناف مقاومة للأمراض',
+                            'دوّر المحاصيل (ما تزرعش طماطم في نفس المكان كل عام)',
+                            'نظّف الأدوات متاعك مليح',
+                            'استخدم تسميد متوازن - الآزوت الزايد يضعّف النبات'
+                        ],
+                        products: ['مبيد فطري مانكوزيب', 'كوبروكسات', 'سماد NPK متوازن']
+                    },
+                    pests: {
+                        title: 'حل مشكلة الحشرات في الطماطم',
+                        diagnosis: 'عندك إصابة بالحشرات - غالباً المنّ أو الذبابة البيضاء.',
+                        causes: ['طقس دافئ', 'نباتات ضعيفة', 'قلة الأعداء الطبيعية'],
+                        solutions: [
+                            'استخدم مبيد حشري طبيعي (زيت النيم) - آمن وفعّال',
+                            'رشّ بمحلول صابون (20 مل صابون سائل + 1 لتر ماء)',
+                            'إذا الإصابة قوية: استخدم مبيد "إيميداكلوبريد"',
+                            'جيب دعسوقة (ladybugs) - تاكل الحشرات',
+                            'ازرع نعناع أو ريحان جنب الطماطم - يطردوا الحشرات'
+                        ],
+                        prevention: [
+                            'راقب النباتات متاعك بانتظام',
+                            'استخدم مصائد صفراء لاصقة',
+                            'حافظ على نظافة الحقل',
+                            'ما تستخدمش تسميد نيتروجيني زايد'
+                        ],
+                        products: ['زيت النيم العضوي', 'مبيد إيميداكلوبريد', 'مصائد الحشرات اللاصقة']
+                    },
+                    yellowing: {
+                        title: 'حل مشكلة اصفرار الطماطم',
+                        diagnosis: 'الاصفرار راجع غالباً لنقص العناصر الغذائية أو مشاكل في الجذور.',
+                        causes: ['نقص النيتروجين', 'نقص الحديد', 'سقي غير منتظم', 'مشاكل في التربة'],
+                        solutions: [
+                            'إذا الاصفرار في الورق القديم: زيد سماد نيتروجيني',
+                            'إذا الاصفرار في الورق الجديد: زيد حديد مخلبي (Iron chelate)',
+                            'استخدم سماد متكامل NPK (20-20-20)',
+                            'اضبط السقي - لا زايد ولا ناقص',
+                            'حسّن التربة بإضافة كمبوست'
+                        ],
+                        prevention: [
+                            'استخدم تسميد منتظم كل أسبوعين',
+                            'افحص pH التربة (المثالي 6-6.8)',
+                            'اسقي بانتظام - التربة لازمها تكون رطبة مش مبلولة',
+                            'استخدم مالتش (mulch) باش تحافظ على الرطوبة'
+                        ],
+                        products: ['سماد NPK 20-20-20', 'حديد مخلبي', 'كمبوست عضوي']
+                    },
+                    wilting: {
+                        title: 'حل مشكلة ذبول الطماطم',
+                        diagnosis: 'الذبول يمكن يكون من مرض ذبول البكتيري أو الفطري، أو من مشاكل في الجذور.',
+                        causes: ['مرض الذبول الفيوزارومي', 'مرض الذبول البكتيري', 'ديدان الجذور', 'سقي غير صحيح'],
+                        solutions: [
+                            'إذا الذبول مع اسوداد: غالباً مرض فطري - احذف النبات المصاب فوراً',
+                            'عالج التربة بمبيد فطري قبل الزراعة القادمة',
+                            'حسّن الصرف - الماء الراكد يسبب الذبول',
+                            'استخدم أصناف مقاومة للذبول',
+                            'اسقي بانتظام في الصباح الباكر'
+                        ],
+                        prevention: [
+                            'استخدم بذور مقاومة للأمراض',
+                            'دوّر المحاصيل (ما تزرعش في نفس المكان)',
+                            'حسّن تصريف الماء',
+                            'عقّم التربة قبل الزراعة',
+                            'استخدم تسميد عضوي يقوّي النبات'
+                        ],
+                        products: ['مبيد فطري للتربة', 'بذور طماطم مقاومة', 'محسّن تربة عضوي']
+                    }
+                }
+            },
+            pepper: {
+                problems: [
+                    { value: 'diseases', label: 'أمراض', icon: '🦠' },
+                    { value: 'pests', label: 'حشرات', icon: '🐛' },
+                    { value: 'fruit-drop', label: 'تساقط الثمار', icon: '⬇️' }
+                ],
+                symptoms: {
+                    diseases: ['بقع بنية على الورق', 'تجعد الورق', 'عفن على الثمار'],
+                    pests: ['المن الأخضر', 'العنكبوت الأحمر', 'دودة ثمار الفلفل'],
+                    'fruit-drop': ['تساقط الزهور', 'تساقط الثمار الصغيرة']
+                },
+                solutions: {
+                    diseases: {
+                        title: 'حل مشكلة الأمراض في الفلفل',
+                        diagnosis: 'الفلفل متاعك عندو إصابة فطرية أو بكتيرية.',
+                        causes: ['رطوبة عالية', 'درجات حرارة غير مناسبة', 'سقي على الورق'],
+                        solutions: [
+                            'استخدم مبيد فطري نحاسي (كوبروكسات)',
+                            'احذف الأجزاء المصابة وارميها',
+                            'حسّن التهوية بين النباتات',
+                            'اسقي على مستوى التربة مش على الورق',
+                            'رشّ كل 7-10 أيام في الطقس الرطب'
+                        ],
+                        prevention: ['زرع أصناف مقاومة', 'تباعد جيد بين النباتات', 'سقي صباحي'],
+                        products: ['مبيد نحاسي', 'مبيد مانكوزيب']
+                    },
+                    pests: {
+                        title: 'حل مشكلة الحشرات في الفلفل',
+                        diagnosis: 'حشرات ماصة للعصارة تهاجم الفلفل متاعك.',
+                        causes: ['طقس دافئ وجاف', 'نباتات ضعيفة'],
+                        solutions: [
+                            'رشّ بزيت النيم - فعّال وآمن',
+                            'استخدم صابون حشري',
+                            'إذا الإصابة قوية: مبيد أباميكتين للعنكبوت',
+                            'زرع نباتات طاردة مثل الكزبرة',
+                            'استخدم مصائد صفراء لاصقة'
+                        ],
+                        prevention: ['فحص منتظم', 'رش وقائي كل أسبوعين', 'تقوية النباتات بالتسميد المتوازن'],
+                        products: ['زيت النيم', 'مبيد أباميكتين', 'صابون حشري']
+                    },
+                    'fruit-drop': {
+                        title: 'حل مشكلة تساقط ثمار الفلفل',
+                        diagnosis: 'التساقط راجع لظروف بيئية أو نقص تغذية.',
+                        causes: ['حرارة عالية (+35°C)', 'نقص البورون', 'سقي غير منتظم', 'نقص التلقيح'],
+                        solutions: [
+                            'حافظ على سقي منتظم - الجفاف يسبب التساقط',
+                            'رشّ البورون (5 جرام/10 لتر ماء) وقت الإزهار',
+                            'استخدم مظللات إذا الحرارة عالية',
+                            'رشّ بهرمونات تثبيت الثمار',
+                            'حسّن التلقيح بهز النباتات صباحاً'
+                        ],
+                        prevention: ['سقي منتظم', 'تسميد متوازن', 'حماية من الحرارة الشديدة'],
+                        products: ['بورون زراعي', 'هرمون تثبيت الثمار', 'سماد كالسيوم وبورون']
+                    }
+                }
+            },
+            wheat: {
+                problems: [
+                    { value: 'rust', label: 'الصدأ', icon: '🟤' },
+                    { value: 'pests', label: 'حشرات', icon: '🐛' },
+                    { value: 'lodging', label: 'رقاد السنابل', icon: '⬇️' }
+                ],
+                symptoms: {
+                    rust: ['بقع صفراء-برتقالية', 'بقع بنية', 'تساقط الورق'],
+                    pests: ['المن', 'السونة', 'الديدان القارضة'],
+                    lodging: ['السنابل تميل', 'السيقان ضعيفة']
+                },
+                solutions: {
+                    rust: {
+                        title: 'حل مشكلة الصدأ في القمح',
+                        diagnosis: 'القمح متاعك مصاب بمرض الصدأ - مرض فطري خطير.',
+                        causes: ['رطوبة عالية', 'أصناف حساسة', 'طقس معتدل (15-25°C)'],
+                        solutions: [
+                            'رشّ فوراً بمبيد تيبوكونازول أو بروبيكونازول',
+                            'كرّر الرش بعد 15-20 يوم',
+                            'ازرع أصناف مقاومة للصدأ في الموسم الجاي',
+                            'احرق البقايا النباتية بعد الحصاد',
+                            'ابدا الرش الوقائي مبكراً'
+                        ],
+                        prevention: ['زراعة أصناف مقاومة', 'رش وقائي', 'إزالة البقايا المصابة', 'دورة زراعية'],
+                        products: ['تيبوكونازول', 'بروبيكونازول', 'مبيد تريفلوكسيستروبين']
+                    },
+                    pests: {
+                        title: 'حل مشكلة الحشرات في القمح',
+                        diagnosis: 'حشرات تهاجم القمح وتنقص من الإنتاج.',
+                        causes: ['طقس مناسب للحشرات', 'ضعف النبات'],
+                        solutions: [
+                            'للمنّ: استخدم مبيد إيميداكلوبريد',
+                            'للسونة: رشّ دلتامثرين',
+                            'للديدان القارضة: طعوم سامة حول الحقل',
+                            'رشّ في الصباح الباكر أو المساء',
+                            'كرّر الرش حسب الحاجة'
+                        ],
+                        prevention: ['فحص دوري', 'زراعة مبكرة', 'تسميد متوازن', 'إزالة الأعشاب'],
+                        products: ['إيميداكلوبريد', 'دلتامثرين', 'كلوربيريفوس']
+                    },
+                    lodging: {
+                        title: 'حل مشكلة رقاد القمح',
+                        diagnosis: 'السيقان ضعيفة والسنابل قاعدة تميل.',
+                        causes: ['تسميد نيتروجيني زايد', 'كثافة زراعة عالية', 'رياح قوية', 'سقي زايد'],
+                        solutions: [
+                            'قلّل من السماد النيتروجيني',
+                            'استخدم منظمات نمو (CCC) لتقوية الساق',
+                            'حسّن تصريف الماء',
+                            'احصد مبكراً قبل ما يتفاقم الرقاد',
+                            'استخدم سماد البوتاسيوم - يقوّي الساق'
+                        ],
+                        prevention: ['معدل بذار مناسب', 'تسميد متوازن', 'أصناف قصيرة الساق', 'تصريف جيد'],
+                        products: ['منظم نمو CCC', 'سماد بوتاسيوم', 'بذور أصناف قصيرة']
+                    }
+                }
+            },
+            // Simplified entries for other crops
+            potato: {
+                problems: [
+                    { value: 'diseases', label: 'أمراض', icon: '🦠' },
+                    { value: 'pests', label: 'حشرات', icon: '🐛' }
+                ],
+                symptoms: {
+                    diseases: ['مرض اللفحة', 'بقع سوداء', 'عفن الدرنات'],
+                    pests: ['دودة الدرنات', 'المن', 'الخنافس']
+                },
+                solutions: {
+                    diseases: {
+                        title: 'حل مشكلة أمراض البطاطا',
+                        diagnosis: 'البطاطا عندها مرض فطري.',
+                        solutions: ['مبيد مانكوزيب', 'ميتالاكسيل', 'رش وقائي منتظم'],
+                        products: ['مانكوزيب', 'ريدوميل جولد']
+                    }
+                }
+            },
+            olive: {
+                problems: [
+                    { value: 'fly', label: 'ذبابة الزيتون', icon: '🪰' },
+                    { value: 'diseases', label: 'أمراض', icon: '🦠' }
+                ],
+                symptoms: {
+                    fly: ['ثقوب في الثمار', 'يرقات داخل الزيتون'],
+                    diseases: ['عين الطاووس', 'جفاف الأغصان']
+                },
+                solutions: {
+                    fly: {
+                        title: 'حل مشكلة ذبابة الزيتون',
+                        diagnosis: 'الزيتون متاعك مصاب بذبابة الزيتون.',
+                        solutions: ['مصائد فيرمونية', 'رش دلتامثرين', 'طعوم بروتينية سامة'],
+                        products: ['دلتامثرين', 'مصائد فيرمونية', 'طعم بروتيني']
+                    }
+                }
+            }
+        };
+
+        // Apply same structure to remaining crops
+        cropDatabase.carrot = cropDatabase.potato;
+        cropDatabase.fennel = cropDatabase.potato;
+        cropDatabase.watermelon = cropDatabase.tomato;
+        cropDatabase.zucchini = cropDatabase.tomato;
+        cropDatabase.eggplant = cropDatabase.tomato;
+
+        // Consultation Form Logic
+        const formState = {
+            crop: '',
+            area: '',
+            water: '',
+            soil: '',
+            period: '',
+            problem: '',
+            symptoms: [],
+            userName: '',
+            userPhone: '',
+            userRegion: ''
+        };
+
+        let currentQuestion = 1;
+        const totalQuestions = 8;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            setupConsultationForm();
+        });
+
+        function setupConsultationForm() {
+            // Crop selection
+            document.querySelectorAll('[data-crop]').forEach(card => {
+                card.addEventListener('click', function() {
+                    document.querySelectorAll('[data-crop]').forEach(c => c.classList.remove('selected'));
+                    this.classList.add('selected');
+                    formState.crop = this.dataset.crop;
+                    populateProblems();
+                });
+            });
+
+            // Area selection
+            document.querySelectorAll('[data-area]').forEach(card => {
+                card.addEventListener('click', function() {
+                    document.querySelectorAll('[data-area]').forEach(c => c.classList.remove('selected'));
+                    this.classList.add('selected');
+                    formState.area = this.dataset.area;
+                });
+            });
+
+            // Water availability selection
+            document.querySelectorAll('[data-water]').forEach(card => {
+                card.addEventListener('click', function() {
+                    document.querySelectorAll('[data-water]').forEach(c => c.classList.remove('selected'));
+                    this.classList.add('selected');
+                    formState.water = this.dataset.water;
+                });
+            });
+
+            // Soil type selection
+            document.querySelectorAll('[data-soil]').forEach(card => {
+                card.addEventListener('click', function() {
+                    document.querySelectorAll('[data-soil]').forEach(c => c.classList.remove('selected'));
+                    this.classList.add('selected');
+                    formState.soil = this.dataset.soil;
+                });
+            });
+
+            // Cultivation period selection
+            document.querySelectorAll('[data-period]').forEach(card => {
+                card.addEventListener('click', function() {
+                    document.querySelectorAll('[data-period]').forEach(c => c.classList.remove('selected'));
+                    this.classList.add('selected');
+                    formState.period = this.dataset.period;
+                });
+            });
+
+            // User data inputs
+            const userNameInput = document.getElementById('userName');
+            const userPhoneInput = document.getElementById('userPhone');
+            const userRegionInput = document.getElementById('userRegion');
+
+            if (userNameInput) {
+                userNameInput.addEventListener('input', function() {
+                    formState.userName = this.value.trim();
+                });
+                userNameInput.addEventListener('focus', function() {
+                    this.style.borderColor = 'var(--primary-green)';
+                    this.style.boxShadow = '0 0 0 4px rgba(45, 134, 89, 0.1)';
+                });
+                userNameInput.addEventListener('blur', function() {
+                    this.style.borderColor = 'var(--light-gray)';
+                    this.style.boxShadow = 'none';
+                });
+            }
+
+            if (userPhoneInput) {
+                userPhoneInput.addEventListener('input', function() {
+                    formState.userPhone = this.value.trim();
+                });
+                userPhoneInput.addEventListener('focus', function() {
+                    this.style.borderColor = 'var(--primary-green)';
+                    this.style.boxShadow = '0 0 0 4px rgba(45, 134, 89, 0.1)';
+                });
+                userPhoneInput.addEventListener('blur', function() {
+                    this.style.borderColor = 'var(--light-gray)';
+                    this.style.boxShadow = 'none';
+                });
+            }
+
+            if (userRegionInput) {
+                userRegionInput.addEventListener('change', function() {
+                    formState.userRegion = this.value;
+                });
+                userRegionInput.addEventListener('focus', function() {
+                    this.style.borderColor = 'var(--primary-green)';
+                    this.style.boxShadow = '0 0 0 4px rgba(45, 134, 89, 0.1)';
+                });
+                userRegionInput.addEventListener('blur', function() {
+                    this.style.borderColor = 'var(--light-gray)';
+                    this.style.boxShadow = 'none';
+                });
+            }
+
+            // Navigation
+            document.getElementById('btnNext').addEventListener('click', nextQuestion);
+            document.getElementById('btnBack').addEventListener('click', previousQuestion);
+            document.getElementById('btnSubmit').addEventListener('click', generateResponse);
+
+            // Problem selection
+            document.addEventListener('click', function(e) {
+                if (e.target.closest('.option-card[data-problem]')) {
+                    const card = e.target.closest('.option-card[data-problem]');
+                    document.querySelectorAll('[data-problem]').forEach(c => c.classList.remove('selected'));
+                    card.classList.add('selected');
+                    formState.problem = card.dataset.problem;
+                    populateSymptoms();
+                }
+            });
+
+            // Symptom checkboxes
+            document.addEventListener('change', function(e) {
+                if (e.target.type === 'checkbox' && e.target.name === 'symptoms') {
+                    const item = e.target.closest('.checkbox-item');
+                    if (e.target.checked) {
+                        item.classList.add('checked');
+                        formState.symptoms.push(e.target.value);
+                    } else {
+                        item.classList.remove('checked');
+                        formState.symptoms = formState.symptoms.filter(s => s !== e.target.value);
+                    }
+                }
+            });
+        }
+
+        function populateProblems() {
+            if (!formState.crop || !cropDatabase[formState.crop]) return;
+            
+            const problems = cropDatabase[formState.crop].problems;
+            const container = document.getElementById('problemOptions');
+            container.innerHTML = '';
+            
+            problems.forEach(problem => {
+                container.innerHTML += `
+                    <div class="option-card" data-problem="${problem.value}">
+                        <span class="option-icon">${problem.icon}</span>
+                        <div class="option-label">${problem.label}</div>
+                    </div>
+                `;
+            });
+        }
+
+        function populateSymptoms() {
+            if (!formState.crop || !formState.problem) return;
+            
+            let symptoms = cropDatabase[formState.crop]?.symptoms?.[formState.problem];
+            
+            // If no specific symptoms found, use generic symptoms
+            if (!symptoms || symptoms.length === 0) {
+                symptoms = [
+                    'تغير لون الأوراق',
+                    'ذبول النبات',
+                    'بقع على الأوراق',
+                    'تساقط الأوراق',
+                    'ضعف النمو',
+                    'تلف الثمار',
+                    'وجود حشرات',
+                    'جفاف الأطراف'
+                ];
+            }
+            
+            const container = document.getElementById('symptomsCheckboxes');
+            container.innerHTML = '';
+            
+            symptoms.forEach((symptom, index) => {
+                container.innerHTML += `
+                    <label class="checkbox-item">
+                        <input type="checkbox" name="symptoms" value="${symptom}" id="symptom${index}">
+                        <span>${symptom}</span>
+                    </label>
+                `;
+            });
+            
+            // Add event listeners to checkboxes
+            document.querySelectorAll('input[name="symptoms"]').forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    formState.symptoms = Array.from(document.querySelectorAll('input[name="symptoms"]:checked'))
+                        .map(cb => cb.value);
+                });
+            });
+        }
+
+        function nextQuestion() {
+            if (!validateQuestion()) {
+                alert('الرجاء إكمال هذا السؤال');
+                return;
+            }
+            
+            if (currentQuestion < totalQuestions) {
+                const currentElement = document.querySelector(`[data-question="${currentQuestion}"]`);
+                if (currentElement) {
+                    currentElement.classList.remove('active');
+                }
+                
+                currentQuestion++;
+                
+                const nextElement = document.querySelector(`[data-question="${currentQuestion}"]`);
+                if (nextElement) {
+                    nextElement.classList.add('active');
+                }
+                
+                updateProgress();
+                updateButtons();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function previousQuestion() {
+            if (currentQuestion > 1) {
+                const currentElement = document.querySelector(`[data-question="${currentQuestion}"]`);
+                if (currentElement) {
+                    currentElement.classList.remove('active');
+                }
+                
+                currentQuestion--;
+                
+                const prevElement = document.querySelector(`[data-question="${currentQuestion}"]`);
+                if (prevElement) {
+                    prevElement.classList.add('active');
+                }
+                
+                updateProgress();
+                updateButtons();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function validateQuestion() {
+            switch(currentQuestion) {
+                case 1: return formState.crop !== '';
+                case 2: return formState.area !== '';
+                case 3: return formState.water !== '';
+                case 4: return formState.soil !== '';
+                case 5: return formState.period !== '';
+                case 6: return formState.problem !== '';
+                case 7: return formState.symptoms.length > 0;
+                case 8: 
+                    // Validate user data
+                    if (formState.userName === '' || formState.userName.length < 3) {
+                        return false;
+                    }
+                    if (formState.userPhone === '' || formState.userPhone.length < 8) {
+                        return false;
+                    }
+                    if (formState.userRegion === '') {
+                        return false;
+                    }
+                    return true;
+                default: return true;
+            }
+        }
+
+        function updateProgress() {
+            const progress = (currentQuestion / totalQuestions) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+            document.getElementById('progressText').textContent = `سؤال ${currentQuestion} من ${totalQuestions}`;
+        }
+
+        function updateButtons() {
+            const btnBack = document.getElementById('btnBack');
+            const btnNext = document.getElementById('btnNext');
+            const btnSubmit = document.getElementById('btnSubmit');
+
+            btnBack.style.display = currentQuestion > 1 ? 'flex' : 'none';
+            btnNext.style.display = currentQuestion < totalQuestions ? 'flex' : 'none';
+            btnSubmit.style.display = currentQuestion === totalQuestions ? 'flex' : 'none';
+        }
+
+        function generateResponse() {
+            if (!validateQuestion()) return;
+            
+            const solution = cropDatabase[formState.crop]?.solutions?.[formState.problem];
+            
+            if (!solution) {
+                alert('عذراً، ما لقيناش حل لهذه المشكلة. جرّب مرة أخرى أو اتصل بينا.');
+                return;
+            }
+
+            // Hide form
+            document.getElementById('consultationForm').style.display = 'none';
+            document.querySelector('.progress-bar').style.display = 'none';
+            document.querySelector('.progress-text').style.display = 'none';
+
+            // Generate response HTML
+            let responseHTML = `
+                <h4>${solution.title}</h4>
+                <p><strong>🔍 التشخيص:</strong> ${solution.diagnosis || ''}</p>
+            `;
+
+            if (solution.causes && solution.causes.length) {
+                responseHTML += `
+                    <h4>🌱 الأسباب:</h4>
+                    <ul>
+                        ${solution.causes.map(cause => `<li>${cause}</li>`).join('')}
+                    </ul>
+                `;
+            }
+
+            if (solution.solutions && solution.solutions.length) {
+                responseHTML += `
+                    <h4>💡 الحلول الموصى بيها:</h4>
+                    <ul>
+                        ${solution.solutions.map(sol => `<li>${sol}</li>`).join('')}
+                    </ul>
+                `;
+            }
+
+            if (solution.prevention && solution.prevention.length) {
+                responseHTML += `
+                    <h4>🛡️ الوقاية للمستقبل:</h4>
+                    <ul>
+                        ${solution.prevention.map(prev => `<li>${prev}</li>`).join('')}
+                    </ul>
+                `;
+            }
+
+            if (solution.products && solution.products.length) {
+                responseHTML += `
+                    <h4>🛒 المنتجات المقترحة:</h4>
+                    <ul>
+                        ${solution.products.map(product => `<li>${product}</li>`).join('')}
+                    </ul>
+                    <p style="margin-top: 20px; font-weight: 700; color: var(--primary-green);">
+                        💡 نصيحة: تلقى كل هذه المنتجات في متجرنا!
+                    </p>
+                `;
+            }
+
+            document.getElementById('responseContent').innerHTML = responseHTML;
+            document.getElementById('responseBox').classList.add('show');
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function switchTab(tabName) {
+            const tabs = document.querySelectorAll('.nav-tab');
+            const contents = document.querySelectorAll('.tab-content');
+            
+            tabs.forEach(t => t.classList.remove('active'));
+            contents.forEach(c => c.classList.remove('active'));
+            
+            document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            // If switching to cart, display cart
+            if (tabName === 'cart') {
+                setTimeout(displayCart, 100);
+            }
+        }
+
+        window.switchTab = switchTab;
+
+        // Add click event listeners to navigation tabs
+        document.addEventListener('DOMContentLoaded', function() {
+            const navTabs = document.querySelectorAll('.nav-tab');
+            navTabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const targetTab = this.dataset.tab;
+                    switchTab(targetTab);
+                });
+            });
+        });
+
+        // Shopping Cart System
+        let cart = JSON.parse(localStorage.getItem('falla7inCart')) || [];
+
+        // Add to Cart
+        document.addEventListener('click', function(e) {
+            const addBtn = e.target.closest('.add-to-cart');
+            if (addBtn) {
+                const productName = addBtn.dataset.productName;
+                const productPrice = parseFloat(addBtn.dataset.productPrice);
+                const productIcon = addBtn.dataset.productIcon;
+
+                addToCart({
+                    name: productName,
+                    price: productPrice,
+                    icon: productIcon,
+                    quantity: 1
+                });
+
+                // Visual feedback
+                const originalHTML = addBtn.innerHTML;
+                addBtn.innerHTML = '<i class="fas fa-check"></i> تمّ الإضافة!';
+                addBtn.style.background = 'linear-gradient(135deg, #1e5f42 0%, #2d8659 100%)';
+
+                setTimeout(() => {
+                    addBtn.innerHTML = originalHTML;
+                    addBtn.style.background = '';
+                }, 2000);
+
+                updateCartBadge();
+            }
+        });
+
+        function addToCart(product) {
+            const existingProduct = cart.find(item => item.name === product.name);
+
+            if (existingProduct) {
+                existingProduct.quantity += 1;
+            } else {
+                cart.push(product);
+            }
+
+            localStorage.setItem('falla7inCart', JSON.stringify(cart));
+        }
+
+        function updateCartBadge() {
+            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            const cartTab = document.querySelector('[data-tab="cart"]');
+
+            if (cartTab) {
+                const oldBadge = cartTab.querySelector('.cart-badge');
+                if (oldBadge) oldBadge.remove();
+
+                if (totalItems > 0) {
+                    const badge = document.createElement('span');
+                    badge.className = 'cart-badge';
+                    badge.textContent = totalItems;
+                    badge.style.cssText = `
+                        position: absolute;
+                        top: -5px;
+                        left: -5px;
+                        background: linear-gradient(135deg, #f49d37 0%, #d67d1f 100%);
+                        color: white;
+                        border-radius: 50%;
+                        width: 26px;
+                        height: 26px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-size: 0.8em;
+                        font-weight: bold;
+                        box-shadow: 0 3px 10px rgba(244, 157, 55, 0.4);
+                    `;
+                    cartTab.style.position = 'relative';
+                    cartTab.appendChild(badge);
+                }
+            }
+        }
+
+        function displayCart() {
+            const cartContent = document.getElementById('cartContent');
+
+            if (cart.length === 0) {
+                cartContent.innerHTML = `
+                    <div class="empty-cart">
+                        <i class="fas fa-shopping-cart"></i>
+                        <p>السلة فارغة توّة</p>
+                        <button class="btn btn-next" onclick="switchTab('products')" style="max-width: 350px; margin: 30px auto 0;">
+                            <i class="fas fa-shopping-bag"></i>
+                            ابدا تسوّق
+                        </button>
+                    </div>
+                `;
+            } else {
+                let cartHTML = '<div class="cart-items">';
+
+                let total = 0;
+                cart.forEach((item, index) => {
+                    const itemTotal = item.price * item.quantity;
+                    total += itemTotal;
+
+                    cartHTML += `
+                        <div class="cart-item">
+                            <div class="cart-item-icon">${item.icon}</div>
+                            <div class="cart-item-details">
+                                <h3 class="cart-item-title">${item.name}</h3>
+                                <p class="cart-item-price">${item.price} دينار</p>
+                            </div>
+                            <div class="cart-item-controls">
+                                <button class="qty-btn" onclick="changeQuantity(${index}, -1)">−</button>
+                                <span class="qty-display">${item.quantity}</span>
+                                <button class="qty-btn" onclick="changeQuantity(${index}, 1)">+</button>
+                                <button class="remove-btn" onclick="removeFromCart(${index})">×</button>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                cartHTML += '</div>';
+                cartHTML += `
+                    <div class="cart-total">
+                        <h3>المجموع الكلي</h3>
+                        <div class="cart-total-price">${total.toFixed(2)} دينار</div>
+                        <button class="btn btn-next" onclick="showCheckoutForm()" style="max-width: 500px; margin: 0 auto;">
+                            <i class="fas fa-check-circle"></i>
+                            أكمل الطلبية
+                        </button>
+                    </div>
+                `;
+
+                cartContent.innerHTML = cartHTML;
+            }
+        }
+
+        window.changeQuantity = function(index, change) {
+            if (cart[index]) {
+                cart[index].quantity += change;
+
+                if (cart[index].quantity <= 0) {
+                    cart.splice(index, 1);
+                }
+
+                localStorage.setItem('falla7inCart', JSON.stringify(cart));
+                displayCart();
+                updateCartBadge();
+            }
+        };
+
+        window.removeFromCart = function(index) {
+            cart.splice(index, 1);
+            localStorage.setItem('falla7inCart', JSON.stringify(cart));
+            displayCart();
+            updateCartBadge();
+        };
+
+        // Checkout Form Function
+        window.showCheckoutForm = function() {
+            const cartContent = document.getElementById('cartContent');
+            
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            
+            cartContent.innerHTML = `
+                <div style="max-width: 700px; margin: 0 auto;">
+                    <div style="text-align: center; margin-bottom: 40px;">
+                        <div style="font-size: 3em; margin-bottom: 15px;">🎉</div>
+                        <h2 style="color: var(--primary-green); font-size: 2em; margin-bottom: 10px;">كمّل معلوماتك!</h2>
+                        <p style="font-size: 1.1em; color: var(--text-light);">باش نوصّلوا الطلبية متاعك، اعطينا معلوماتك</p>
+                    </div>
+                    
+                    <div style="background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 40px var(--shadow); border: 3px solid var(--primary-green);">
+                        <div style="margin-bottom: 25px;">
+                            <label style="display: block; margin-bottom: 10px; font-weight: 700; color: var(--text-dark); font-size: 1.1em;">
+                                <i class="fas fa-user"></i> الاسم الكامل
+                            </label>
+                            <input type="text" id="checkoutName" placeholder="مثال: محمد بن علي" 
+                                style="width: 100%; padding: 18px; border: 2px solid var(--light-gray); border-radius: 12px; font-size: 1.1em; font-family: 'Tajawal', sans-serif; transition: all 0.3s ease;">
+                        </div>
+                        
+                        <div style="margin-bottom: 25px;">
+                            <label style="display: block; margin-bottom: 10px; font-weight: 700; color: var(--text-dark); font-size: 1.1em;">
+                                <i class="fas fa-phone"></i> رقم الهاتف
+                            </label>
+                            <input type="tel" id="checkoutPhone" placeholder="مثال: 20123456" 
+                                style="width: 100%; padding: 18px; border: 2px solid var(--light-gray); border-radius: 12px; font-size: 1.1em; font-family: 'Tajawal', sans-serif; transition: all 0.3s ease;">
+                        </div>
+                        
+                        <div style="margin-bottom: 25px;">
+                            <label style="display: block; margin-bottom: 10px; font-weight: 700; color: var(--text-dark); font-size: 1.1em;">
+                                <i class="fas fa-map-marker-alt"></i> المنطقة
+                            </label>
+                            <select id="checkoutRegion" 
+                                style="width: 100%; padding: 18px; border: 2px solid var(--light-gray); border-radius: 12px; font-size: 1.1em; font-family: 'Tajawal', sans-serif; transition: all 0.3s ease; background: white;">
+                                <option value="">اختار المنطقة متاعك...</option>
+                                <option value="tunis">تونس</option>
+                                <option value="ariana">أريانة</option>
+                                <option value="ben-arous">بن عروس</option>
+                                <option value="manouba">منوبة</option>
+                                <option value="nabeul">نابل</option>
+                                <option value="zaghouan">زغوان</option>
+                                <option value="bizerte">بنزرت</option>
+                                <option value="beja">باجة</option>
+                                <option value="jendouba">جندوبة</option>
+                                <option value="kef">الكاف</option>
+                                <option value="siliana">سليانة</option>
+                                <option value="kairouan">القيروان</option>
+                                <option value="kasserine">القصرين</option>
+                                <option value="sidi-bouzid">سيدي بوزيد</option>
+                                <option value="sousse">سوسة</option>
+                                <option value="monastir">المنستير</option>
+                                <option value="mahdia">المهدية</option>
+                                <option value="sfax">صفاقس</option>
+                                <option value="gafsa">قفصة</option>
+                                <option value="tozeur">توزر</option>
+                                <option value="kebili">قبلي</option>
+                                <option value="gabes">قابس</option>
+                                <option value="medenine">مدنين</option>
+                                <option value="tataouine">تطاوين</option>
+                            </select>
+                        </div>
+                        
+                        <div style="margin-bottom: 30px;">
+                            <label style="display: block; margin-bottom: 10px; font-weight: 700; color: var(--text-dark); font-size: 1.1em;">
+                                <i class="fas fa-home"></i> العنوان بالتفصيل
+                            </label>
+                            <textarea id="checkoutAddress" placeholder="مثال: نهج الحرية رقم 25، الطابق 3" 
+                                style="width: 100%; padding: 18px; border: 2px solid var(--light-gray); border-radius: 12px; font-size: 1.1em; font-family: 'Tajawal', sans-serif; min-height: 100px; transition: all 0.3s ease; resize: vertical;"></textarea>
+                        </div>
+                        
+                        <div style="background: linear-gradient(135deg, #fff9e6 0%, #fff3cc 100%); padding: 20px; border-radius: 12px; margin-bottom: 30px; border: 2px solid var(--accent-orange);">
+                            <h3 style="color: var(--text-dark); margin-bottom: 20px; font-size: 1.3em;">
+                                <i class="fas fa-shopping-cart"></i> ملخص الطلبية
+                            </h3>
+                            <div style="margin-bottom: 20px;">
+                                ${cart.map(item => `
+                                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: white; border-radius: 8px; margin-bottom: 10px; border: 1px solid #e0e0e0;">
+                                        <div style="display: flex; align-items: center; gap: 12px; flex: 1;">
+                                            <span style="font-size: 1.5em;">${item.icon}</span>
+                                            <div>
+                                                <div style="font-weight: 700; color: var(--text-dark); font-size: 1.05em;">${item.name}</div>
+                                                <div style="color: var(--text-light); font-size: 0.9em;">الكمية: ${item.quantity}</div>
+                                            </div>
+                                        </div>
+                                        <div style="text-align: left; font-weight: 700; color: var(--primary-green); font-size: 1.1em;">
+                                            ${(item.price * item.quantity).toFixed(2)} د.ت
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <div style="color: var(--text-dark); font-size: 1.1em; line-height: 1.8;">
+                                <div style="display: flex; justify-content: space-between; padding-top: 15px; border-top: 2px solid var(--accent-orange); margin-top: 10px;">
+                                    <span style="font-weight: 700; font-size: 1.2em;">المجموع الكلي:</span>
+                                    <span style="font-weight: 700; font-size: 1.3em; color: var(--primary-green);">${total.toFixed(2)} دينار</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div style="background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); padding: 18px; border-radius: 12px; margin-bottom: 30px; border: 2px solid var(--primary-green);">
+                            <p style="margin: 0; font-size: 1em; color: var(--text-dark); text-align: center;">
+                                <i class="fas fa-lock" style="color: var(--primary-green);"></i>
+                                معلوماتك آمنة ومحمية - نستخدموها برك للتوصيل
+                            </p>
+                        </div>
+                        
+                        <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                            <button onclick="displayCart()" style="flex: 1; min-width: 200px; padding: 18px 30px; background: white; color: var(--primary-green); border: 3px solid var(--primary-green); border-radius: 15px; font-size: 1.2em; font-weight: 700; cursor: pointer; transition: all 0.3s ease; font-family: 'Tajawal', sans-serif;">
+                                <i class="fas fa-arrow-right"></i>
+                                رجوع للسلة
+                            </button>
+                            <button onclick="submitOrder()" style="flex: 2; min-width: 200px; padding: 18px 30px; background: linear-gradient(135deg, var(--primary-green) 0%, #1e6b45 100%); color: white; border: none; border-radius: 15px; font-size: 1.2em; font-weight: 700; cursor: pointer; transition: all 0.3s ease; font-family: 'Tajawal', sans-serif; box-shadow: 0 5px 20px rgba(45, 134, 89, 0.3);">
+                                <i class="fas fa-check-circle"></i>
+                                تأكيد الطلبية
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Add focus effects
+            ['checkoutName', 'checkoutPhone', 'checkoutRegion', 'checkoutAddress'].forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.addEventListener('focus', function() {
+                        this.style.borderColor = 'var(--primary-green)';
+                        this.style.boxShadow = '0 0 0 4px rgba(45, 134, 89, 0.1)';
+                    });
+                    element.addEventListener('blur', function() {
+                        this.style.borderColor = 'var(--light-gray)';
+                        this.style.boxShadow = 'none';
+                    });
+                }
+            });
+        };
+
+        // Submit Order Function with Firebase
+        window.submitOrder = function() {
+            const name = document.getElementById('checkoutName').value.trim();
+            const phone = document.getElementById('checkoutPhone').value.trim();
+            const region = document.getElementById('checkoutRegion').value;
+            const address = document.getElementById('checkoutAddress').value.trim();
+            
+            // Validation
+            if (name === '' || name.length < 3) {
+                alert('الرجاء إدخال الاسم الكامل (3 أحرف على الأقل)');
+                return;
+            }
+            
+            if (phone === '' || phone.length < 8) {
+                alert('الرجاء إدخال رقم هاتف صحيح (8 أرقام على الأقل)');
+                return;
+            }
+            
+            if (region === '') {
+                alert('الرجاء اختيار المنطقة');
+                return;
+            }
+            
+            if (address === '' || address.length < 10) {
+                alert('الرجاء إدخال العنوان بالتفصيل (10 أحرف على الأقل)');
+                return;
+            }
+            
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            
+            // Save to Firebase if configured
+            if (isFirebaseConfigured) {
+                const currentUser = auth.currentUser;
+                const orderData = {
+                    customerName: name,
+                    customerPhone: phone,
+                    customerRegion: region,
+                    customerAddress: address,
+                    items: cart,
+                    total: total,
+                    status: 'pending',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    userId: currentUser ? currentUser.uid : null,
+                    userEmail: currentUser ? currentUser.email : null
+                };
+                
+                db.collection('orders').add(orderData)
+                    .then((docRef) => {
+                        console.log('✅ Order saved to Firebase with ID:', docRef.id);
+                        showOrderSuccess(name, total, phone, address, region);
+                    })
+                    .catch((error) => {
+                        console.error('Error saving order:', error);
+                        alert('حدث خطأ في حفظ الطلبية. الرجاء المحاولة مرة أخرى.');
+                    });
+            } else {
+                // Demo mode
+                console.log('📦 Order (Demo Mode):', { name, phone, region, address, cart, total });
+                showOrderSuccess(name, total, phone, address, region);
+            }
+        };
+        
+        function showOrderSuccess(name, total, phone, address, region) {
+            const cartContent = document.getElementById('cartContent');
+            
+            cartContent.innerHTML = `
+                <div style="text-align: center; padding: 60px 20px;">
+                    <div style="font-size: 5em; margin-bottom: 30px; animation: bounce 1s ease;">🎉</div>
+                    <h2 style="color: var(--primary-green); font-size: 2.5em; margin-bottom: 20px;">تمّت الطلبية بنجاح!</h2>
+                    <p style="font-size: 1.3em; color: var(--text-dark); margin-bottom: 15px;">شكراً <strong>${name}</strong>!</p>
+                    <p style="font-size: 1.2em; color: var(--text-light); margin-bottom: 30px;">
+                        طلبيتك متاع <strong>${total.toFixed(2)} دينار</strong> قاعدة تتحضّر.<br>
+                        باش نتصلوا بيك على <strong>${phone}</strong> قريباً للتأكيد.
+                    </p>
+                    <div style="background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); padding: 25px; border-radius: 15px; margin: 30px auto; max-width: 500px; border: 3px solid var(--primary-green);">
+                        <p style="margin: 0; font-size: 1.1em; color: var(--text-dark);">
+                            <i class="fas fa-truck"></i> التوصيل باش يكون لـ: <br>
+                            <strong>${address}, ${region}</strong>
+                        </p>
+                    </div>
+                    ${isFirebaseConfigured ? '<p style="color: var(--primary-green); font-weight: 700;"><i class="fas fa-database"></i> تمّ حفظ الطلبية في قاعدة البيانات</p>' : ''}
+                    <button onclick="location.reload()" style="padding: 18px 50px; background: linear-gradient(135deg, var(--primary-green) 0%, #1e6b45 100%); color: white; border: none; border-radius: 15px; font-size: 1.2em; font-weight: 700; cursor: pointer; margin-top: 30px; font-family: 'Tajawal', sans-serif; box-shadow: 0 5px 20px rgba(45, 134, 89, 0.3);">
+                        <i class="fas fa-home"></i>
+                        رجوع للصفحة الرئيسية
+                    </button>
+                </div>
+            `;
+            
+            // Clear cart
+            cart = [];
+            localStorage.setItem('falla7inCart', JSON.stringify(cart));
+            updateCartBadge();
+        }
+
+        // Product Search
+        const searchInput = document.getElementById('productSearch');
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                const productCards = document.querySelectorAll('.product-card');
+
+                productCards.forEach(card => {
+                    const title = card.querySelector('.product-title').textContent.toLowerCase();
+                    const description = card.querySelector('.product-description').textContent.toLowerCase();
+
+                    if (title.includes(searchTerm) || description.includes(searchTerm)) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            });
+        }
+
+        // Product Filter
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        filterButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                filterButtons.forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+
+                const filter = this.dataset.filter;
+                const productCards = document.querySelectorAll('.product-card');
+
+                productCards.forEach(card => {
+                    if (filter === 'all' || card.dataset.category === filter) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            });
+        });
+
+        // Initialize cart badge on page load
+        updateCartBadge();
+    </script>
+    <!-- Login Modal -->
+    <div id="loginModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 9999; backdrop-filter: blur(5px);">
+        <div style="display: flex; justify-content: center; align-items: center; height: 100%; padding: 20px;">
+            <div style="background: white; padding: 40px; border-radius: 25px; max-width: 450px; width: 100%; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); position: relative; animation: slideDown 0.3s ease;">
+                <button onclick="closeLoginModal()" style="position: absolute; top: 15px; left: 15px; background: none; border: none; font-size: 1.8em; color: var(--text-light); cursor: pointer; transition: all 0.3s ease; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                    ×
+                </button>
+                
+                <div style="text-align: center; margin-bottom: 35px;">
+                    <div style="font-size: 3em; margin-bottom: 15px;">👋</div>
+                    <h2 style="color: var(--primary-green); font-size: 2em; margin-bottom: 10px;">مرحباً بيك مرّة أخرى!</h2>
+                    <p style="color: var(--text-light); font-size: 1.05em;">ادخل باش تكمّل</p>
+                </div>
+
+                <form onsubmit="handleLogin(event)">
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 700; color: var(--text-dark);">
+                            <i class="fas fa-envelope"></i> البريد الإلكتروني
+                        </label>
+                        <input type="email" id="loginEmail" required placeholder="example@email.com" 
+                            style="width: 100%; padding: 15px; border: 2px solid var(--light-gray); border-radius: 12px; font-size: 1.05em; font-family: 'Tajawal', sans-serif; transition: all 0.3s ease;">
+                    </div>
+                    
+                    <div style="margin-bottom: 25px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 700; color: var(--text-dark);">
+                            <i class="fas fa-lock"></i> كلمة السر
+                        </label>
+                        <input type="password" id="loginPassword" required placeholder="••••••••" 
+                            style="width: 100%; padding: 15px; border: 2px solid var(--light-gray); border-radius: 12px; font-size: 1.05em; font-family: 'Tajawal', sans-serif; transition: all 0.3s ease;">
+                    </div>
+
+                    <button type="submit" style="width: 100%; padding: 16px; background: linear-gradient(135deg, var(--primary-green) 0%, #1e6b45 100%); color: white; border: none; border-radius: 12px; font-size: 1.2em; font-weight: 700; cursor: pointer; margin-bottom: 20px; font-family: 'Tajawal', sans-serif; box-shadow: 0 5px 15px rgba(45, 134, 89, 0.3); transition: all 0.3s ease;">
+                        <i class="fas fa-sign-in-alt"></i>
+                        دخول
+                    </button>
+                </form>
+
+                <div style="text-align: center; margin: 25px 0; color: var(--text-light); font-size: 0.95em; position: relative;">
+                    <span style="background: white; padding: 0 15px; position: relative; z-index: 1;">أو ادخل بواسطة</span>
+                    <div style="position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: var(--light-gray); z-index: 0;"></div>
+                </div>
+
+                <div style="display: flex; gap: 12px; margin-bottom: 25px;">
+                    <button onclick="loginWithGoogle()" style="flex: 1; padding: 14px; background: white; border: 2px solid #db4437; color: #db4437; border-radius: 10px; font-size: 1.05em; font-weight: 700; cursor: pointer; font-family: 'Tajawal', sans-serif; transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <i class="fab fa-google"></i>
+                        Google
+                    </button>
+                    <button onclick="loginWithFacebook()" style="flex: 1; padding: 14px; background: white; border: 2px solid #1877f2; color: #1877f2; border-radius: 10px; font-size: 1.05em; font-weight: 700; cursor: pointer; font-family: 'Tajawal', sans-serif; transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <i class="fab fa-facebook-f"></i>
+                        Facebook
+                    </button>
+                </div>
+
+                <div style="text-align: center; color: var(--text-light); font-size: 0.95em;">
+                    ما عندكش حساب؟ 
+                    <a href="#" onclick="closeLoginModal(); showSignupModal(); return false;" style="color: var(--primary-green); font-weight: 700; text-decoration: none;">سجل توّة</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Signup Modal -->
+    <div id="signupModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 9999; backdrop-filter: blur(5px);">
+        <div style="display: flex; justify-content: center; align-items: center; height: 100%; padding: 20px; overflow-y: auto;">
+            <div style="background: white; padding: 40px; border-radius: 25px; max-width: 450px; width: 100%; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); position: relative; animation: slideDown 0.3s ease; margin: 20px 0;">
+                <button onclick="closeSignupModal()" style="position: absolute; top: 15px; left: 15px; background: none; border: none; font-size: 1.8em; color: var(--text-light); cursor: pointer; transition: all 0.3s ease; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                    ×
+                </button>
+                
+                <div style="text-align: center; margin-bottom: 35px;">
+                    <div style="font-size: 3em; margin-bottom: 15px;">🌾</div>
+                    <h2 style="color: var(--primary-green); font-size: 2em; margin-bottom: 10px;">انضم لفلاحين!</h2>
+                    <p style="color: var(--text-light); font-size: 1.05em;">سجل توّة وابدا رحلتك</p>
+                </div>
+
+                <form onsubmit="handleSignup(event)">
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 700; color: var(--text-dark);">
+                            <i class="fas fa-user"></i> الاسم الكامل
+                        </label>
+                        <input type="text" id="signupName" required placeholder="محمد بن علي" 
+                            style="width: 100%; padding: 15px; border: 2px solid var(--light-gray); border-radius: 12px; font-size: 1.05em; font-family: 'Tajawal', sans-serif; transition: all 0.3s ease;">
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 700; color: var(--text-dark);">
+                            <i class="fas fa-envelope"></i> البريد الإلكتروني
+                        </label>
+                        <input type="email" id="signupEmail" required placeholder="example@email.com" 
+                            style="width: 100%; padding: 15px; border: 2px solid var(--light-gray); border-radius: 12px; font-size: 1.05em; font-family: 'Tajawal', sans-serif; transition: all 0.3s ease;">
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 700; color: var(--text-dark);">
+                            <i class="fas fa-phone"></i> رقم الهاتف
+                        </label>
+                        <input type="tel" id="signupPhone" required placeholder="20123456" 
+                            style="width: 100%; padding: 15px; border: 2px solid var(--light-gray); border-radius: 12px; font-size: 1.05em; font-family: 'Tajawal', sans-serif; transition: all 0.3s ease;">
+                    </div>
+                    
+                    <div style="margin-bottom: 25px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 700; color: var(--text-dark);">
+                            <i class="fas fa-lock"></i> كلمة السر
+                        </label>
+                        <input type="password" id="signupPassword" required placeholder="••••••••" 
+                            style="width: 100%; padding: 15px; border: 2px solid var(--light-gray); border-radius: 12px; font-size: 1.05em; font-family: 'Tajawal', sans-serif; transition: all 0.3s ease;">
+                    </div>
+
+                    <button type="submit" style="width: 100%; padding: 16px; background: linear-gradient(135deg, var(--primary-green) 0%, #1e6b45 100%); color: white; border: none; border-radius: 12px; font-size: 1.2em; font-weight: 700; cursor: pointer; margin-bottom: 20px; font-family: 'Tajawal', sans-serif; box-shadow: 0 5px 15px rgba(45, 134, 89, 0.3); transition: all 0.3s ease;">
+                        <i class="fas fa-user-plus"></i>
+                        سجل توّة
+                    </button>
+                </form>
+
+                <div style="text-align: center; margin: 25px 0; color: var(--text-light); font-size: 0.95em; position: relative;">
+                    <span style="background: white; padding: 0 15px; position: relative; z-index: 1;">أو سجل بواسطة</span>
+                    <div style="position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: var(--light-gray); z-index: 0;"></div>
+                </div>
+
+                <div style="display: flex; gap: 12px; margin-bottom: 25px;">
+                    <button onclick="signupWithGoogle()" style="flex: 1; padding: 14px; background: white; border: 2px solid #db4437; color: #db4437; border-radius: 10px; font-size: 1.05em; font-weight: 700; cursor: pointer; font-family: 'Tajawal', sans-serif; transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <i class="fab fa-google"></i>
+                        Google
+                    </button>
+                    <button onclick="signupWithFacebook()" style="flex: 1; padding: 14px; background: white; border: 2px solid #1877f2; color: #1877f2; border-radius: 10px; font-size: 1.05em; font-weight: 700; cursor: pointer; font-family: 'Tajawal', sans-serif; transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <i class="fab fa-facebook-f"></i>
+                        Facebook
+                    </button>
+                </div>
+
+                <div style="text-align: center; color: var(--text-light); font-size: 0.95em;">
+                    عندك حساب؟ 
+                    <a href="#" onclick="closeSignupModal(); showLoginModal(); return false;" style="color: var(--primary-green); font-weight: 700; text-decoration: none;">ادخل</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        #loginModal input:focus, #signupModal input:focus {
+            border-color: var(--primary-green) !important;
+            box-shadow: 0 0 0 4px rgba(45, 134, 89, 0.1) !important;
+            outline: none;
+        }
+
+        #loginModal button[type="submit"]:hover, #signupModal button[type="submit"]:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(45, 134, 89, 0.4);
+        }
+
+        #loginModal button:not([type="submit"]):hover, #signupModal button:not([type="submit"]):hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        #loginModal button:first-of-type:hover, #signupModal button:first-of-type:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+    </style>
+
+    <script>
+        // Modal Functions
+        function showLoginModal() {
+            document.getElementById('loginModal').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeLoginModal() {
+            document.getElementById('loginModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        function showSignupModal() {
+            document.getElementById('signupModal').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeSignupModal() {
+            document.getElementById('signupModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        // Close modals when clicking outside
+        document.addEventListener('click', function(event) {
+            const loginModal = document.getElementById('loginModal');
+            const signupModal = document.getElementById('signupModal');
+            
+            if (event.target === loginModal) {
+                closeLoginModal();
+            }
+            if (event.target === signupModal) {
+                closeSignupModal();
+            }
+        });
+
+        // Login Handler with Firebase
+        function handleLogin(event) {
+            event.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            if (isFirebaseConfigured) {
+                // Real Firebase login
+                auth.signInWithEmailAndPassword(email, password)
+                    .then((userCredential) => {
+                        const user = userCredential.user;
+                        showSuccessNotification(`مرحباً ${user.email}! تمّ الدخول بنجاح`);
+                        closeLoginModal();
+                    })
+                    .catch((error) => {
+                        alert('خطأ في الدخول: ' + error.message);
+                    });
+            } else {
+                // Demo mode
+                alert('تمّ الدخول بنجاح! (Demo Mode)\nالبريد: ' + email);
+                simulateSuccessfulLogin(email.split('@')[0], 'email');
+                closeLoginModal();
+            }
+        }
+
+        // Signup Handler with Firebase
+        function handleSignup(event) {
+            event.preventDefault();
+            const name = document.getElementById('signupName').value;
+            const email = document.getElementById('signupEmail').value;
+            const phone = document.getElementById('signupPhone').value;
+            const password = document.getElementById('signupPassword').value;
+            
+            if (isFirebaseConfigured) {
+                // Real Firebase signup
+                auth.createUserWithEmailAndPassword(email, password)
+                    .then((userCredential) => {
+                        const user = userCredential.user;
+                        
+                        // Update profile
+                        return user.updateProfile({
+                            displayName: name
+                        }).then(() => {
+                            // Save additional info to Firestore
+                            return db.collection('users').doc(user.uid).set({
+                                name: name,
+                                email: email,
+                                phone: phone,
+                                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                            });
+                        });
+                    })
+                    .then(() => {
+                        showSuccessNotification(`مرحباً ${name}! تمّ التسجيل بنجاح`);
+                        closeSignupModal();
+                    })
+                    .catch((error) => {
+                        alert('خطأ في التسجيل: ' + error.message);
+                    });
+            } else {
+                // Demo mode
+                alert('تمّ التسجيل بنجاح! (Demo Mode)\nمرحباً ' + name);
+                simulateSuccessfulLogin(name, 'email');
+                closeSignupModal();
+            }
+        }
+
+        // Social Login Functions with Firebase
+        function loginWithGoogle() {
+            if (isFirebaseConfigured) {
+                const provider = new firebase.auth.GoogleAuthProvider();
+                provider.setCustomParameters({
+                    prompt: 'select_account'
+                });
+                
+                auth.signInWithPopup(provider)
+                    .then((result) => {
+                        const user = result.user;
+                        showSuccessNotification(`مرحباً ${user.displayName}! تمّ الدخول بواسطة Google`);
+                        closeLoginModal();
+                        closeSignupModal();
+                        
+                        // Save user info to Firestore if new
+                        db.collection('users').doc(user.uid).set({
+                            name: user.displayName,
+                            email: user.email,
+                            photoURL: user.photoURL,
+                            provider: 'google',
+                            lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+                        }, { merge: true });
+                    })
+                    .catch((error) => {
+                        console.error('Google login error:', error);
+                        alert('خطأ في الدخول بواسطة Google: ' + error.message);
+                    });
+            } else {
+                simulateSuccessfulLogin('مستخدم Google', 'google');
+            }
+        }
+
+        function loginWithFacebook() {
+            if (isFirebaseConfigured) {
+                const provider = new firebase.auth.FacebookAuthProvider();
+                
+                auth.signInWithPopup(provider)
+                    .then((result) => {
+                        const user = result.user;
+                        showSuccessNotification(`مرحباً ${user.displayName}! تمّ الدخول بواسطة Facebook`);
+                        closeLoginModal();
+                        closeSignupModal();
+                        
+                        // Save user info to Firestore if new
+                        db.collection('users').doc(user.uid).set({
+                            name: user.displayName,
+                            email: user.email,
+                            photoURL: user.photoURL,
+                            provider: 'facebook',
+                            lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+                        }, { merge: true });
+                    })
+                    .catch((error) => {
+                        console.error('Facebook login error:', error);
+                        alert('خطأ في الدخول بواسطة Facebook: ' + error.message);
+                    });
+            } else {
+                simulateSuccessfulLogin('مستخدم Facebook', 'facebook');
+            }
+        }
+
+        function signupWithGoogle() {
+            loginWithGoogle();
+        }
+
+        function signupWithFacebook() {
+            loginWithFacebook();
+        }
+
+        function showSuccessNotification(message) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: linear-gradient(135deg, var(--primary-green) 0%, #1e6b45 100%);
+                color: white;
+                padding: 20px 40px;
+                border-radius: 15px;
+                font-size: 1.2em;
+                font-weight: 700;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+                z-index: 10000;
+                animation: slideDown 0.5s ease;
+                text-align: center;
+            `;
+            notification.innerHTML = `
+                <i class="fas fa-check-circle" style="margin-left: 10px;"></i>
+                ${message}
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        function simulateSuccessfulLogin(userName, provider) {
+            const providerNames = {
+                'google': 'Google',
+                'facebook': 'Facebook'
+            };
+            
+            // Save to localStorage
+            localStorage.setItem('falla7inUser', JSON.stringify({
+                name: userName,
+                provider: provider,
+                loggedIn: true
+            }));
+            
+            // Show success message
+            closeLoginModal();
+            closeSignupModal();
+            
+            // Create success notification
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: linear-gradient(135deg, var(--primary-green) 0%, #1e6b45 100%);
+                color: white;
+                padding: 20px 40px;
+                border-radius: 15px;
+                font-size: 1.2em;
+                font-weight: 700;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+                z-index: 10000;
+                animation: slideDown 0.5s ease;
+                text-align: center;
+            `;
+            notification.innerHTML = `
+                <i class="fas fa-check-circle" style="margin-left: 10px;"></i>
+                مرحباً ${userName}! تمّ الدخول بواسطة ${providerNames[provider]}
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Update header buttons
+            updateHeaderForLoggedInUser(userName);
+            
+            // Remove notification after 3 seconds
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        function updateHeaderForLoggedInUser(userName, photoURL) {
+            const headerActions = document.querySelector('.header-actions');
+            if (headerActions) {
+                const userImage = photoURL 
+                    ? `<img src="${photoURL}" style="width: 35px; height: 35px; border-radius: 50%; margin-left: 10px;" alt="User">` 
+                    : '<i class="fas fa-user-circle" style="font-size: 1.5em; margin-left: 10px;"></i>';
+                
+                headerActions.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <span style="color: var(--primary-green); font-weight: 700; display: flex; align-items: center;">
+                            ${userImage}
+                            <span style="margin-right: 8px;">${userName}</span>
+                        </span>
+                        <button onclick="logout()" class="header-btn" style="background: #dc3545; border: none; color: white;">
+                            <i class="fas fa-sign-out-alt"></i>
+                            خروج
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        function logout() {
+            if (isFirebaseConfigured) {
+                auth.signOut().then(() => {
+                    showSuccessNotification('تمّ الخروج بنجاح');
+                    setTimeout(() => location.reload(), 1000);
+                }).catch((error) => {
+                    console.error('Logout error:', error);
+                });
+            } else {
+                localStorage.removeItem('falla7inUser');
+                location.reload();
+            }
+        }
+
+        // Check if user is already logged in on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            if (isFirebaseConfigured) {
+                // Listen to auth state changes
+                auth.onAuthStateChanged((user) => {
+                    if (user) {
+                        // User is signed in
+                        const displayName = user.displayName || user.email.split('@')[0];
+                        updateHeaderForLoggedInUser(displayName, user.photoURL);
+                        console.log('User logged in:', user.email);
+                    } else {
+                        // User is signed out
+                        console.log('No user logged in');
+                    }
+                });
+            } else {
+                // Demo mode - check localStorage
+                const user = JSON.parse(localStorage.getItem('falla7inUser'));
+                if (user && user.loggedIn) {
+                    updateHeaderForLoggedInUser(user.name);
+                }
+            }
+        });
+    </script>
+
+    <!-- 🔥 DYNAMIC FIRESTORE LOADER 🔥 -->
+    <script>
+        // This script makes products and questions dynamic from Firestore
+        console.log('🔥 Loading dynamic content from Firestore...');
+
+        // Wait for Firebase to be ready
+        window.addEventListener('load', function() {
+            if (typeof db !== 'undefined' && db) {
+                loadDynamicQuestions();
+                loadDynamicProducts();
+                console.log('✅ Dynamic loader initialized!');
+            } else {
+                console.log('⚠️ Firebase not ready, dynamic content disabled');
+            }
+        });
+
+        // Load Questions Dynamically
+        function loadDynamicQuestions() {
+            console.log('📋 Loading questions from Firestore...');
+            
+            db.collection('questions').orderBy('order').get()
+                .then(function(snapshot) {
+                    if (snapshot.empty) {
+                        console.log('⚠️ No questions found in Firestore - keeping hardcoded questions');
+                        return;
+                    }
+
+                    console.log('✅ Found ' + snapshot.size + ' questions in Firestore');
+                    console.log('💡 Keeping hardcoded questions for full functionality');
+                    console.log('🔗 Dynamic questions available at: /consultation.html');
+                    
+                    // Note: The main site uses complex hardcoded question logic
+                    // For dynamic questions with admin control, use /consultation.html
+                    // This keeps the main site stable while allowing flexibility
+                })
+                .catch(function(error) {
+                    console.error('❌ Error loading questions:', error);
+                });
+        }
+
+        function updateProgressBar(current, total) {
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            
+            if (progressFill && progressText) {
+                const percentage = (current / total) * 100;
+                progressFill.style.width = percentage + '%';
+                progressText.textContent = 'سؤال ' + current + ' من ' + total;
+            }
+        }
+
+        // Load Products Dynamically
+        function loadDynamicProducts() {
+            console.log('📦 Loading products from Firestore...');
+            
+            db.collection('products').get()
+                .then(function(snapshot) {
+                    if (snapshot.empty) {
+                        console.log('⚠️ No products found in Firestore');
+                        return;
+                    }
+
+                    const productGrid = document.querySelector('.product-grid');
+                    if (!productGrid) {
+                        console.log('❌ Product grid not found');
+                        return;
+                    }
+
+                    // Clear existing products
+                    productGrid.innerHTML = '';
+
+                    const categoryNames = {
+                        'fertilizers': 'أسمدة',
+                        'pesticides': 'مبيدات',
+                        'seeds': 'بذور',
+                        'tools': 'معدات',
+                        'equipment': 'معدات'
+                    };
+
+                    snapshot.forEach(function(doc) {
+                        const product = doc.data();
+
+                        // Create product card
+                        const productCard = document.createElement('div');
+                        productCard.className = 'product-card';
+                        productCard.setAttribute('data-category', product.category || 'all');
+
+                        let html = '';
+
+                        // Product image or icon
+                        if (product.imageUrl) {
+                            html += '<img src="' + product.imageUrl + '" class="product-image" alt="' + product.name + '" style="width: 100%; height: 200px; object-fit: cover; border-radius: 10px; margin-bottom: 15px;">';
+                        } else if (product.icon) {
+                            html += '<div class="product-image">' + product.icon + '</div>';
+                        }
+
+                        html += '<div class="product-content">' +
+                            '<h3 class="product-title">' + product.name + '</h3>' +
+                            '<div class="product-rating">' +
+                            '<span class="stars">⭐⭐⭐⭐⭐</span>' +
+                            '<span class="rating-count">(جديد)</span>' +
+                            '</div>' +
+                            '<p class="product-description">' + product.description + '</p>' +
+                            '<div class="product-footer">' +
+                            '<span class="product-price">' + product.price.toFixed(2) + ' دينار</span>' +
+                            '<button class="add-to-cart" data-product-name="' + product.name + '" data-product-price="' + product.price + '" data-product-icon="' + (product.icon || '📦') + '">' +
+                            '<i class="fas fa-cart-plus"></i> زيد للسلة' +
+                            '</button>' +
+                            '</div>' +
+                            '</div>';
+
+                        productCard.innerHTML = html;
+                        productGrid.appendChild(productCard);
+
+                        // Note: Click handler is already set up globally via event delegation
+                        // No need to add individual listeners here
+                    });
+
+                    console.log('✅ Loaded ' + snapshot.size + ' products from Firestore!');
+                })
+                .catch(function(error) {
+                    console.error('❌ Error loading products:', error);
+                });
+        }
+    </script>
+
+</body>
+</html>
+
