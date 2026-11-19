@@ -1,0 +1,1657 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>صدى SADA — سماعات، بافل و إكسسوارات في تونس</title>
+<meta name="description" content="صدى SADA.tn : سماعات AirPods و Galaxy Buds، كاسكات، بافل JBL و Marshall، شواحن و إكسسوارات أصلية بأفضل سعر في تونس. توصيل 24/48 ساعة و الدفع عند الاستلام.">
+<meta name="theme-color" content="#0B0F19">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%233B82F6'/%3E%3Cstop offset='1' stop-color='%238B5CF6'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='3' y='3' width='34' height='34' rx='11' fill='%230B0F19' stroke='url(%23g)' stroke-width='2.6'/%3E%3Cpath d='M12 20v0M16 15v10M20 11v18M24 15v10M28 20v0' stroke='url(%23g)' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/js/all.min.js"></script>
+
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: { ink: { DEFAULT: '#0B0F19', 900: '#070A12', 800: '#0E1322', 700: '#141A2C' } },
+        fontFamily: {
+          sans: ['Cairo', 'system-ui', 'sans-serif'],
+          mono: ['"JetBrains Mono"', 'Cairo', 'ui-monospace', 'monospace']
+        },
+        boxShadow: {
+          glow: '0 0 0 1px rgba(59,130,246,.35), 0 12px 40px -12px rgba(59,130,246,.65)',
+          violet: '0 0 0 1px rgba(139,92,246,.35), 0 12px 40px -12px rgba(139,92,246,.7)'
+        }
+      }
+    }
+  };
+</script>
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+
+<style>
+  /* Layout concept: dark "studio" page, electric-blue & violet light like an equalizer, right-to-left Arabic reading order. */
+  :root { color-scheme: dark; }
+  html { scroll-behavior: smooth; }
+  html, body { background: #0B0F19; }
+  body { font-family: Cairo, system-ui, sans-serif; color: #CBD5E1; -webkit-font-smoothing: antialiased; overflow-x: hidden; padding-bottom: 5rem; }
+  @media (min-width: 1024px) { body { padding-bottom: 0; } }
+  body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 45; background: #0B0F19; }
+  ::selection { background: rgba(59,130,246,.35); color: #fff; }
+  /* Arabic is a joined script: never letter-space it */
+  [class*="tracking-"]:not(.keep-track) { letter-spacing: 0 !important; }
+
+  .bg-glow { position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background:
+      radial-gradient(620px 420px at 92% -6%, rgba(59,130,246,.20), transparent 60%),
+      radial-gradient(720px 520px at 4% 8%, rgba(139,92,246,.17), transparent 60%),
+      radial-gradient(900px 600px at 50% 115%, rgba(37,99,235,.10), transparent 60%); }
+  .grid-bg { background-image: linear-gradient(rgba(148,163,184,.07) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,.07) 1px, transparent 1px); background-size: 28px 28px; }
+  .glass { background: linear-gradient(180deg, rgba(30,41,59,.50), rgba(15,23,42,.40)); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); }
+  .card-media { background: radial-gradient(ellipse at center, rgba(59,130,246,.12), transparent 70%); }
+  .text-gradient { background: linear-gradient(270deg, #60A5FA, #A78BFA 55%, #F472B6); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .mask-fade { -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); }
+
+  /* Marquees run toward the reading direction (RTL) */
+  .ticker { display: flex; width: max-content; animation: ticker 45s linear infinite; }
+  .ticker.reverse { animation-direction: reverse; animation-duration: 60s; }
+  .ticker:hover { animation-play-state: paused; }
+  @keyframes ticker { from { transform: translateX(0); } to { transform: translateX(50%); } }
+
+  /* SVG art: sound waves pulse (always in .live, on hover in cards) */
+  .wave { opacity: .35; }
+  .live .wave, .group:hover .wave { animation: wave 1.6s ease-out infinite; }
+  @keyframes wave { 0% { opacity: 0; } 30% { opacity: .95; } 100% { opacity: 0; } }
+  .ring-pulse { transform-box: fill-box; transform-origin: center; }
+  .live .ring-pulse, .group:hover .ring-pulse { animation: ringPulse 1.2s ease-in-out infinite; }
+  @keyframes ringPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+  .art-float { animation: float 6s ease-in-out infinite; }
+  @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+  .hero-art svg { filter: drop-shadow(0 30px 60px rgba(59,130,246,.35)); }
+
+  .glow-pulse { animation: glowPulse 2.6s ease-in-out infinite; }
+  @keyframes glowPulse { 0%,100% { box-shadow: 0 0 0 1px rgba(139,92,246,.35), 0 0 18px -4px rgba(139,92,246,.45); } 50% { box-shadow: 0 0 0 1px rgba(139,92,246,.6), 0 0 30px -2px rgba(139,92,246,.75); } }
+
+  .badge { position: absolute; top: -6px; inset-inline-end: -6px; min-width: 19px; height: 19px; padding: 0 5px; border-radius: 999px; display: grid; place-items: center;
+    font-size: 10px; font-weight: 800; color: #fff; background: linear-gradient(135deg, #8B5CF6, #EC4899); box-shadow: 0 0 0 2px #0B0F19; line-height: 1; font-family: "JetBrains Mono", monospace; }
+  .badge.is-empty { display: none; }
+  .bump { animation: bump .45s cubic-bezier(.3,1.6,.5,1); }
+  @keyframes bump { 0% { transform: scale(1); } 40% { transform: scale(1.45); } 100% { transform: scale(1); } }
+
+  .eyebrow { display: inline-flex; align-items: center; gap: .5rem; font-size: 13px; font-weight: 800; color: #93C5FD; }
+  .eyebrow::before { content: ""; width: 18px; height: 2px; border-radius: 2px; background: linear-gradient(270deg, #3B82F6, #8B5CF6); }
+  .chip-btn { display: inline-flex; align-items: center; gap: .4rem; border-radius: 999px; border: 1px solid rgba(71,85,105,.7); background: rgba(30,41,59,.6); padding: .38rem .8rem; font-size: 12.5px; font-weight: 600; color: #E2E8F0; transition: .2s; }
+  .chip-btn:hover { border-color: rgba(59,130,246,.65); color: #fff; background: rgba(37,99,235,.15); }
+  .dd-title { font-size: 12px; font-weight: 800; color: #64748B; }
+  .sr-item.sr-active, .sr-item:hover { background: rgba(51,65,85,.55); }
+  .field { width: 100%; height: 46px; border-radius: 12px; border: 1px solid rgba(51,65,85,.9); background: rgba(15,23,42,.8); padding: 0 14px; font-size: 14px; color: #F1F5F9; outline: none; transition: .2s; font-family: inherit; }
+  textarea.field { height: auto; padding: 10px 14px; }
+  .field:focus { border-color: rgba(59,130,246,.75); box-shadow: 0 0 0 4px rgba(59,130,246,.12); }
+  .field.is-invalid { border-color: rgba(244,63,94,.8); box-shadow: 0 0 0 4px rgba(244,63,94,.12); }
+  .field-label { display: block; font-size: 13px; font-weight: 700; color: #CBD5E1; margin-bottom: 6px; }
+  select.field { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%2394a3b8' stroke-width='2' viewBox='0 0 24 24'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: left 12px center; padding-left: 36px; }
+  .opt-radio { display: flex; gap: 12px; align-items: flex-start; border: 1px solid rgba(51,65,85,.9); border-radius: 14px; padding: 12px 14px; cursor: pointer; transition: .2s; background: rgba(15,23,42,.6); }
+  .opt-radio:hover { border-color: rgba(100,116,139,.9); }
+  .opt-radio:has(input:checked) { border-color: rgba(59,130,246,.85); background: rgba(37,99,235,.10); box-shadow: 0 0 0 1px rgba(59,130,246,.35); }
+  .opt-radio input { accent-color: #3B82F6; margin-top: 5px; }
+  .bn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 11px; font-weight: 700; color: #94A3B8; position: relative; }
+  .bn:hover, .bn:focus-visible { color: #fff; }
+  .nav-btn { display: inline-flex; align-items: center; gap: .4rem; height: 36px; padding: 0 .55rem; border-radius: 10px; font-size: 13.5px; font-weight: 700; color: #CBD5E1; transition: .2s; white-space: nowrap; }
+  @media (min-width: 1280px) { .nav-btn { padding: 0 .8rem; } }
+  .nav-btn:hover, .nav-btn.is-active { color: #fff; background: rgba(51,65,85,.5); }
+  .tab-btn { white-space: nowrap; border-radius: 11px; padding: .5rem .7rem; font-size: 13px; font-weight: 700; color: #94A3B8; transition: .25s; }
+  @media (min-width: 640px) { .tab-btn { padding: .55rem 1rem; font-size: 14px; border-radius: 12px; } }
+  .tab-btn:hover { color: #fff; }
+  .tab-btn.is-active { color: #fff; background: linear-gradient(135deg, #2563EB, #7C3AED); box-shadow: 0 10px 30px -10px rgba(37,99,235,.8); }
+  .digit { display: inline-grid; place-items: center; min-width: 34px; height: 34px; border-radius: 9px; background: rgba(2,6,23,.75); border: 1px solid rgba(71,85,105,.6); font-family: "JetBrains Mono", monospace; font-weight: 700; font-size: 15px; color: #fff; }
+  .scroll-thin::-webkit-scrollbar { width: 6px; height: 6px; }
+  .scroll-thin::-webkit-scrollbar-thumb { background: rgba(71,85,105,.7); border-radius: 6px; }
+  .no-scrollbar::-webkit-scrollbar { display: none; } .no-scrollbar { scrollbar-width: none; }
+  .fade-in { animation: fadeIn .45s ease both; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  details > summary { list-style: none; } details > summary::-webkit-details-marker { display: none; }
+  details[open] .chev { transform: rotate(180deg); }
+  :focus-visible { outline: 2px solid #60A5FA; outline-offset: 2px; }
+
+  .layer { position: fixed; inset: 0; z-index: 60; }
+  .layer .backdrop { position: absolute; inset: 0; background: rgba(2,6,23,.72); -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px); opacity: 0; transition: opacity .3s ease; }
+  .layer.is-open .backdrop { opacity: 1; }
+  .layer .panel-right { transform: translateX(100%); transition: transform .38s cubic-bezier(.2,.8,.2,1); }
+  .layer .panel-left { transform: translateX(-100%); transition: transform .38s cubic-bezier(.2,.8,.2,1); }
+  .layer.is-open .panel-right, .layer.is-open .panel-left { transform: none; }
+  .layer .panel-modal { opacity: 0; transform: translateY(24px) scale(.98); transition: opacity .3s ease, transform .35s cubic-bezier(.2,.8,.2,1); }
+  .layer.is-open .panel-modal { opacity: 1; transform: none; }
+
+  .toast { animation: toastIn .4s cubic-bezier(.2,.9,.3,1.2) both; }
+  .toast.out { animation: toastOut .3s ease both; }
+  @keyframes toastIn { from { opacity: 0; transform: translateY(-14px) scale(.96); } to { opacity: 1; transform: none; } }
+  @media (min-width: 1024px) { @keyframes toastIn { from { opacity: 0; transform: translateY(16px) scale(.96); } to { opacity: 1; transform: none; } } }
+  @keyframes toastOut { to { opacity: 0; transform: translateY(10px) scale(.97); } }
+  .toast-bar { animation: toastBar 3.4s linear forwards; }
+  @keyframes toastBar { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+  .check-pop { animation: pop .6s cubic-bezier(.3,1.6,.5,1) both; }
+  @keyframes pop { 0% { transform: scale(.3); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ticker, .art-float, .live .wave, .group:hover .wave, .live .ring-pulse, .group:hover .ring-pulse, .glow-pulse, .animate-ping { animation: none !important; }
+    html { scroll-behavior: auto; }
+  }
+</style>
+</head>
+
+<body>
+<div class="bg-glow" aria-hidden="true"></div>
+
+<!-- ============ 1. شريط علوي ============ -->
+<div class="relative z-50 bg-ink-900/90 border-b border-slate-800/70 text-[12.5px] text-slate-300">
+  <div class="max-w-7xl mx-auto px-4 flex items-center gap-4 h-9">
+    <div class="flex-1 min-w-0 overflow-hidden mask-fade">
+      <div class="ticker gap-10 whitespace-nowrap font-semibold" id="ticker"></div>
+    </div>
+    <div class="hidden md:flex items-center gap-4 shrink-0">
+      <a data-tel href="tel:+21670000000" class="flex items-center gap-1.5 hover:text-white transition">
+        <i data-lucide="phone-call" class="w-3.5 h-3.5 text-blue-400"></i><span class="font-bold font-mono" dir="ltr" data-hotline>70 000 000</span>
+      </a>
+      <a data-wa="مرحبا صدى، عندي سؤال." href="#" target="_blank" rel="noopener" class="flex items-center gap-1.5 text-emerald-400 hover:text-emerald-300 font-bold transition">
+        <i class="fa-brands fa-whatsapp text-[14px]"></i>واتساب
+      </a>
+      <div class="relative" id="storesWrap">
+        <button id="storesBtn" aria-expanded="false" class="flex items-center gap-1.5 hover:text-white transition">
+          <i data-lucide="map-pin" class="w-3.5 h-3.5 text-violet-400"></i>محلاتنا: تونس · سوسة · صفاقس · نابل<i data-lucide="chevron-down" class="w-3.5 h-3.5 opacity-60"></i>
+        </button>
+        <div id="storesMenu" class="hidden absolute left-0 top-full mt-2 w-[22rem] rounded-2xl border border-slate-700/70 bg-ink-800 p-2 shadow-2xl fade-in"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 2. الهيدر و البحث الذكي ============ -->
+<header id="header" style="top: env(safe-area-inset-top, 0px)" class="sticky z-40 bg-ink/80 backdrop-blur-xl border-b border-slate-800/70 transition-shadow duration-300">
+  <div class="max-w-7xl mx-auto px-4">
+    <div class="flex items-center gap-3 lg:gap-6 h-16 lg:h-[72px]">
+      <button data-open="menu" aria-label="فتح القائمة" class="lg:hidden w-10 h-10 grid place-items-center rounded-xl border border-slate-800 text-slate-200 hover:border-slate-600">
+        <i data-lucide="menu" class="w-5 h-5"></i>
+      </button>
+
+      <a href="#top" class="flex items-center gap-2.5 shrink-0" aria-label="صدى — الصفحة الرئيسية">
+        <svg viewBox="0 0 40 40" class="w-9 h-9" aria-hidden="true"><defs><linearGradient id="logoG1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3B82F6"/><stop offset="1" stop-color="#8B5CF6"/></linearGradient></defs><rect x="3" y="3" width="34" height="34" rx="11" fill="rgba(59,130,246,.08)" stroke="url(#logoG1)" stroke-width="2.4"/><path d="M12 20v0M16 15v10M20 11v18M24 15v10M28 20v0" stroke="url(#logoG1)" stroke-width="3" stroke-linecap="round"/></svg>
+        <span class="leading-none">
+          <span class="flex items-baseline gap-1.5"><span class="text-[22px] font-extrabold text-white">صدى</span><span class="text-[13px] font-extrabold text-blue-400 font-mono" dir="ltr">SADA.tn</span></span>
+          <span class="hidden sm:block text-[11px] font-bold text-slate-500 mt-0.5">سماعات · بافل · إكسسوارات</span>
+        </span>
+      </a>
+
+      <div class="relative flex-1 min-w-0 max-w-2xl hidden md:block" data-search>
+        <div class="flex items-center rounded-2xl border border-slate-700/70 bg-slate-900/70 transition focus-within:border-blue-500/70 focus-within:ring-4 focus-within:ring-blue-500/10">
+          <i data-lucide="search" class="w-4 h-4 ms-4 text-slate-500 shrink-0"></i>
+          <input data-search-input id="searchDesk" type="search" autocomplete="off" placeholder="ابحث عن AirPods، بافل JBL، كاسك…" aria-label="بحث" class="flex-1 min-w-0 bg-transparent h-11 px-3 text-sm text-white placeholder:text-slate-500 outline-none [&::-webkit-search-cancel-button]:hidden">
+          <kbd class="hidden lg:grid place-items-center w-6 h-6 me-1 rounded-md border border-slate-700 text-[11px] font-mono text-slate-400">/</kbd>
+          <button data-search-go class="m-1 h-9 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold transition shrink-0"><span class="hidden lg:inline">بحث</span><i data-lucide="search" class="lg:hidden w-4 h-4"></i></button>
+        </div>
+        <div data-search-dd class="hidden absolute left-0 right-0 top-full mt-2 max-h-[70vh] overflow-y-auto scroll-thin rounded-2xl border border-slate-700/70 bg-ink-800 shadow-2xl z-50 fade-in"></div>
+      </div>
+
+      <div class="ms-auto flex items-center gap-1.5 sm:gap-2">
+        <a href="#pack" class="glow-pulse hidden lg:flex relative items-center gap-2 px-3.5 h-11 rounded-xl border border-violet-500/50 bg-violet-500/10 text-violet-50 hover:bg-violet-500/20 transition">
+          <i data-lucide="package-plus" class="w-4 h-4 text-violet-300"></i><span class="font-bold text-sm whitespace-nowrap hidden xl:inline">صانع الباك</span>
+          <span class="absolute -top-2 -end-2 text-[10px] font-extrabold px-1.5 py-0.5 rounded-full bg-gradient-to-r from-blue-500 to-violet-500 text-white">جديد</span>
+        </a>
+        <button data-open="compare" title="المقارنة" aria-label="المقارنة" class="hidden sm:grid relative w-11 h-11 place-items-center rounded-xl text-slate-200 hover:bg-slate-800/70 transition">
+          <i data-lucide="git-compare-arrows" class="w-5 h-5"></i><span class="badge" data-count="compare">2</span>
+        </button>
+        <button data-open="wish" title="المفضلة" aria-label="المفضلة" class="hidden sm:grid relative w-11 h-11 place-items-center rounded-xl text-slate-200 hover:bg-slate-800/70 transition">
+          <i data-lucide="heart" class="w-5 h-5"></i><span class="badge is-empty" data-count="wish">0</span>
+        </button>
+        <button data-open="cart" aria-label="فتح السلة" class="relative flex items-center gap-2 h-11 px-3 sm:px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white shadow-glow transition">
+          <i data-lucide="shopping-cart" class="w-5 h-5"></i>
+          <span class="hidden sm:flex flex-col items-start leading-none">
+            <span class="text-[10.5px] font-bold text-blue-100/80">سلتي</span>
+            <span class="text-[13px] font-extrabold tabular-nums mt-0.5" data-cart-total>0,000 د.ت</span>
+          </span>
+          <span class="badge is-empty" data-count="cart">0</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="md:hidden pb-3 relative" data-search>
+      <div class="flex items-center rounded-2xl border border-slate-700/70 bg-slate-900/70 focus-within:border-blue-500/70 focus-within:ring-4 focus-within:ring-blue-500/10">
+        <i data-lucide="search" class="w-4 h-4 ms-3.5 text-slate-500 shrink-0"></i>
+        <input data-search-input id="searchMob" type="search" autocomplete="off" placeholder="AirPods، بافل، كاسك…" aria-label="بحث" class="flex-1 min-w-0 bg-transparent h-11 px-3 text-sm text-white placeholder:text-slate-500 outline-none [&::-webkit-search-cancel-button]:hidden">
+        <button data-search-go aria-label="ابدأ البحث" class="m-1 w-9 h-9 grid place-items-center rounded-xl bg-blue-600 text-white"><i data-lucide="arrow-left" class="w-4 h-4"></i></button>
+      </div>
+      <div data-search-dd class="hidden absolute left-0 right-0 top-full -mt-1 max-h-[65vh] overflow-y-auto scroll-thin rounded-2xl border border-slate-700/70 bg-ink-800 shadow-2xl z-50 fade-in"></div>
+    </div>
+  </div>
+
+  <!-- ============ 3. قائمة الأصناف ============ -->
+  <nav id="megaNav" class="hidden lg:block border-t border-slate-800/60 relative" aria-label="الأصناف">
+    <div class="max-w-7xl mx-auto px-4 flex items-center justify-between gap-0.5 h-12 overflow-x-auto no-scrollbar" id="navList"></div>
+    <div id="megaPanel" class="hidden absolute left-0 right-0 top-full">
+      <div class="max-w-7xl mx-auto px-4">
+        <div id="megaInner" class="rounded-b-3xl border border-t-0 border-slate-700/70 bg-ink-800 shadow-2xl"></div>
+      </div>
+    </div>
+  </nav>
+</header>
+
+<main id="top" class="relative z-10">
+
+  <!-- ============ 4. الواجهة الرئيسية ============ -->
+  <section class="max-w-7xl mx-auto px-4 pt-5 lg:pt-7">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+      <div class="lg:col-span-8 relative overflow-hidden rounded-3xl border border-slate-800/80 bg-gradient-to-bl from-[#0F1B3D] via-[#0A0F22] to-[#1B1040]">
+        <div class="absolute inset-0 grid-bg opacity-70"></div>
+        <div class="absolute -top-28 -right-24 w-96 h-96 rounded-full bg-blue-600/30 blur-3xl"></div>
+        <div class="absolute -bottom-36 left-0 w-[30rem] h-[30rem] rounded-full bg-violet-600/30 blur-3xl"></div>
+        <div class="relative grid md:grid-cols-2 gap-2 md:gap-4 p-6 sm:p-10 items-center min-h-[460px]">
+          <div>
+            <span class="inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1 text-[12.5px] font-bold text-emerald-300">
+              <span class="relative flex w-2 h-2"><span class="absolute inset-0 rounded-full bg-emerald-400 animate-ping opacity-75"></span><span class="relative w-2 h-2 rounded-full bg-emerald-400"></span></span>
+              وصل جديد · AirPods Pro 2 بشحن USB-C
+            </span>
+            <h1 class="mt-5 text-[2.7rem] leading-[1.2] sm:text-6xl sm:leading-[1.15] font-extrabold text-white">اسمع<br><span class="text-gradient">الفرق.</span></h1>
+            <p class="mt-4 text-lg sm:text-xl text-slate-300 font-bold leading-snug">سماعات، بافل و إكسسوارات أصلية <span class="text-white">بأفضل سعر في تونس.</span></p>
+            <p class="mt-3 text-sm text-slate-400 max-w-md leading-relaxed">AirPods، Galaxy Buds، كاسكات Sony و JBL، بافل JBL و Marshall — منتجات أصلية بضمان رسمي، توصلك لدارك في 24/48 ساعة و تخلّص عند الاستلام.</p>
+            <div class="mt-7 flex flex-wrap gap-3">
+              <button data-goto-tab="new" class="group/cta inline-flex items-center gap-2 h-12 px-6 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold shadow-glow transition">
+                اكتشف الجديد<i data-lucide="arrow-left" class="w-4 h-4 transition group-hover/cta:-translate-x-1"></i>
+              </button>
+              <a href="#pack" class="inline-flex items-center gap-2 h-12 px-6 rounded-xl border border-slate-600/80 bg-slate-900/40 hover:border-violet-400/70 hover:bg-violet-500/10 text-white font-bold transition">
+                <i data-lucide="package-plus" class="w-4 h-4 text-violet-300"></i>اصنع الباك متاعك
+              </a>
+            </div>
+            <dl class="mt-8 grid grid-cols-3 gap-4 max-w-sm">
+              <div><dt class="text-[12px] text-slate-500 font-semibold">منتجات</dt><dd class="text-lg font-extrabold text-white"><span dir="ltr">+1 500</span></dd></div>
+              <div><dt class="text-[12px] text-slate-500 font-semibold">محلات</dt><dd class="text-lg font-extrabold text-white">4 مدن</dd></div>
+              <div><dt class="text-[12px] text-slate-500 font-semibold">تقييم الحرفاء</dt><dd class="text-lg font-extrabold text-white"><span dir="ltr">4,9</span><span class="text-amber-400">★</span></dd></div>
+            </dl>
+          </div>
+          <div class="relative h-60 sm:h-80 md:h-[380px]">
+            <div class="absolute inset-0 hero-art live" id="heroArt"></div>
+            <div class="absolute top-3 right-0 sm:right-2 rounded-xl border border-slate-700/70 glass px-3 py-2 text-[12px] font-bold text-white shadow-xl art-float">
+              <span class="text-blue-300">عزل نشط</span> للضوضاء
+            </div>
+            <div class="absolute top-1/2 left-0 rounded-xl border border-slate-700/70 glass px-3 py-2 text-[12px] font-bold text-white shadow-xl art-float" style="animation-delay:-2s" dir="ltr">
+              USB-C · <span class="text-violet-300">MagSafe</span>
+            </div>
+            <div class="absolute bottom-2 right-4 sm:right-8 rounded-2xl border border-blue-500/40 bg-ink/80 backdrop-blur px-4 py-2.5 shadow-glow">
+              <div class="text-[11px] font-bold text-slate-400">AirPods Pro 2 بـ</div>
+              <div class="text-xl font-extrabold text-white tabular-nums"><span dir="ltr">899</span><span class="text-xs text-blue-300 font-bold"> د.ت</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="lg:col-span-4 grid sm:grid-cols-2 lg:grid-cols-1 gap-4">
+        <div class="relative overflow-hidden rounded-3xl border border-rose-500/30 bg-gradient-to-bl from-[#2A0F24] via-[#140B1F] to-[#0B0F19] p-5 group flex flex-col">
+          <div class="absolute -left-16 -top-16 w-56 h-56 rounded-full bg-rose-500/25 blur-3xl"></div>
+          <div class="relative flex items-center justify-between">
+            <span class="inline-flex items-center gap-1.5 rounded-full bg-rose-500 px-2.5 py-1 text-[12px] font-extrabold text-white"><i data-lucide="zap" class="w-3 h-3"></i>عرض فلاش</span>
+            <span class="text-[12px] font-semibold text-rose-200/80">ينتهي بعد</span>
+          </div>
+          <div class="relative mt-2 flex justify-end gap-1 items-center" dir="ltr" data-countdown></div>
+          <div class="relative my-auto py-2 grid grid-cols-5 gap-3 items-center">
+            <div class="col-span-2 h-24 lg:h-28 cursor-pointer live" data-qv="10" id="flashArt"></div>
+            <div class="col-span-3">
+              <h3 class="text-sm font-bold text-white leading-snug cursor-pointer hover:text-rose-200" data-qv="10">بافل JBL Flip 6 مقاوم للماء</h3>
+              <div class="mt-1 flex items-baseline gap-2"><span class="text-2xl font-extrabold text-white tabular-nums"><span dir="ltr">449</span><span class="text-xs text-rose-300"> د.ت</span></span><span class="text-xs text-slate-500 line-through"><span dir="ltr">529</span> د.ت</span></div>
+              <div class="mt-1.5 h-1.5 rounded-full bg-slate-800 overflow-hidden"><div class="h-full w-[71%] rounded-full bg-gradient-to-l from-rose-500 to-amber-400"></div></div>
+              <div class="mt-1 text-[11.5px] font-semibold text-amber-300">تباع منها 71% · بقي 8 فقط</div>
+            </div>
+          </div>
+          <button data-add="10" class="relative mt-auto w-full h-10 rounded-xl bg-rose-500 hover:bg-rose-400 text-white text-sm font-bold flex items-center justify-center gap-2 transition"><i data-lucide="shopping-cart" class="w-4 h-4"></i>نستغل العرض</button>
+        </div>
+
+        <div class="relative overflow-hidden rounded-3xl border border-violet-500/25 bg-gradient-to-bl from-[#1A1236] via-[#0E0F24] to-[#0B0F19] p-5 cursor-pointer group" data-search-run="كاسك" role="button" tabindex="0">
+          <div class="absolute -right-16 -bottom-16 w-56 h-56 rounded-full bg-violet-500/20 blur-3xl"></div>
+          <div class="relative grid grid-cols-5 gap-3 items-center">
+            <div class="col-span-3">
+              <span class="text-[12px] font-extrabold text-violet-300">كاسكات Bluetooth</span>
+              <h3 class="mt-1.5 text-lg font-extrabold text-white leading-snug">Sony، JBL،<br>Marshall</h3>
+              <p class="mt-1 text-xs text-slate-400">ابتداءً من <span class="text-white font-bold"><span dir="ltr">179</span> د.ت</span> · تخفيض حتى 15%</p>
+              <span class="mt-3 inline-flex items-center gap-1 text-xs font-bold text-violet-300 group-hover:gap-2 transition-all">شوف الكاسكات<i data-lucide="arrow-left" class="w-3.5 h-3.5"></i></span>
+            </div>
+            <div class="col-span-2 h-28 transition duration-500 group-hover:scale-110" id="headArt"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-4 grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div class="flex items-center gap-3 rounded-2xl border border-slate-800/80 glass p-3.5 hover:border-blue-500/40 transition">
+        <span class="w-10 h-10 shrink-0 rounded-xl grid place-items-center bg-blue-500/15 text-blue-300"><i data-lucide="shield-check" class="w-5 h-5"></i></span>
+        <div><div class="text-[13.5px] font-bold text-white leading-tight">ضمان رسمي من سنة إلى سنتين</div><div class="text-[12px] text-slate-400">عند الوكلاء المعتمدين</div></div>
+      </div>
+      <div class="flex items-center gap-3 rounded-2xl border border-slate-800/80 glass p-3.5 hover:border-blue-500/40 transition">
+        <span class="w-10 h-10 shrink-0 rounded-xl grid place-items-center bg-emerald-500/15 text-emerald-300"><i data-lucide="badge-check" class="w-5 h-5"></i></span>
+        <div><div class="text-[13.5px] font-bold text-white leading-tight">منتجات أصلية 100%</div><div class="text-[12px] text-slate-400">بالرقم التسلسلي</div></div>
+      </div>
+      <div class="flex items-center gap-3 rounded-2xl border border-slate-800/80 glass p-3.5 hover:border-blue-500/40 transition">
+        <span class="w-10 h-10 shrink-0 rounded-xl grid place-items-center bg-violet-500/15 text-violet-300"><i data-lucide="wallet" class="w-5 h-5"></i></span>
+        <div><div class="text-[13.5px] font-bold text-white leading-tight">تسهيلات في الدفع</div><div class="text-[12px] text-slate-400">حتى 12 شهر</div></div>
+      </div>
+      <div class="flex items-center gap-3 rounded-2xl border border-slate-800/80 glass p-3.5 hover:border-blue-500/40 transition">
+        <span class="w-10 h-10 shrink-0 rounded-xl grid place-items-center bg-amber-500/15 text-amber-300"><i data-lucide="truck" class="w-5 h-5"></i></span>
+        <div><div class="text-[13.5px] font-bold text-white leading-tight">توصيل 24/48 ساعة</div><div class="text-[12px] text-slate-400">في كامل الولايات</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="mt-10 border-y border-slate-800/70 bg-ink-900/50" aria-label="الماركات">
+    <div class="max-w-7xl mx-auto px-4 flex items-center gap-6 h-16">
+      <span class="hidden sm:block shrink-0 text-[12px] font-bold text-slate-500">موزّع معتمد</span>
+      <div class="flex-1 min-w-0 overflow-hidden mask-fade"><div class="ticker reverse gap-12 whitespace-nowrap" id="brands" dir="ltr"></div></div>
+    </div>
+  </section>
+
+  <section class="max-w-7xl mx-auto px-4 mt-10" aria-label="الأصناف">
+    <div class="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-7 gap-3" id="tiles"></div>
+  </section>
+
+  <!-- ============ 5. صانع الباك ============ -->
+  <section id="pack" class="max-w-7xl mx-auto px-4 mt-20 scroll-mt-40">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <div>
+        <span class="eyebrow">صانع الباك</span>
+        <h2 class="mt-3 text-3xl sm:text-4xl font-extrabold text-white leading-snug">اصنع الباك متاعك <span class="text-gradient">و وفّر حتى 10%.</span></h2>
+        <p class="mt-2 text-slate-400 max-w-2xl">اختار السماعة، البافل، الشاحن و الغطاء. كل ما تزيد قطعة، يكبر التخفيض. السعر يتبدّل مباشرة.</p>
+      </div>
+      <div class="flex flex-wrap gap-2 text-[12.5px] font-semibold">
+        <span class="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-emerald-300"><i data-lucide="circle-check" class="w-3.5 h-3.5"></i>متوافق مع هاتفك</span>
+        <span class="inline-flex items-center gap-1.5 rounded-full border border-slate-700 bg-slate-800/50 px-3 py-1.5 text-slate-200"><i data-lucide="gift" class="w-3.5 h-3.5 text-blue-300"></i>تغليف هدية مجاني</span>
+      </div>
+    </div>
+    <div class="mt-6 grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+      <div class="min-w-0 lg:col-span-7 xl:col-span-8 rounded-3xl border border-slate-800/80 glass p-4 sm:p-6 space-y-6" id="cfgSteps"></div>
+      <aside class="min-w-0 lg:col-span-5 xl:col-span-4 lg:sticky lg:top-36">
+        <div class="relative overflow-hidden rounded-3xl border border-blue-500/30 bg-gradient-to-b from-[#101A38] to-[#0B0F19] p-5 sm:p-6 shadow-glow">
+          <div class="absolute -top-20 -left-20 w-64 h-64 rounded-full bg-violet-600/25 blur-3xl"></div>
+          <div class="relative flex items-center justify-between">
+            <span class="text-[13px] text-slate-400 font-bold">الباك متاعك</span>
+            <span id="cfgBadge" class="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11.5px] font-bold text-emerald-300"></span>
+          </div>
+          <div class="relative h-36 my-2 live" id="cfgArt"></div>
+          <ul class="relative space-y-1.5 text-[13px]" id="cfgList"></ul>
+          <div class="relative mt-4 rounded-2xl border border-slate-800 bg-slate-950/50 p-4" id="cfgInd"></div>
+          <div class="relative mt-4 pt-4 border-t border-slate-800 flex items-end justify-between gap-3">
+            <div>
+              <div class="text-[12px] text-slate-400 font-semibold">السعر الجملي</div>
+              <div id="cfgTotal" class="leading-none mt-1"></div>
+            </div>
+            <div class="text-left text-[12px] text-slate-400 leading-snug" id="cfgSave"></div>
+          </div>
+          <button id="cfgAdd" class="relative mt-4 w-full h-12 rounded-xl bg-gradient-to-l from-blue-600 to-violet-600 hover:from-blue-500 hover:to-violet-500 text-white font-extrabold flex items-center justify-center gap-2 shadow-violet transition">
+            <i data-lucide="shopping-cart" class="w-5 h-5"></i>أضف الباك إلى السلة
+          </button>
+          <p class="relative mt-2.5 text-[12px] text-slate-500 text-center">تغليف هدية مجاني · ضمان رسمي على كل القطع</p>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ============ 6. المنتجات ============ -->
+  <section id="produits" class="max-w-7xl mx-auto px-4 mt-20 scroll-mt-40">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <div>
+        <span class="eyebrow">اختيارات صدى</span>
+        <h2 class="mt-3 text-3xl sm:text-4xl font-extrabold text-white leading-snug">أحسن صوت،<br class="sm:hidden"> بأحسن سعر.</h2>
+      </div>
+      <div role="tablist" aria-label="الاختيارات" class="flex p-1 rounded-2xl border border-slate-800 bg-slate-900/60 overflow-x-auto no-scrollbar max-w-full" id="tabs">
+        <button role="tab" data-tab="best" class="tab-btn is-active">🔥 الأكثر مبيعاً</button>
+        <button role="tab" data-tab="new" class="tab-btn">⚡ وصل حديثاً</button>
+        <button role="tab" data-tab="promo" class="tab-btn">🏷️ عروض قوية</button>
+      </div>
+    </div>
+    <div id="gridInfo" class="hidden mt-5"></div>
+    <div id="productGrid" class="mt-6 grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4"></div>
+  </section>
+
+  <section class="max-w-7xl mx-auto px-4 mt-12">
+    <div class="relative overflow-hidden rounded-3xl border border-slate-800/80 bg-gradient-to-l from-blue-700/30 via-violet-700/25 to-fuchsia-700/20 p-6 sm:p-8 flex flex-col md:flex-row items-start md:items-center gap-5 justify-between">
+      <div class="absolute inset-0 grid-bg opacity-40"></div>
+      <div class="relative flex items-center gap-4">
+        <span class="w-14 h-14 shrink-0 rounded-2xl grid place-items-center bg-white/10 border border-white/15 text-white"><i data-lucide="credit-card" class="w-7 h-7"></i></span>
+        <div>
+          <h3 class="text-xl sm:text-2xl font-extrabold text-white">AirPods Pro 2 ابتداءً من <span class="text-gradient"><span dir="ltr">75</span> د.ت/شهر</span></h3>
+          <p class="text-sm text-slate-300">تسهيلات في الدفع حتى 12 شهر مع البنوك الشريكة · دراسة الملف في 24 ساعة.</p>
+        </div>
+      </div>
+      <a data-wa="مرحبا صدى، نحب نعرف تفاصيل التسهيلات في الدفع." href="#" target="_blank" rel="noopener" class="relative shrink-0 inline-flex items-center gap-2 h-12 px-6 rounded-xl bg-white text-slate-900 font-extrabold hover:bg-blue-50 transition">
+        <i class="fa-brands fa-whatsapp text-emerald-600 text-lg"></i>احسب التقسيط
+      </a>
+    </div>
+  </section>
+
+  <!-- ============ 7. علاش تختارنا ============ -->
+  <section id="confiance" class="max-w-7xl mx-auto px-4 mt-20 scroll-mt-40">
+    <div class="relative overflow-hidden rounded-[2rem] bg-gradient-to-b from-slate-50 to-slate-100 text-slate-900 p-6 sm:p-10 lg:p-12">
+      <div class="absolute -top-24 -left-24 w-80 h-80 rounded-full bg-blue-400/25 blur-3xl"></div>
+      <div class="absolute -bottom-24 -right-24 w-80 h-80 rounded-full bg-violet-400/25 blur-3xl"></div>
+      <div class="relative max-w-2xl">
+        <span class="text-[13px] font-extrabold text-blue-600">لماذا تختارنا؟</span>
+        <h2 class="mt-3 text-3xl sm:text-4xl font-extrabold leading-snug">شريكك الموثوق في الصوت و الإكسسوارات في تونس.</h2>
+        <p class="mt-3 text-slate-600">أسعار معقولة، سلعة متوفرة فعلاً، و فريق يعرف يرشّدك — أونلاين و في المحل.</p>
+      </div>
+      <div class="relative mt-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="rounded-2xl bg-white border border-slate-200 p-5 shadow-sm hover:shadow-xl hover:-translate-y-1 transition duration-300">
+          <div class="w-12 h-12 rounded-2xl grid place-items-center text-2xl bg-gradient-to-br from-blue-500 to-blue-700 shadow-lg shadow-blue-500/30">🚚</div>
+          <h3 class="mt-4 font-extrabold text-lg">توصيل آمن 24/48 ساعة</h3>
+          <p class="mt-1.5 text-sm text-slate-600 leading-relaxed">لكل ولايات تونس مع تتبّع الطرد، تغليف محكم و طرد مؤمّن.</p>
+        </div>
+        <div class="rounded-2xl bg-white border border-slate-200 p-5 shadow-sm hover:shadow-xl hover:-translate-y-1 transition duration-300">
+          <div class="w-12 h-12 rounded-2xl grid place-items-center text-2xl bg-gradient-to-br from-violet-500 to-violet-700 shadow-lg shadow-violet-500/30">🛠️</div>
+          <h3 class="mt-4 font-extrabold text-lg">خدمة ما بعد البيع مضمونة</h3>
+          <p class="mt-1.5 text-sm text-slate-600 leading-relaxed">تقنيون مختصون، تبديل سريع في فترة الضمان و مساعدة في الربط مع هاتفك.</p>
+        </div>
+        <div class="rounded-2xl bg-white border border-slate-200 p-5 shadow-sm hover:shadow-xl hover:-translate-y-1 transition duration-300">
+          <div class="w-12 h-12 rounded-2xl grid place-items-center text-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 shadow-lg shadow-emerald-500/30">💵</div>
+          <h3 class="mt-4 font-extrabold text-lg">الدفع كيما تحب</h3>
+          <p class="mt-1.5 text-sm text-slate-600 leading-relaxed">نقداً عند الاستلام، بالبطاقة البنكية (CIB، e-Dinar، Visa، Mastercard)، بشيك أو تحويل.</p>
+        </div>
+        <div class="rounded-2xl bg-white border border-slate-200 p-5 shadow-sm hover:shadow-xl hover:-translate-y-1 transition duration-300">
+          <div class="w-12 h-12 rounded-2xl grid place-items-center text-2xl bg-gradient-to-br from-amber-500 to-orange-600 shadow-lg shadow-amber-500/30">📍</div>
+          <h3 class="mt-4 font-extrabold text-lg">محلات للتجربة</h3>
+          <p class="mt-1.5 text-sm text-slate-600 leading-relaxed">جرّب السماعة و البافل قبل ما تشري، و خوذ طلبيتك من المحل في الحين.</p>
+        </div>
+      </div>
+      <div class="relative mt-8 grid grid-cols-2 lg:grid-cols-4 gap-4 rounded-2xl bg-slate-900 text-white p-6">
+        <div><div class="text-3xl font-extrabold" dir="ltr">+40 000</div><div class="text-[13px] text-slate-400 mt-1 font-medium">حريف راضي</div></div>
+        <div><div class="text-3xl font-extrabold" dir="ltr">24/24</div><div class="text-[13px] text-slate-400 mt-1 font-medium">ولاية نوصلولها</div></div>
+        <div><div class="text-3xl font-extrabold"><span dir="ltr">4,9</span><span class="text-amber-400">★</span></div><div class="text-[13px] text-slate-400 mt-1 font-medium">معدّل تقييم الحرفاء</div></div>
+        <div><div class="text-3xl font-extrabold" dir="ltr">100%</div><div class="text-[13px] text-slate-400 mt-1 font-medium">منتجات أصلية</div></div>
+      </div>
+      <div class="relative mt-10">
+        <h3 class="text-xl font-extrabold">محلاتنا</h3>
+        <div class="mt-4 grid sm:grid-cols-2 lg:grid-cols-4 gap-4" id="storeCards"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="max-w-7xl mx-auto px-4 mt-16">
+    <div class="rounded-3xl border border-slate-800/80 glass p-6 sm:p-8 grid md:grid-cols-2 gap-6 items-center">
+      <div>
+        <h3 class="text-2xl font-extrabold text-white">العروض قبل الجميع.</h3>
+        <p class="mt-1 text-sm text-slate-400">وصول السلعة الجديدة، عروض فلاش و كودات خاصة. <span class="text-white font-semibold">تخفيض 5% على أول طلبية.</span></p>
+      </div>
+      <form id="newsletter" class="flex flex-col sm:flex-row gap-2" novalidate>
+        <label for="nlEmail" class="sr-only">البريد الإلكتروني</label>
+        <input id="nlEmail" type="email" dir="ltr" required placeholder="votre@email.tn" class="field flex-1 !h-12 text-left">
+        <button class="h-12 px-6 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold flex items-center justify-center gap-2 transition"><i data-lucide="send" class="w-4 h-4"></i>نشترك</button>
+      </form>
+    </div>
+  </section>
+</main>
+
+<footer class="relative z-10 mt-16 border-t border-slate-800/80 bg-ink-900/70">
+  <div class="max-w-7xl mx-auto px-4 py-12 grid sm:grid-cols-2 lg:grid-cols-5 gap-8">
+    <div class="lg:col-span-2">
+      <a href="#top" class="flex items-center gap-2.5">
+        <svg viewBox="0 0 40 40" class="w-9 h-9" aria-hidden="true"><defs><linearGradient id="logoG2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3B82F6"/><stop offset="1" stop-color="#8B5CF6"/></linearGradient></defs><rect x="3" y="3" width="34" height="34" rx="11" fill="rgba(59,130,246,.08)" stroke="url(#logoG2)" stroke-width="2.4"/><path d="M12 20v0M16 15v10M20 11v18M24 15v10M28 20v0" stroke="url(#logoG2)" stroke-width="3" stroke-linecap="round"/></svg>
+        <span class="text-2xl font-extrabold text-white">صدى</span><span class="text-sm font-extrabold text-blue-400 font-mono" dir="ltr">SADA.tn</span>
+      </a>
+      <p class="mt-4 text-sm text-slate-400 max-w-sm leading-relaxed">مختصّون في السماعات، البافل و إكسسوارات الهواتف في تونس. منتجات أصلية، ضمان رسمي و توصيل لكامل الولايات.</p>
+      <div class="mt-5 flex gap-2" id="socials"></div>
+    </div>
+    <div>
+      <h4 class="text-sm font-extrabold text-white">الأصناف</h4>
+      <ul class="mt-4 space-y-2.5 text-sm" id="footCats"></ul>
+    </div>
+    <div>
+      <h4 class="text-sm font-extrabold text-white">خدمة الحرفاء</h4>
+      <ul class="mt-4 space-y-2.5 text-sm text-slate-400">
+        <li><a class="hover:text-white transition" data-wa="مرحبا صدى، نحب نتبّع طلبيتي. رقم الطلبية: " href="#" target="_blank" rel="noopener">تتبّع الطلبية</a></li>
+        <li><a class="hover:text-white transition" data-wa="مرحبا صدى، عندي مشكل في منتج شريته من عندكم (الضمان)." href="#" target="_blank" rel="noopener">الضمان و خدمة ما بعد البيع</a></li>
+        <li><a class="hover:text-white transition" data-wa="مرحبا صدى، نحب نبدّل سماعتي القديمة بسماعة جديدة." href="#" target="_blank" rel="noopener">استبدال سماعتك القديمة</a></li>
+        <li><a href="#pack" class="hover:text-white transition">صانع الباك</a></li>
+        <li><a href="#confiance" class="hover:text-white transition">محلاتنا</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4 class="text-sm font-extrabold text-white">اتصل بنا</h4>
+      <ul class="mt-4 space-y-3 text-sm text-slate-400">
+        <li class="flex items-center gap-2"><i data-lucide="phone" class="w-4 h-4 text-blue-400"></i><a data-tel href="tel:+21670000000" class="hover:text-white font-mono" dir="ltr" data-hotline>70 000 000</a></li>
+        <li class="flex items-center gap-2"><i class="fa-brands fa-whatsapp text-emerald-400 w-4 text-center"></i><a data-wa="مرحبا صدى!" href="#" target="_blank" rel="noopener" class="hover:text-white">احكي معانا على واتساب</a></li>
+        <li class="flex items-center gap-2"><i data-lucide="clock" class="w-4 h-4 text-violet-400"></i>من الاثنين إلى السبت · 9:00 – 20:00</li>
+      </ul>
+    </div>
+  </div>
+  <div class="border-t border-slate-800/80">
+    <div class="max-w-7xl mx-auto px-4 py-5 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-slate-500">
+      <span>© <span data-year></span> صدى SADA.tn — جميع الحقوق محفوظة · الأسعار بالدينار التونسي وتشمل الأداءات.</span>
+      <div class="flex items-center gap-3 text-2xl text-slate-400" dir="ltr">
+        <i class="fa-brands fa-cc-visa" title="Visa"></i><i class="fa-brands fa-cc-mastercard" title="Mastercard"></i>
+        <span class="text-[10px] font-extrabold border border-slate-700 rounded-md px-1.5 py-0.5">e-DINAR</span>
+        <span class="text-[10px] font-extrabold border border-slate-700 rounded-md px-1.5 py-0.5">CIB</span>
+        <span class="inline-flex items-center gap-1 text-[11px] font-extrabold border border-emerald-700/70 text-emerald-400 rounded-md px-1.5 py-0.5"><i class="fa-solid fa-money-bill-wave"></i>نقداً</span>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<nav class="lg:hidden fixed bottom-0 inset-x-0 z-40 border-t border-slate-800 bg-ink/90 backdrop-blur-xl" style="padding-bottom:env(safe-area-inset-bottom)" aria-label="التنقل">
+  <div class="grid grid-cols-5 h-16">
+    <a href="#top" class="bn"><i data-lucide="house" class="w-5 h-5"></i>الرئيسية</a>
+    <button data-open="menu" class="bn"><i data-lucide="layout-grid" class="w-5 h-5"></i>الأصناف</button>
+    <a href="#pack" class="bn text-white"><span class="-mt-7 w-12 h-12 rounded-2xl grid place-items-center bg-gradient-to-br from-blue-600 to-violet-600 shadow-violet border-4 border-ink"><i data-lucide="package-plus" class="w-5 h-5"></i></span>الباك</a>
+    <button data-open="wish" class="bn"><span class="relative"><i data-lucide="heart" class="w-5 h-5"></i><span class="badge is-empty" data-count="wish">0</span></span>المفضلة</button>
+    <button data-open="cart" class="bn"><span class="relative"><i data-lucide="shopping-cart" class="w-5 h-5"></i><span class="badge is-empty" data-count="cart">0</span></span>السلة</button>
+  </div>
+</nav>
+
+<!-- القائمة (من اليمين) -->
+<div id="menuLayer" class="layer hidden" aria-hidden="true">
+  <div class="backdrop" data-close></div>
+  <aside class="panel-right absolute right-0 top-0 h-full w-[88%] max-w-sm bg-ink-800 border-l border-slate-800 flex flex-col" role="dialog" aria-label="القائمة">
+    <div class="flex items-center justify-between px-4 h-16 border-b border-slate-800">
+      <span class="text-xl font-extrabold text-white">صدى <span class="text-sm text-blue-400 font-mono" dir="ltr">SADA.tn</span></span>
+      <button data-close aria-label="إغلاق" class="w-10 h-10 grid place-items-center rounded-xl hover:bg-slate-800"><i data-lucide="x" class="w-5 h-5"></i></button>
+    </div>
+    <div class="flex-1 overflow-y-auto scroll-thin p-4 space-y-2" id="menuBody"></div>
+  </aside>
+</div>
+
+<div id="qvLayer" class="layer hidden" aria-hidden="true">
+  <div class="backdrop" data-close></div>
+  <div class="absolute inset-0 overflow-y-auto p-3 sm:p-6 flex items-start sm:items-center justify-center pointer-events-none">
+    <div class="panel-modal pointer-events-auto relative w-full max-w-5xl rounded-3xl border border-slate-700/70 bg-ink-800 shadow-2xl overflow-hidden" role="dialog" aria-modal="true" aria-label="نظرة سريعة">
+      <button data-close aria-label="إغلاق" class="absolute top-3 left-3 z-10 w-10 h-10 grid place-items-center rounded-xl bg-slate-900/80 border border-slate-700 hover:border-slate-500 text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+      <div id="qvBody"></div>
+    </div>
+  </div>
+</div>
+
+<div id="cmpLayer" class="layer hidden" aria-hidden="true">
+  <div class="backdrop" data-close></div>
+  <div class="absolute inset-0 overflow-y-auto p-3 sm:p-6 flex items-start sm:items-center justify-center pointer-events-none">
+    <div class="panel-modal pointer-events-auto relative w-full max-w-6xl rounded-3xl border border-slate-700/70 bg-ink-800 shadow-2xl" role="dialog" aria-modal="true" aria-label="المقارنة">
+      <div class="flex items-center justify-between px-5 sm:px-6 h-16 border-b border-slate-800">
+        <h3 class="flex items-center gap-2 font-extrabold text-white"><i data-lucide="git-compare-arrows" class="w-5 h-5 text-blue-400"></i>المقارنة <span class="text-slate-500 font-semibold text-sm" id="cmpCount"></span></h3>
+        <button data-close aria-label="إغلاق" class="w-10 h-10 grid place-items-center rounded-xl hover:bg-slate-800 text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <div id="cmpBody" class="overflow-x-auto scroll-thin"></div>
+    </div>
+  </div>
+</div>
+
+<div id="coLayer" class="layer hidden" aria-hidden="true">
+  <div class="backdrop" data-close></div>
+  <div class="absolute inset-0 overflow-y-auto p-3 sm:p-6 flex items-start sm:items-center justify-center pointer-events-none">
+    <div class="panel-modal pointer-events-auto relative w-full max-w-5xl rounded-3xl border border-slate-700/70 bg-ink-800 shadow-2xl overflow-hidden" role="dialog" aria-modal="true" aria-label="تأكيد الطلبية">
+      <button data-close aria-label="إغلاق" class="absolute top-3 left-3 z-10 w-10 h-10 grid place-items-center rounded-xl bg-slate-900/80 border border-slate-700 hover:border-slate-500 text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+      <div id="coBody"></div>
+    </div>
+  </div>
+</div>
+
+<!-- السلة (من اليسار) -->
+<div id="drawerLayer" class="layer hidden" aria-hidden="true">
+  <div class="backdrop" data-close></div>
+  <aside class="panel-left absolute left-0 top-0 h-full w-full sm:w-[440px] bg-ink-800 border-r border-slate-800 flex flex-col shadow-2xl" role="dialog" aria-label="السلة">
+    <div class="flex items-center justify-between px-5 h-16 border-b border-slate-800 shrink-0">
+      <div class="flex items-center gap-2.5">
+        <span class="w-9 h-9 rounded-xl grid place-items-center bg-blue-600/15 text-blue-300" id="drawerIcon"></span>
+        <h3 class="font-extrabold text-white text-lg" id="drawerTitle">سلتي</h3>
+        <span class="rounded-full bg-slate-800 px-2 py-0.5 text-xs font-bold text-slate-300 font-mono" id="drawerCount">0</span>
+      </div>
+      <button data-close aria-label="إغلاق" class="w-10 h-10 grid place-items-center rounded-xl hover:bg-slate-800 text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+    </div>
+    <div id="drawerShip" class="px-5 py-3 border-b border-slate-800 shrink-0"></div>
+    <div id="drawerItems" class="flex-1 overflow-y-auto scroll-thin px-5 py-4 space-y-3"></div>
+    <div id="drawerFoot" class="border-t border-slate-800 px-5 py-4 bg-ink-900/80 shrink-0"></div>
+  </aside>
+</div>
+
+<div id="toasts" class="fixed z-[90] top-3 left-1/2 -translate-x-1/2 lg:top-auto lg:bottom-6 lg:left-auto lg:right-6 lg:translate-x-0 flex flex-col gap-2 pointer-events-none" aria-live="polite"></div>
+
+<script>
+/* =========================================================================
+   صدى SADA.tn — نموذج تفاعلي (Vanilla JS)
+   ========================================================================= */
+(() => {
+'use strict';
+
+/* ---------- إعدادات المحل (تتبدّل عند إطلاق الموقع) ---------- */
+const CONFIG = {
+  brand: 'صدى',
+  whatsapp: '21629000000',      // رقم واتساب (بالصيغة الدولية بدون +)
+  hotline: '70 000 000',
+  hotlineTel: '+21670000000',
+  freeShipping: 150,            // توصيل مجاني ابتداءً من هذا المبلغ (د.ت)
+  shippingFee: 7,               // معلوم التوصيل (د.ت)
+  months: 12                    // تسهيلات الدفع
+};
+const CUR = 'د.ت';
+
+const STORES = [
+  { city: 'تونس',  tag: 'المحل الرئيسي',       addr: 'البحيرة 2، نهج بحيرة توركانا', q: 'Les Berges du Lac 2, Tunis', hours: 'الاثنين–السبت · 9:00–20:00', tel: '+216 70 000 001' },
+  { city: 'سوسة',  tag: 'محل و خدمة ما بعد البيع', addr: 'شارع 14 جانفي، خزامة الشرقية', q: 'Khezama Est, Sousse', hours: 'الاثنين–السبت · 9:00–19:30', tel: '+216 70 000 002' },
+  { city: 'صفاقس', tag: 'محل و استلام',        addr: 'طريق تونس كلم 3، عمارة النور',  q: 'Route de Tunis km 3, Sfax', hours: 'الاثنين–السبت · 9:00–19:00', tel: '+216 70 000 003' },
+  { city: 'نابل',  tag: 'نقطة استلام',          addr: 'شارع الحبيب بورقيبة، وسط المدينة', q: 'Avenue Habib Bourguiba, Nabeul', hours: 'الاثنين–السبت · 9:00–19:00', tel: '+216 70 000 004' }
+];
+
+const GOUVERNORATS = ['أريانة','باجة','بن عروس','بنزرت','تطاوين','توزر','تونس','جندوبة','زغوان','سليانة','سوسة','سيدي بوزيد','صفاقس','قابس','قبلي','القصرين','قفصة','القيروان','الكاف','مدنين','المنستير','منوبة','المهدية','نابل'];
+
+const CATS = [
+  { key: 'buds', label: 'سماعات لاسلكية', icon: 'bluetooth', count: 214, q: 'سماعات لاسلكية', feat: 1, art: 'buds',
+    groups: [['حسب الماركة', ['Apple AirPods', 'Samsung Galaxy Buds', 'Xiaomi Redmi Buds', 'JBL']],
+             ['حسب الاستعمال', ['عزل الضوضاء', 'للرياضة', 'للمكالمات', 'أفضل سعر']]] },
+  { key: 'head', label: 'كاسكات', icon: 'headphones', count: 96, q: 'كاسك', feat: 7, art: 'headphones',
+    groups: [['حسب الماركة', ['Sony', 'AirPods Max', 'JBL', 'Marshall']],
+             ['حسب الاستعمال', ['عزل الضوضاء', 'للسفر', 'للدراسة و العمل']]] },
+  { key: 'spk', label: 'بافل (مكبرات صوت)', icon: 'speaker', count: 132, q: 'بافل', feat: 11, art: 'speaker',
+    groups: [['بافل محمول', ['JBL Go', 'JBL Flip', 'JBL Charge', 'Marshall']],
+             ['للحفلات', ['JBL PartyBox', 'بافل بأضواء RGB']]] },
+  { key: 'gaming', label: 'سماعات ألعاب', icon: 'gamepad-2', count: 58, q: 'gaming', feat: 15, art: 'gaming',
+    groups: [['سماعات ألعاب', ['لاسلكية', 'سلكية', 'PS5 و PC']]] },
+  { key: 'power', label: 'شواحن و باور بانك', icon: 'battery-charging', count: 174, q: 'شاحن', feat: 18, art: 'powerbank',
+    groups: [['الشحن', ['شواحن سريعة', 'باور بانك', 'شواحن MagSafe']]] },
+  { key: 'acc', label: 'كوابل و إكسسوارات', icon: 'cable', count: 310, q: 'اكسسوارات', feat: 20, art: 'cable',
+    groups: [['إكسسوارات', ['كوابل USB-C', 'كوابل Lightning', 'غطاء AirPods', 'حامل هاتف']]] },
+  { key: 'deals', label: 'العروض %', icon: 'badge-percent', count: 72, q: 'تخفيض', feat: 10, deal: true, art: 'speaker',
+    groups: [['عروض', ['عروض فلاش', 'باكات بأسعار خاصة', 'تصفية']],
+             ['خدمات', ['تسهيلات في الدفع', 'استبدال سماعتك القديمة']]] }
+];
+
+const W = '#F8FAFC';
+const PRODUCTS = [
+  { id: 1, name: 'سماعات Apple AirPods Pro 2 USB-C بعزل الضوضاء', brand: 'Apple', cat: 'buds', type: 'buds', accent: '#3B82F6', price: 899, old: 999, stock: 'in', rating: 4.9, reviews: 486, tags: ['best', 'promo'], warranty: 'سنة', artOpts: { color: W },
+    specs: ['ANC', 'USB-C', '30 h', 'MagSafe'], kw: 'airpods pro ecouteur سماعات لاسلكية سماعة ابل iphone',
+    details: [['عزل الضوضاء', 'نشط (ANC) + وضع الشفافية'], ['البطارية', 'حتى 6 ساعات · 30 ساعة مع العلبة'], ['الشحن', 'USB-C · MagSafe · لاسلكي'], ['الصوت', 'صوت مكاني مع تتبّع الرأس'], ['مقاومة', 'IP54 للغبار و العرق و الماء'], ['التوافق', 'iPhone · iPad · Mac · Android'], ['الضمان', 'سنة · Apple']] },
+  { id: 2, name: 'سماعات Apple AirPods 4 مع عزل الضوضاء', brand: 'Apple', cat: 'buds', type: 'buds', accent: '#60A5FA', price: 699, old: null, stock: 'in', rating: 4.8, reviews: 203, tags: ['new', 'best'], warranty: 'سنة', artOpts: { color: W },
+    specs: ['ANC', 'USB-C', '30 h', 'H2'], kw: 'airpods 4 ecouteur سماعات لاسلكية سماعة ابل',
+    details: [['عزل الضوضاء', 'نشط (ANC)'], ['البطارية', 'حتى 5 ساعات · 30 ساعة مع العلبة'], ['الشحن', 'USB-C · لاسلكي'], ['الشريحة', 'Apple H2'], ['التصميم', 'مفتوح بدون رؤوس سيليكون'], ['التوافق', 'iPhone · Android'], ['الضمان', 'سنة · Apple']] },
+  { id: 3, name: 'كاسك فاخر Apple AirPods Max USB-C', brand: 'Apple', cat: 'head', type: 'headphones', accent: '#A78BFA', price: 1990, old: null, stock: 'limited', left: 3, rating: 4.8, reviews: 61, tags: ['new'], warranty: 'سنة', artOpts: { color: '#CBD5E1' },
+    specs: ['ANC', 'USB-C', '20 h', 'Spatial'], kw: 'airpods max casque كاسك سماعات راس ابل',
+    details: [['عزل الضوضاء', 'نشط (ANC) + وضع الشفافية'], ['البطارية', 'حتى 20 ساعة'], ['الشحن', 'USB-C'], ['الصوت', 'صوت مكاني · Dolby Atmos'], ['الخامات', 'ألمنيوم و نسيج شبكي'], ['التوافق', 'iPhone · iPad · Mac'], ['الضمان', 'سنة · Apple']] },
+  { id: 4, name: 'سماعات لاسلكية Samsung Galaxy Buds3 Pro', brand: 'Samsung', cat: 'buds', type: 'buds', accent: '#94A3B8', price: 749, old: 849, stock: 'in', rating: 4.7, reviews: 142, tags: ['promo'], warranty: 'سنتين', artOpts: { color: '#CBD5E1' },
+    specs: ['ANC', 'Hi-Fi 24bit', '26 h', 'IP57'], kw: 'galaxy buds samsung ecouteur سماعات لاسلكية سامسونغ',
+    details: [['عزل الضوضاء', 'ANC ذكي متكيّف'], ['البطارية', 'حتى 6 ساعات · 26 ساعة مع العلبة'], ['الصوت', 'Hi-Fi 24 بت · مكبرين'], ['مقاومة', 'IP57'], ['الشحن', 'USB-C · لاسلكي'], ['التوافق', 'Android · Galaxy AI'], ['الضمان', 'سنتين · Samsung']] },
+  { id: 5, name: 'سماعات لاسلكية Xiaomi Redmi Buds 6 Pro', brand: 'Xiaomi', cat: 'buds', type: 'buds', accent: '#F97316', price: 199, old: 239, stock: 'in', rating: 4.6, reviews: 529, tags: ['best', 'promo'], warranty: 'سنة', artOpts: { color: '#1F2937', stem: false },
+    specs: ['ANC 55dB', 'LDAC', '36 h', 'IP54'], kw: 'redmi buds xiaomi ecouteur سماعات لاسلكية شاومي رخيص',
+    details: [['عزل الضوضاء', 'حتى 55 ديسيبل'], ['البطارية', 'حتى 9 ساعات · 36 ساعة مع العلبة'], ['الصوت', 'LDAC · Hi-Res'], ['مقاومة', 'IP54'], ['الشحن', 'USB-C'], ['التوافق', 'Android · iPhone'], ['الضمان', 'سنة']] },
+  { id: 6, name: 'سماعات لاسلكية JBL Wave Buds 2', brand: 'JBL', cat: 'buds', type: 'buds', accent: '#EF4444', price: 179, old: null, stock: 'in', rating: 4.5, reviews: 88, tags: ['new'], warranty: 'سنة', artOpts: { color: '#111827', stem: false },
+    specs: ['ANC', 'Bass Boost', '40 h', 'IP54'], kw: 'jbl wave buds ecouteur سماعات لاسلكية',
+    details: [['عزل الضوضاء', 'نشط (ANC)'], ['البطارية', 'حتى 10 ساعات · 40 ساعة مع العلبة'], ['الصوت', 'JBL Pure Bass'], ['مقاومة', 'IP54'], ['الشحن', 'USB-C'], ['التوافق', 'Android · iPhone'], ['الضمان', 'سنة']] },
+  { id: 7, name: 'كاسك Sony WH-1000XM5 بعزل الضوضاء', brand: 'Sony', cat: 'head', type: 'headphones', accent: '#3B82F6', price: 1290, old: 1490, stock: 'in', rating: 4.9, reviews: 274, tags: ['best', 'promo'], warranty: 'سنتين', artOpts: { color: '#1F2937' },
+    specs: ['ANC', 'LDAC', '30 h', '250 g'], kw: 'sony casque كاسك سماعات راس سوني',
+    details: [['عزل الضوضاء', 'من أقوى العوازل في السوق'], ['البطارية', 'حتى 30 ساعة'], ['الشحن السريع', '3 دقائق = 3 ساعات'], ['الصوت', 'LDAC · Hi-Res Audio'], ['الوزن', '250 غرام'], ['المكالمات', '8 ميكروفونات'], ['الضمان', 'سنتين · Sony']] },
+  { id: 8, name: 'كاسك بلوتوث JBL Tune 520BT', brand: 'JBL', cat: 'head', type: 'headphones', accent: '#2563EB', price: 179, old: 209, stock: 'in', rating: 4.6, reviews: 612, tags: ['best', 'promo'], warranty: 'سنة', artOpts: { color: '#2563EB' },
+    specs: ['57 h', 'Pure Bass', 'Multipoint', 'USB-C'], kw: 'jbl tune casque كاسك سماعات راس رخيص',
+    details: [['البطارية', 'حتى 57 ساعة'], ['الشحن السريع', '5 دقائق = 3 ساعات'], ['الصوت', 'JBL Pure Bass'], ['الاتصال', 'Bluetooth 5.3 · ربط بجهازين'], ['الوزن', '157 غرام'], ['التصميم', 'قابل للطي'], ['الضمان', 'سنة']] },
+  { id: 9, name: 'كاسك بلوتوث Marshall Major V', brand: 'Marshall', cat: 'head', type: 'headphones', accent: '#D4A017', price: 549, old: null, stock: 'in', rating: 4.7, reviews: 77, tags: ['new'], warranty: 'سنتين', artOpts: { color: '#111827' },
+    specs: ['100 h', 'Wireless', 'Pliable', 'USB-C'], kw: 'marshall major casque كاسك سماعات راس مارشال',
+    details: [['البطارية', 'أكثر من 100 ساعة'], ['الشحن', 'USB-C · لاسلكي'], ['الصوت', 'توقيع Marshall المميّز'], ['التحكم', 'زر ذهبي متعدد الاتجاهات'], ['التصميم', 'قابل للطي'], ['الوزن', '186 غرام'], ['الضمان', 'سنتين']] },
+  { id: 10, name: 'بافل JBL Flip 6 مقاوم للماء', brand: 'JBL', cat: 'spk', type: 'speaker', accent: '#EF4444', price: 449, old: 529, stock: 'in', rating: 4.8, reviews: 391, tags: ['best', 'promo'], warranty: 'سنة', artOpts: { color: '#B91C1C', label: 'JBL' },
+    specs: ['30 W', 'IP67', '12 h', 'PartyBoost'], kw: 'jbl flip baffle bafel enceinte speaker بافل مكبر صوت',
+    details: [['القوة', '30 واط (20 + 10)'], ['البطارية', 'حتى 12 ساعة'], ['مقاومة', 'IP67 للماء و الغبار'], ['الاتصال', 'Bluetooth 5.1'], ['ربط عدة بافلات', 'PartyBoost'], ['الوزن', '550 غرام'], ['الضمان', 'سنة']] },
+  { id: 11, name: 'بافل JBL Charge 5 مع باور بانك', brand: 'JBL', cat: 'spk', type: 'speaker', accent: '#0EA5E9', price: 649, old: null, stock: 'in', rating: 4.9, reviews: 318, tags: ['best'], warranty: 'سنة', artOpts: { color: '#0369A1', label: 'JBL' },
+    specs: ['40 W', 'IP67', '20 h', 'Powerbank'], kw: 'jbl charge baffle bafel enceinte speaker بافل مكبر صوت',
+    details: [['القوة', '40 واط'], ['البطارية', 'حتى 20 ساعة'], ['ميزة', 'يشحن هاتفك (باور بانك)'], ['مقاومة', 'IP67'], ['ربط عدة بافلات', 'PartyBoost'], ['الوزن', '960 غرام'], ['الضمان', 'سنة']] },
+  { id: 12, name: 'بافل حفلات JBL PartyBox 110', brand: 'JBL', cat: 'spk', type: 'boombox', accent: '#8B5CF6', price: 1690, old: null, stock: 'limited', left: 2, rating: 4.8, reviews: 54, tags: ['new'], warranty: 'سنة',
+    specs: ['160 W', 'RGB', '12 h', 'Micro/Guitare'], kw: 'jbl partybox baffle bafel enceinte fete بافل حفلات كبير',
+    details: [['القوة', '160 واط'], ['البطارية', 'حتى 12 ساعة'], ['الأضواء', 'عرض ضوئي RGB متزامن مع الموسيقى'], ['المداخل', 'ميكروفون · قيتارة · USB'], ['مقاومة', 'IPX4'], ['الوزن', '10,9 كغ'], ['الضمان', 'سنة']] },
+  { id: 13, name: 'بافل Marshall Emberton II', brand: 'Marshall', cat: 'spk', type: 'speaker', accent: '#D4A017', price: 699, old: null, stock: 'in', rating: 4.7, reviews: 93, tags: ['new'], warranty: 'سنتين', artOpts: { color: '#111827', label: 'Marshall', gold: true },
+    specs: ['360°', 'IP67', '30 h', 'Stack'], kw: 'marshall emberton baffle bafel enceinte بافل مارشال',
+    details: [['الصوت', 'True Stereophonic 360°'], ['البطارية', 'أكثر من 30 ساعة'], ['مقاومة', 'IP67'], ['ربط عدة بافلات', 'Stack Mode'], ['الاتصال', 'Bluetooth 5.1'], ['الوزن', '700 غرام'], ['الضمان', 'سنتين']] },
+  { id: 14, name: 'بافل صغير JBL Go 4', brand: 'JBL', cat: 'spk', type: 'speaker', accent: '#22C55E', price: 149, old: 169, stock: 'in', rating: 4.6, reviews: 447, tags: ['promo'], warranty: 'سنة', artOpts: { color: '#15803D', label: 'JBL', mini: true },
+    specs: ['4,2 W', 'IP67', '7 h', 'Auracast'], kw: 'jbl go baffle bafel enceinte mini بافل صغير رخيص',
+    details: [['القوة', '4,2 واط'], ['البطارية', 'حتى 7 ساعات'], ['مقاومة', 'IP67'], ['الاتصال', 'Bluetooth 5.3 · Auracast'], ['الحجم', 'يدخل في الجيب'], ['الوزن', '190 غرام'], ['الضمان', 'سنة']] },
+  { id: 15, name: 'سماعة ألعاب لاسلكية Logitech G435', brand: 'Logitech G', cat: 'gaming', type: 'gaming', accent: '#8B5CF6', price: 299, old: 349, stock: 'in', rating: 4.6, reviews: 168, tags: ['promo'], warranty: 'سنتين',
+    specs: ['Lightspeed', '165 g', '18 h', 'PS5/PC'], kw: 'gaming casque logitech سماعة العاب جيمنغ ps5',
+    details: [['الاتصال', 'Lightspeed 2,4 غيغاهرتز + Bluetooth'], ['البطارية', 'حتى 18 ساعة'], ['الوزن', '165 غرام'], ['الصوت', 'Dolby Atmos · Tempest 3D'], ['الميكروفون', 'مدمج مزدوج'], ['التوافق', 'PC · PS5 · Switch · هاتف'], ['الضمان', 'سنتين']] },
+  { id: 16, name: 'سماعة ألعاب HyperX Cloud Stinger 2', brand: 'HyperX', cat: 'gaming', type: 'gaming', accent: '#EF4444', price: 229, old: null, stock: 'limited', left: 5, rating: 4.5, reviews: 72, tags: ['new'], warranty: 'سنتين',
+    specs: ['DTS:X', '50 mm', 'Micro', 'Jack 3,5'], kw: 'gaming casque hyperx سماعة العاب جيمنغ',
+    details: [['الصوت', 'DTS:X Spatial · مكبرات 50 مم'], ['الميكروفون', 'قابل للطي مع كتم الصوت'], ['الاتصال', 'Jack 3,5 مم'], ['الوزن', '272 غرام'], ['الراحة', 'إسفنج ذاكرة'], ['التوافق', 'PC · PS5 · Xbox · Switch'], ['الضمان', 'سنتين']] },
+  { id: 17, name: 'شاحن Apple USB-C سريع 20W', brand: 'Apple', cat: 'power', type: 'charger', accent: '#60A5FA', price: 89, old: null, stock: 'in', rating: 4.8, reviews: 734, tags: ['best'], warranty: 'سنة', artOpts: { color: W, label: '20W' },
+    specs: ['20 W', 'USB-C', 'iPhone', 'Original'], kw: 'chargeur charjour apple شاحن سريع iphone',
+    details: [['القوة', '20 واط'], ['المنفذ', 'USB-C'], ['الشحن السريع', '50% في 30 دقيقة لـ iPhone'], ['التوافق', 'iPhone · iPad · AirPods'], ['الأصل', 'منتج Apple أصلي'], ['الكابل', 'غير مضمّن'], ['الضمان', 'سنة']] },
+  { id: 18, name: 'باور بانك Anker 10000mAh شحن سريع', brand: 'Anker', cat: 'power', type: 'powerbank', accent: '#22D3EE', price: 129, old: 149, stock: 'in', rating: 4.7, reviews: 281, tags: ['promo'], warranty: '18 شهر', artOpts: { color: '#1F2937', label: 'ANKER' },
+    specs: ['10 000 mAh', '22,5 W', 'USB-C', '2 ports'], kw: 'power bank powerbank anker شاحن باور بانك بطارية',
+    details: [['السعة', '10 000 ملي أمبير'], ['القوة', '22,5 واط'], ['المنافذ', 'USB-C + USB-A'], ['الشحن', 'حوالي 2 شحنات كاملة لهاتف'], ['الشاشة', 'نسبة الشحن رقمية'], ['الوزن', '200 غرام'], ['الضمان', '18 شهر']] },
+  { id: 19, name: 'كابل USB-C إلى Lightning مضفور 1م', brand: 'Baseus', cat: 'acc', type: 'cable', accent: '#A78BFA', price: 39, old: null, stock: 'in', rating: 4.5, reviews: 158, tags: [], warranty: '6 أشهر',
+    specs: ['1 m', '20 W', 'Nylon', 'MFi'], kw: 'cable kabel lightning كابل اكسسوارات iphone',
+    details: [['الطول', '1 متر'], ['القوة', 'حتى 20 واط'], ['الخامة', 'نايلون مضفور'], ['الشهادة', 'MFi'], ['التوافق', 'iPhone · AirPods'], ['المقاومة', 'أكثر من 10 000 طيّة'], ['الضمان', '6 أشهر']] },
+  { id: 20, name: 'غطاء سيليكون AirPods Pro 2 مع مشبك', brand: 'Accessoires', cat: 'acc', type: 'case', accent: '#A78BFA', price: 35, old: null, stock: 'in', rating: 4.6, reviews: 96, tags: ['new'], warranty: '—', artOpts: { color: '#A78BFA' },
+    specs: ['Silicone', 'MagSafe OK', '6 couleurs', 'Anti-choc'], kw: 'coque cover etui airpods غطاء اكسسوارات حماية',
+    details: [['الخامة', 'سيليكون ناعم'], ['التوافق', 'AirPods Pro 2'], ['الشحن', 'يقبل الشحن اللاسلكي و MagSafe'], ['الألوان', '6 ألوان'], ['الحماية', 'ضد الصدمات و الخدوش'], ['إضافة', 'مشبك معدني'], ['الضمان', '—']] }
+];
+
+const POPULAR = ['AirPods Pro', 'بافل JBL', 'كاسك Sony', 'Galaxy Buds', 'باور بانك', 'شاحن سريع'];
+const BRANDS = ['APPLE', 'SAMSUNG', 'SONY', 'JBL', 'MARSHALL', 'XIAOMI', 'ANKER', 'BASEUS', 'LOGITECH G', 'HYPERX', 'BOSE', 'BEATS', 'UGREEN', 'SOUNDCORE'];
+
+/* ---------- صانع الباك ---------- */
+const CFG = {
+  buds: { title: 'السماعة', hint: 'القطعة الأساسية في الباك', opts: [
+    { id: 'ap4', brand: 'Apple', name: 'AirPods 4', sub: 'عزل الضوضاء · 30 ساعة', price: 699, perf: 4, anc: 2, batt: 30, snd: 80, art: ['buds', '#60A5FA', { color: W }] },
+    { id: 'app', brand: 'Apple', name: 'AirPods Pro 2', sub: 'أقوى عزل · MagSafe', price: 899, perf: 5, anc: 3, batt: 30, snd: 92, tag: 'الأكثر طلباً', art: ['buds', '#3B82F6', { color: W }] },
+    { id: 'gb3', brand: 'Samsung', name: 'Galaxy Buds3 Pro', sub: 'Hi-Fi 24 بت · IP57', price: 749, perf: 5, anc: 3, batt: 26, snd: 90, art: ['buds', '#94A3B8', { color: '#CBD5E1' }] },
+    { id: 'rb6', brand: 'Xiaomi', name: 'Redmi Buds 6 Pro', sub: 'عزل 55 ديسيبل · 36 ساعة', price: 199, perf: 3, anc: 2, batt: 36, snd: 74, tag: 'أفضل سعر', art: ['buds', '#F97316', { color: '#1F2937', stem: false }] } ] },
+  spk: { title: 'البافل', hint: 'للدار، البحر و الخرجات', opts: [
+    { id: 'none', brand: '—', name: 'بدون بافل', sub: 'سماعة فقط', price: 0, perf: 0, w: 0, batt: 0 },
+    { id: 'go4', brand: 'JBL', name: 'Go 4', sub: '4,2 واط · يدخل في الجيب', price: 149, perf: 2, w: 4.2, batt: 7, art: ['speaker', '#22C55E', { color: '#15803D', label: 'JBL', mini: true }] },
+    { id: 'flip6', brand: 'JBL', name: 'Flip 6', sub: '30 واط · IP67', price: 449, perf: 4, w: 30, batt: 12, tag: 'الأكثر طلباً', art: ['speaker', '#EF4444', { color: '#B91C1C', label: 'JBL' }] },
+    { id: 'ch5', brand: 'JBL', name: 'Charge 5', sub: '40 واط · يشحن هاتفك', price: 649, perf: 5, w: 40, batt: 20, art: ['speaker', '#0EA5E9', { color: '#0369A1', label: 'JBL' }] } ] },
+  pow: { title: 'الشحن', hint: 'ما تبقاش بلا بطارية', opts: [
+    { id: 'none', brand: '—', name: 'بدون شاحن', sub: '', price: 0, perf: 0, mah: 0 },
+    { id: 'c20', brand: 'Apple', name: 'شاحن 20W', sub: 'شحن سريع USB-C', price: 89, perf: 3, mah: 0 },
+    { id: 'pb10', brand: 'Anker', name: 'باور بانك 10 000', sub: 'شحنتين كاملتين', price: 129, perf: 4, mah: 10000, tag: 'مُقترح' },
+    { id: 'pb20', brand: 'Anker', name: 'باور بانك 20 000', sub: '4 شحنات · 30 واط', price: 199, perf: 5, mah: 20000 } ] },
+  prot: { title: 'الحماية', hint: 'باش تبقى كي الجديدة', opts: [
+    { id: 'none', brand: '—', name: 'بدون غطاء', sub: '', price: 0, perf: 0 },
+    { id: 'sil', brand: 'Silicone', name: 'غطاء سيليكون', sub: '6 ألوان · مع مشبك', price: 35, perf: 3 },
+    { id: 'lea', brand: 'Cuir', name: 'غطاء جلد فاخر', sub: 'جلد طبيعي · مغناطيس', price: 69, perf: 5, tag: 'فاخر' } ] }
+};
+let cfgSel = { buds: 'app', spk: 'flip6', pow: 'pb10', prot: 'sil' };
+
+/* ---------- أدوات ---------- */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const byId = id => PRODUCTS.find(p => p.id === +id);
+const waLink = msg => `https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(msg)}`;
+const icons = () => {
+  if (window.lucide && lucide.createIcons) lucide.createIcons();
+  document.querySelectorAll('a[data-wa]').forEach(a => { a.href = waLink(a.dataset.wa); });
+};
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const norm = s => String(s).normalize('NFD').replace(/[̀-ًͯ-ٰٟـ]/g, '').toLowerCase()
+  .replace(/[أإآٱ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي');
+const num = n => Number(n).toLocaleString('fr-FR', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
+const fmt = n => `${num(n)} ${CUR}`;
+const fmtShort = n => `${Math.round(n).toLocaleString('fr-FR')} ${CUR}`;
+const fmtShortH = n => `<span dir="ltr">${Math.round(n).toLocaleString('fr-FR')}</span> ${CUR}`;
+const discount = p => p.old ? Math.round((p.old - p.price) / p.old * 100) : 0;
+const pct = d => `<span dir="ltr">-${d}%</span>`;
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* التخزين غير متاح */ } }
+};
+function priceHTML(n, cls = 'text-xl') {
+  const [i, d] = num(n).split(',');
+  return `<span class="${cls} font-extrabold text-white tabular-nums whitespace-nowrap"><span dir="ltr">${i}<span class="text-[0.58em] align-top font-bold text-slate-300">,${d}</span></span> <span class="text-[0.55em] font-extrabold text-blue-300">${CUR}</span></span>`;
+}
+function stars(r) {
+  return `<span class="relative inline-block whitespace-nowrap text-[12px] leading-none" aria-label="تقييم ${String(r).replace('.', ',')} من 5"><span class="text-slate-700">★★★★★</span><span class="absolute inset-0 overflow-hidden text-amber-400" style="width:${r / 5 * 100}%">★★★★★</span></span>`;
+}
+function stockBadge(p) {
+  const m = {
+    in: ['متوفر', 'text-emerald-300 bg-emerald-500/10 border-emerald-500/30', 'bg-emerald-400'],
+    limited: [`كمية محدودة${p.left ? ' · بقي ' + p.left : ''}`, 'text-amber-300 bg-amber-500/10 border-amber-500/30', 'bg-amber-400'],
+    order: ['حسب الطلب · 5–7 أيام', 'text-sky-300 bg-sky-500/10 border-sky-500/30', 'bg-sky-400']
+  }[p.stock || 'in'];
+  return `<span class="inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11.5px] font-bold whitespace-nowrap ${m[1]}"><span class="relative flex w-1.5 h-1.5">${p.stock === 'in' ? `<span class="absolute inset-0 rounded-full ${m[2]} animate-ping opacity-75"></span>` : ''}<span class="relative w-1.5 h-1.5 rounded-full ${m[2]}"></span></span>${m[0]}</span>`;
+}
+function deliveryDate(days) {
+  const d = new Date(); let added = 0;
+  while (added < days) { d.setDate(d.getDate() + 1); if (d.getDay() !== 0) added++; }
+  return d.toLocaleDateString('ar-TN', { weekday: 'long', day: 'numeric', month: 'long' });
+}
+const monthly = p => `أو ${fmtShortH(Math.ceil(p / CONFIG.months))}/شهر`;
+
+/* ---------- رسومات المنتجات (SVG بدون صور خارجية) ---------- */
+let ART_UID = 0;
+function art(type, accent = '#3B82F6', o = {}) {
+  const u = 'sd' + (++ART_UID);
+  const v = o.variant || 0;
+  const acc = v === 3 ? (accent === '#8B5CF6' ? '#22D3EE' : '#8B5CF6') : accent;
+  const A = `url(#${u}A)`, B = `url(#${u}B)`, S = `url(#${u}S)`, G = `url(#${u}G)`, P = `url(#${u}P)`;
+  const defs = `<defs>
+    <linearGradient id="${u}A" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${acc}"/><stop offset="1" stop-color="#8B5CF6"/></linearGradient>
+    <linearGradient id="${u}B" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#263350"/><stop offset="1" stop-color="#0D1322"/></linearGradient>
+    <linearGradient id="${u}S" gradientUnits="userSpaceOnUse" x1="10" y1="0" x2="230" y2="0"><stop offset="0" stop-color="#22D3EE"/><stop offset=".35" stop-color="${acc}"/><stop offset=".7" stop-color="#A855F7"/><stop offset="1" stop-color="#EC4899"/></linearGradient>
+    <radialGradient id="${u}G" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="${acc}" stop-opacity=".5"/><stop offset="1" stop-color="${acc}" stop-opacity="0"/></radialGradient>
+    <pattern id="${u}P" width="6" height="6" patternUnits="userSpaceOnUse"><circle cx="3" cy="3" r="1.25" fill="#000" fill-opacity=".38"/></pattern>
+  </defs>`;
+  const c = o.color || acc;
+  const light = ['#F8FAFC', '#CBD5E1', '#E2E8F0'].includes(c);
+  const st = light ? '#94A3B8' : '#475569';
+  const waves = (x, y, dir, sc = 1) => [0, 1, 2].map(i => `<path class="wave" style="animation-delay:-${(i * .45).toFixed(2)}s" d="M${x + dir * (6 + i * 9) * sc} ${y - (10 + i * 7) * sc}q${dir * (7 + i * 3) * sc} ${(10 + i * 7) * sc} 0 ${(20 + i * 14) * sc}" fill="none" stroke="${S}" stroke-width="2.4" stroke-linecap="round"/>`).join('');
+  let body = '';
+  switch (type) {
+    case 'buds': {
+      const bud = (x, flip) => o.stem === false
+        ? `<ellipse cx="${x}" cy="72" rx="13" ry="11" fill="${c}" stroke="${st}"/><ellipse cx="${x + flip * 4}" cy="70" rx="5" ry="4" fill="${light ? '#334155' : '#0B1220'}"/><circle cx="${x - flip * 6}" cy="66" r="2" fill="${acc}"/>`
+        : `<rect x="${x - 3.5}" y="70" width="7" height="24" rx="3.5" fill="${c}" stroke="${st}"/><ellipse cx="${x}" cy="68" rx="11" ry="9.5" fill="${c}" stroke="${st}"/><ellipse cx="${x + flip * 4}" cy="66" rx="3.6" ry="3" fill="#1F2937"/>`;
+      body = `<rect x="78" y="34" width="84" height="40" rx="20" fill="${c}" stroke="${st}" opacity=".95"/><path d="M86 70h68" stroke="${st}" stroke-width=".8"/>
+        <rect x="78" y="76" width="84" height="62" rx="24" fill="${c}" stroke="${st}"/>
+        <rect x="88" y="82" width="64" height="18" rx="9" fill="${light ? '#E2E8F0' : '#0B1220'}" opacity=".8"/>
+        ${bud(104, 1)}${bud(136, -1)}
+        <circle cx="120" cy="114" r="2.2" fill="#22C55E"/><rect x="113" y="133" width="14" height="3" rx="1.5" fill="${st}"/>
+        ${waves(60, 86, -1)}${waves(180, 86, 1)}`;
+      break;
+    }
+    case 'headphones':
+      body = `<path d="M60 98C60 32 180 32 180 98" fill="none" stroke="${c}" stroke-width="11" stroke-linecap="round"/>
+        <path d="M67 94C67 44 173 44 173 94" fill="none" stroke="${A}" stroke-width="1.6" opacity=".7"/>
+        <rect x="40" y="80" width="40" height="60" rx="18" fill="${c}" stroke="${st}"/><rect x="160" y="80" width="40" height="60" rx="18" fill="${c}" stroke="${st}"/>
+        <rect x="74" y="86" width="11" height="48" rx="5.5" fill="#111827"/><rect x="155" y="86" width="11" height="48" rx="5.5" fill="#111827"/>
+        <rect x="50" y="96" width="20" height="28" rx="10" fill="none" stroke="${A}" stroke-width="2"/><rect x="170" y="96" width="20" height="28" rx="10" fill="none" stroke="${A}" stroke-width="2"/>
+        ${waves(32, 110, -1, .9)}${waves(208, 110, 1, .9)}`;
+      break;
+    case 'gaming':
+      body = `<path d="M62 92C62 28 178 28 178 92" fill="none" stroke="#1E293B" stroke-width="12" stroke-linecap="round"/>
+        <path d="M62 92C62 28 178 28 178 92" fill="none" stroke="${A}" stroke-width="2" opacity=".7"/>
+        <rect x="42" y="78" width="36" height="54" rx="15" fill="${B}" stroke="#475569"/><rect x="162" y="78" width="36" height="54" rx="15" fill="${B}" stroke="#475569"/>
+        <rect class="ring-pulse" x="49" y="87" width="22" height="36" rx="10" fill="none" stroke="${S}" stroke-width="2.6"/><rect class="ring-pulse" x="169" y="87" width="22" height="36" rx="10" fill="none" stroke="${S}" stroke-width="2.6"/>
+        <path d="M56 128q12 22 44 20" stroke="#334155" stroke-width="3.5" fill="none" stroke-linecap="round"/><circle cx="102" cy="148" r="4.5" fill="${A}"/>`;
+      break;
+    case 'speaker':
+      if (o.mini) body = `<rect x="76" y="40" width="88" height="96" rx="22" fill="${c}" stroke="${st}"/>
+        <rect x="86" y="52" width="68" height="62" rx="14" fill="${P}"/>
+        <rect x="104" y="118" width="32" height="10" rx="3" fill="#fff" opacity=".9"/><text x="120" y="126" text-anchor="middle" font-family="Arial,sans-serif" font-size="8" font-weight="900" fill="${c}">${esc(o.label || '')}</text>
+        <path d="M152 44q20 6 18 26" stroke="#111827" stroke-width="4" fill="none"/>
+        ${waves(64, 88, -1, .9)}${waves(176, 88, 1, .9)}`;
+      else body = `<rect x="28" y="54" width="184" height="72" rx="36" fill="${c}" stroke="${st}"/>
+        <rect x="56" y="60" width="128" height="60" rx="10" fill="${P}"/>
+        <ellipse class="ring-pulse" cx="38" cy="90" rx="9" ry="28" fill="#111827" stroke="${A}" stroke-width="1.5"/><ellipse class="ring-pulse" cx="202" cy="90" rx="9" ry="28" fill="#111827" stroke="${A}" stroke-width="1.5"/>
+        ${o.gold ? `<text x="120" y="96" text-anchor="middle" font-family="Georgia,serif" font-style="italic" font-size="15" font-weight="700" fill="#D4A017">${esc(o.label || '')}</text>`
+          : `<rect x="104" y="84" width="32" height="13" rx="3.5" fill="#F97316"/><text x="120" y="94" text-anchor="middle" font-family="Arial,sans-serif" font-size="9" font-weight="900" fill="#fff">${esc(o.label || '')}</text>`}
+        <path d="M206 64q22 26 0 52" stroke="#111827" stroke-width="5" fill="none" stroke-linecap="round"/>
+        ${waves(20, 90, -1, .8)}${waves(222, 90, 1, .8)}`;
+      break;
+    case 'boombox':
+      body = `<rect x="100" y="4" width="40" height="10" rx="5" fill="#334155"/>
+        <rect x="70" y="12" width="100" height="138" rx="12" fill="#111827" stroke="#334155"/>
+        <rect x="80" y="20" width="80" height="6" rx="3" fill="#1F2937"/>${[0, 1, 2, 3].map(i => `<circle cx="${90 + i * 9}" cy="23" r="1.6" fill="#64748B"/>`).join('')}
+        ${[56, 110].map(cy => `<circle class="ring-pulse" cx="120" cy="${cy}" r="30" fill="none" stroke="${S}" stroke-width="3" opacity=".9"/><circle cx="120" cy="${cy}" r="25" fill="#0B1220"/><circle class="ring-pulse" cx="120" cy="${cy}" r="15" fill="#1F2937" stroke="#334155"/><circle cx="120" cy="${cy}" r="5" fill="${A}"/>`).join('')}
+        ${waves(58, 80, -1)}${waves(182, 80, 1)}`;
+      break;
+    case 'charger':
+      body = `<rect x="103" y="28" width="7" height="18" rx="2" fill="#94A3B8"/><rect x="130" y="28" width="7" height="18" rx="2" fill="#94A3B8"/>
+        <rect x="86" y="44" width="68" height="68" rx="14" fill="${c}" stroke="${st}"/>
+        <text x="120" y="82" text-anchor="middle" font-family="Arial,sans-serif" font-size="11" font-weight="800" fill="${light ? '#334155' : '#E2E8F0'}">${esc(o.label || '')}</text>
+        <rect x="110" y="102" width="20" height="6" rx="3" fill="#1F2937"/>
+        <path d="M120 112C120 146 168 146 186 124" stroke="${light ? '#E2E8F0' : c}" stroke-width="5" fill="none" stroke-linecap="round"/>
+        <rect x="182" y="112" width="12" height="16" rx="3" fill="${light ? '#E2E8F0' : c}" stroke="${st}" transform="rotate(-38 188 120)"/>
+        <path d="M60 64l-8 14h8l-6 14" stroke="${A}" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" class="wave"/>`;
+      break;
+    case 'powerbank':
+      body = `<rect x="56" y="50" width="128" height="68" rx="14" fill="${c}" stroke="${st}"/>
+        <rect x="56" y="50" width="128" height="68" rx="14" fill="${G}" opacity=".4"/>
+        <text x="76" y="90" font-family="Arial,sans-serif" font-size="12" font-weight="900" fill="#E2E8F0" letter-spacing="1">${esc(o.label || '')}</text>
+        ${[0, 1, 2, 3].map(i => `<circle cx="${140 + i * 9}" cy="84" r="2.6" fill="${i < 3 ? acc : '#334155'}" class="${i < 3 ? 'wave' : ''}" style="animation-delay:-${i * .3}s"/>`).join('')}
+        <rect x="182" y="70" width="5" height="10" rx="1.5" fill="#64748B"/><rect x="182" y="86" width="5" height="12" rx="1.5" fill="#64748B"/>
+        <path d="M120 128v14M120 142c0 8 20 8 30 4" stroke="#94A3B8" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+      break;
+    case 'cable':
+      body = `<path d="M44 124C40 64 100 60 102 92S158 124 162 74S212 38 206 82" stroke="#E2E8F0" stroke-width="6" fill="none" stroke-linecap="round"/>
+        <path d="M44 124C40 64 100 60 102 92S158 124 162 74S212 38 206 82" stroke="${S}" stroke-width="6" fill="none" stroke-linecap="round" stroke-dasharray="2 5" opacity=".8"/>
+        <rect x="37" y="120" width="14" height="22" rx="3" fill="#CBD5E1" stroke="#94A3B8"/><rect x="40" y="141" width="8" height="8" rx="1.5" fill="#94A3B8"/>
+        <rect x="199" y="80" width="14" height="22" rx="3" fill="#CBD5E1" stroke="#94A3B8"/><rect x="203" y="101" width="6" height="9" rx="1" fill="#E2E8F0"/>`;
+      break;
+    case 'case':
+      body = `<path d="M148 52a16 16 0 1 1 26-14" stroke="#94A3B8" stroke-width="4" fill="none" stroke-linecap="round"/><rect x="146" y="48" width="10" height="8" rx="2" fill="#94A3B8"/>
+        <rect x="80" y="48" width="80" height="88" rx="26" fill="${c}" stroke="${st}"/><path d="M82 76h76" stroke="#0B1220" stroke-opacity=".25" stroke-width="1.4"/>
+        <rect x="80" y="48" width="80" height="88" rx="26" fill="${G}" opacity=".35"/>
+        <circle cx="120" cy="108" r="2.4" fill="#F8FAFC" opacity=".8"/>
+        ${waves(68, 92, -1, .8)}`;
+      break;
+  }
+  const vt = v === 1 ? 'translate(120 80) scale(1.55) translate(-120 -80)' : v === 2 ? 'rotate(6 120 80) translate(0 3)' : v === 3 ? 'translate(120 80) scale(.92) translate(-120 -80)' : '';
+  return `<svg viewBox="0 0 240 160" class="w-full h-full" role="img" aria-label="${esc(o.alt || type)}">${defs}
+    <ellipse cx="120" cy="82" rx="104" ry="70" fill="${G}"/>
+    <ellipse cx="120" cy="153" rx="80" ry="5" fill="#000" opacity=".5"/>
+    <g transform="${vt}"><g class="${o.float ? 'art-float' : ''}">${body}</g></g></svg>`;
+}
+const pArt = (p, extra = {}) => art(p.type, p.accent, { ...(p.artOpts || {}), alt: p.name, ...extra });
+
+/* ---------- الحالة ---------- */
+const state = {
+  cart: store.get('sd_cart', []),
+  wish: store.get('sd_wish', []),
+  compare: store.get('sd_compare', [1, 4]),
+  tab: 'best',
+  drawer: 'cart'
+};
+const save = () => { store.set('sd_cart', state.cart); store.set('sd_wish', state.wish); store.set('sd_compare', state.compare); };
+const cartCount = () => state.cart.reduce((s, i) => s + i.qty, 0);
+const cartSubtotal = () => state.cart.reduce((s, i) => s + i.qty * i.price, 0);
+const shippingFor = sub => (sub === 0 || sub >= CONFIG.freeShipping) ? 0 : CONFIG.shippingFee;
+
+/* ---------- النوافذ ---------- */
+const openLayers = [];
+function openLayer(el) {
+  if (!el || openLayers.includes(el)) return;
+  el.classList.remove('hidden'); el.setAttribute('aria-hidden', 'false');
+  void el.offsetWidth;
+  el.classList.add('is-open'); openLayers.push(el);
+  document.documentElement.classList.add('overflow-hidden');
+  icons();
+}
+function closeLayer(el) {
+  if (!el || !openLayers.includes(el)) return;
+  el.classList.remove('is-open'); el.setAttribute('aria-hidden', 'true');
+  openLayers.splice(openLayers.indexOf(el), 1);
+  setTimeout(() => { if (!openLayers.includes(el)) el.classList.add('hidden'); }, 360);
+  if (!openLayers.length) document.documentElement.classList.remove('overflow-hidden');
+}
+const closeAll = () => [...openLayers].forEach(closeLayer);
+
+/* ---------- الإشعارات ---------- */
+function toast({ title, msg = '', type = 'success', p = null, action = null }) {
+  const ic = { success: ['circle-check', 'text-emerald-400 bg-emerald-500/15'], info: ['info', 'text-blue-300 bg-blue-500/15'], warn: ['triangle-alert', 'text-amber-300 bg-amber-500/15'], wish: ['heart', 'text-rose-400 bg-rose-500/15'] }[type];
+  const el = document.createElement('div');
+  el.className = 'toast pointer-events-auto relative w-[min(92vw,390px)] overflow-hidden rounded-2xl border border-slate-700/80 bg-slate-900/95 backdrop-blur-xl shadow-2xl p-3 flex items-center gap-3';
+  el.innerHTML = `${p ? `<div class="w-14 h-11 shrink-0 rounded-xl border border-slate-800 bg-slate-950/70 p-1">${pArt(p)}</div>` : `<span class="w-10 h-10 shrink-0 rounded-xl grid place-items-center ${ic[1]}"><i data-lucide="${ic[0]}" class="w-5 h-5"></i></span>`}
+    <div class="min-w-0 flex-1"><div class="flex items-center gap-1.5 text-[13.5px] font-extrabold text-white">${p ? `<i data-lucide="${ic[0]}" class="w-4 h-4 shrink-0 ${ic[1].split(' ')[0]}"></i>` : ''}<span>${esc(title)}</span></div>${msg ? `<div class="text-[12px] text-slate-400 truncate">${esc(msg)}</div>` : ''}</div>
+    ${action ? `<button class="shrink-0 text-[12px] font-bold text-blue-300 hover:text-white px-2" data-toast-act>${esc(action.label)}</button>` : ''}
+    <span class="toast-bar absolute right-0 bottom-0 h-0.5 w-full origin-right bg-gradient-to-l from-blue-500 to-violet-500"></span>`;
+  $('#toasts').appendChild(el); icons();
+  if (action) $('[data-toast-act]', el).addEventListener('click', () => { action.fn(); dismiss(); });
+  let gone = false;
+  function dismiss() { if (gone) return; gone = true; el.classList.add('out'); setTimeout(() => el.remove(), 300); }
+  setTimeout(dismiss, 3400);
+  const all = $$('#toasts .toast:not(.out)'); if (all.length > 3) all[0].remove();
+}
+
+/* ---------- العدّادات ---------- */
+function bump(key) { $$(`[data-count="${key}"]`).forEach(b => { b.classList.remove('bump'); void b.offsetWidth; b.classList.add('bump'); }); }
+function updateCounts() {
+  const counts = { cart: cartCount(), wish: state.wish.length, compare: state.compare.length };
+  Object.entries(counts).forEach(([k, n]) => $$(`[data-count="${k}"]`).forEach(b => { b.textContent = n; b.classList.toggle('is-empty', n === 0); }));
+  $$('[data-cart-total]').forEach(e => e.textContent = fmt(cartSubtotal()));
+}
+
+/* ---------- عناصر ثابتة ---------- */
+function renderTicker() {
+  const items = ['🚚 توصيل سريع 24/48 ساعة لكل ولايات تونس', '💳 الدفع عند الاستلام أو بالبطاقة', '🎧 AirPods أصلية بضمان رسمي', '🔊 بافل JBL و Marshall متوفرة', '🏬 محلاتنا في تونس، سوسة، صفاقس و نابل', '🔥 عروض فلاش: تخفيضات حتى 20%'];
+  const row = items.map(t => `<span class="inline-flex items-center gap-10">${t}<span class="text-slate-600">|</span></span>`).join('');
+  $('#ticker').innerHTML = row + row;
+  const b = BRANDS.map(n => `<span class="keep-track font-mono text-[13px] font-bold tracking-[.18em] text-slate-500 hover:text-white transition">${n}</span>`).join('');
+  $('#brands').innerHTML = b + b;
+}
+function storeRow(s, light = false) {
+  const maps = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.q + ', Tunisie')}`;
+  const tel = 'tel:' + s.tel.replace(/\s/g, '');
+  if (light) return `<div class="rounded-2xl bg-white border border-slate-200 p-5 shadow-sm">
+      <div class="flex items-center justify-between gap-2"><h4 class="font-extrabold text-lg">${s.city}</h4><span class="text-[11.5px] font-bold text-blue-700 bg-blue-50 rounded-full px-2 py-0.5 whitespace-nowrap">${s.tag}</span></div>
+      <p class="mt-2 text-sm text-slate-600 flex gap-2"><i data-lucide="map-pin" class="w-4 h-4 shrink-0 mt-1 text-slate-400"></i>${s.addr}</p>
+      <p class="mt-1 text-sm text-slate-600 flex gap-2"><i data-lucide="clock" class="w-4 h-4 shrink-0 mt-1 text-slate-400"></i>${s.hours}</p>
+      <p class="mt-1 text-sm text-slate-600 flex gap-2"><i data-lucide="phone" class="w-4 h-4 shrink-0 mt-1 text-slate-400"></i><span dir="ltr" class="font-mono select-all">${s.tel}</span></p>
+      <div class="mt-4 flex gap-2"><a href="${maps}" target="_blank" rel="noopener" class="flex-1 h-9 rounded-xl bg-slate-900 text-white text-xs font-bold grid place-items-center hover:bg-blue-600 transition">الطريق</a><a href="${tel}" class="flex-1 h-9 rounded-xl border border-slate-300 text-xs font-bold grid place-items-center hover:border-slate-900 transition">اتصل</a></div>
+    </div>`;
+  return `<div class="flex gap-3 rounded-xl p-3 hover:bg-slate-800/60 transition">
+      <span class="w-9 h-9 shrink-0 rounded-xl grid place-items-center bg-violet-500/15 text-violet-300"><i data-lucide="store" class="w-4 h-4"></i></span>
+      <div class="min-w-0 flex-1"><div class="flex items-center justify-between gap-2"><span class="font-bold text-white text-[13.5px]">${s.city}</span><span class="text-[11px] font-semibold text-slate-500">${s.hours}</span></div>
+      <div class="text-[12px] text-slate-400 truncate">${s.addr}</div>
+      <div class="mt-1.5 flex gap-3 text-[12px] font-bold"><a href="${maps}" target="_blank" rel="noopener" class="text-blue-300 hover:text-white">الطريق</a><a href="${tel}" class="text-slate-300 hover:text-white font-mono" dir="ltr">${s.tel}</a></div></div>
+    </div>`;
+}
+function renderStores() {
+  $('#storesMenu').innerHTML = `<div class="px-3 pt-2 pb-1 dd-title">محلاتنا</div>` + STORES.map(s => storeRow(s)).join('');
+  $('#storeCards').innerHTML = STORES.map(s => storeRow(s, true)).join('');
+}
+function renderNav() {
+  $('#navList').innerHTML = CATS.map(c => `<button data-mega="${c.key}" class="nav-btn ${c.deal ? '!text-rose-300 hover:!text-white' : ''}">
+      <i data-lucide="${c.icon}" class="w-4 h-4 ${c.deal ? 'text-rose-400' : 'text-slate-400'}"></i>${c.label}${c.deal ? '<span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>' : '<i data-lucide="chevron-down" class="hidden xl:block w-3.5 h-3.5 opacity-50"></i>'}
+    </button>`).join('');
+}
+function mlinkTag(l, key, cls, inner) {
+  if (/تسهيلات|استبدال/.test(l)) return `<a data-wa="${esc(`مرحبا صدى، نحب معلومات على: ${l}.`)}" href="#" target="_blank" rel="noopener" class="${cls}">${inner}</a>`;
+  return `<button data-mlink="${esc(l)}" data-cat="${key}" class="${cls}">${inner}</button>`;
+}
+function renderMega(key) {
+  const c = CATS.find(x => x.key === key); const p = byId(c.feat);
+  $('#megaInner').innerHTML = `<div class="grid grid-cols-12 gap-6 p-6">
+    <div class="col-span-8">
+      <div class="flex items-center justify-between mb-5"><div class="flex items-center gap-2"><i data-lucide="${c.icon}" class="w-5 h-5 text-blue-400"></i><span class="text-lg font-extrabold text-white">${c.label}</span><span class="text-xs text-slate-500 font-semibold"><span dir="ltr">${c.count.toLocaleString('fr-FR')}</span> منتج</span></div>
+      <button data-search-run="${esc(c.q)}" class="text-xs font-bold text-blue-300 hover:text-white inline-flex items-center gap-1">شوف الكل<i data-lucide="arrow-left" class="w-3.5 h-3.5"></i></button></div>
+      <div class="grid grid-cols-3 gap-6">${c.groups.map(([t, links]) => `<div><div class="text-[12px] font-extrabold text-blue-300/80">${t}</div>
+        <ul class="mt-3 space-y-2.5">${links.map(l => `<li>${mlinkTag(l, c.key, 'group/l flex items-center gap-2 text-[14px] text-slate-300 hover:text-white text-start transition', `<span class="w-1 h-1 rounded-full bg-slate-600 group-hover/l:bg-blue-400 group-hover/l:w-3 transition-all"></span>${l}`)}</li>`).join('')}</ul></div>`).join('')}</div>
+    </div>
+    <div class="col-span-4 rounded-2xl border border-slate-700/70 bg-gradient-to-bl from-blue-600/15 to-violet-600/15 p-4 group">
+      <div class="flex items-center justify-between"><span class="text-[12px] font-extrabold text-violet-300">اختيارنا</span>${stockBadge(p)}</div>
+      <div class="h-32 mt-2 cursor-pointer" data-qv="${p.id}">${pArt(p)}</div>
+      <div class="text-sm font-bold text-white leading-snug line-clamp-2">${p.name}</div>
+      <div class="mt-2 flex items-center justify-between gap-2">${priceHTML(p.price, 'text-lg')}<div class="flex gap-1.5"><button data-qv="${p.id}" class="h-9 w-9 grid place-items-center rounded-lg border border-slate-600 hover:border-blue-400" aria-label="نظرة سريعة"><i data-lucide="eye" class="w-4 h-4"></i></button><button data-add="${p.id}" class="h-9 px-3 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold inline-flex items-center gap-1.5"><i data-lucide="shopping-cart" class="w-3.5 h-3.5"></i>أضف</button></div></div>
+    </div></div>`;
+  icons();
+}
+function renderTiles() {
+  const opts = { buds: { color: W }, headphones: { color: '#1F2937' }, speaker: { color: '#B91C1C', label: 'JBL' }, powerbank: { color: '#1F2937', label: 'ANKER' } };
+  $('#tiles').innerHTML = CATS.map(c => `<button data-search-run="${esc(c.q)}" class="group relative rounded-2xl border ${c.deal ? 'border-rose-500/40 bg-rose-500/5' : 'border-slate-800/80 bg-slate-900/40'} hover:border-blue-500/50 p-3 text-start transition overflow-hidden">
+      <div class="h-14 sm:h-16 transition duration-500 group-hover:scale-110">${art(c.art, c.deal ? '#F43F5E' : '#3B82F6', c.deal ? { color: '#9F1239', label: '%' } : (opts[c.art] || {}))}</div>
+      <div class="mt-2 text-[12.5px] sm:text-[13.5px] font-bold text-white leading-tight">${c.label}</div>
+      <div class="text-[11.5px] text-slate-500 font-semibold"><span dir="ltr">${c.count.toLocaleString('fr-FR')}</span> منتج</div>
+    </button>`).join('');
+}
+function renderMenu() {
+  $('#menuBody').innerHTML = `
+    <a href="#pack" class="flex items-center gap-3 rounded-2xl border border-violet-500/40 bg-gradient-to-l from-blue-600/20 to-violet-600/20 p-4">
+      <span class="w-10 h-10 shrink-0 rounded-xl grid place-items-center bg-gradient-to-br from-blue-600 to-violet-600 text-white"><i data-lucide="package-plus" class="w-5 h-5"></i></span>
+      <div><div class="font-extrabold text-white">صانع الباك</div><div class="text-xs text-slate-400">اصنع الباك متاعك و وفّر حتى 10%</div></div>
+      <span class="ms-auto text-[10px] font-extrabold px-1.5 py-0.5 rounded-full bg-gradient-to-r from-blue-500 to-violet-500 text-white">جديد</span>
+    </a>
+    ${CATS.map(c => `<details class="rounded-2xl border border-slate-800 bg-slate-900/40">
+      <summary class="flex items-center gap-3 p-3.5 cursor-pointer"><i data-lucide="${c.icon}" class="w-5 h-5 ${c.deal ? 'text-rose-400' : 'text-blue-400'}"></i><span class="font-bold ${c.deal ? 'text-rose-300' : 'text-white'} text-sm">${c.label}</span><i data-lucide="chevron-down" class="chev ms-auto w-4 h-4 text-slate-500 transition"></i></summary>
+      <div class="px-4 pb-4 space-y-3">${c.groups.map(([t, links]) => `<div><div class="dd-title">${t}</div><div class="mt-2 flex flex-wrap gap-1.5">${links.map(l => mlinkTag(l, c.key, 'chip-btn', l)).join('')}</div></div>`).join('')}</div>
+    </details>`).join('')}
+    <div class="grid grid-cols-2 gap-2 pt-2">
+      <button data-open="compare" class="rounded-2xl border border-slate-800 p-3 text-start"><i data-lucide="git-compare-arrows" class="w-5 h-5 text-blue-400"></i><div class="mt-1.5 text-sm font-bold text-white">المقارنة</div><div class="text-[12px] text-slate-500"><span data-count="compare">2</span> منتجات</div></button>
+      <button data-open="wish" class="rounded-2xl border border-slate-800 p-3 text-start"><i data-lucide="heart" class="w-5 h-5 text-rose-400"></i><div class="mt-1.5 text-sm font-bold text-white">المفضلة</div><div class="text-[12px] text-slate-500"><span data-count="wish">0</span> منتجات</div></button>
+    </div>
+    <div class="rounded-2xl border border-slate-800 p-4 space-y-3 text-sm">
+      <a data-tel href="tel:${CONFIG.hotlineTel}" class="flex items-center gap-2 text-white font-bold"><i data-lucide="phone-call" class="w-4 h-4 text-blue-400"></i><span dir="ltr" class="font-mono">${CONFIG.hotline}</span></a>
+      <a data-wa="مرحبا صدى، عندي سؤال." href="#" target="_blank" rel="noopener" class="flex items-center gap-2 text-emerald-400 font-bold"><i class="fa-brands fa-whatsapp text-base"></i>اطلب على واتساب</a>
+    </div>
+    <div class="rounded-2xl border border-slate-800 p-1">${STORES.map(s => storeRow(s)).join('')}</div>`;
+}
+function renderFooter() {
+  $('#footCats').innerHTML = CATS.map(c => `<li><button data-search-run="${esc(c.q)}" class="text-slate-400 hover:text-white transition">${c.label}</button></li>`).join('');
+  const socials = [['fa-facebook-f', 'https://www.facebook.com/', 'Facebook'], ['fa-instagram', 'https://www.instagram.com/', 'Instagram'], ['fa-tiktok', 'https://www.tiktok.com/', 'TikTok'], ['fa-youtube', 'https://www.youtube.com/', 'YouTube']];
+  $('#socials').innerHTML = socials.map(([i, h, l]) => `<a href="${h}" target="_blank" rel="noopener" aria-label="${l}" class="w-10 h-10 rounded-xl grid place-items-center border border-slate-800 text-slate-400 hover:text-white hover:border-blue-500/60 transition"><i class="fa-brands ${i}"></i></a>`).join('');
+  $$('[data-year]').forEach(e => e.textContent = new Date().getFullYear());
+  $$('[data-hotline]').forEach(e => e.textContent = CONFIG.hotline);
+  $$('[data-tel]').forEach(e => e.setAttribute('href', 'tel:' + CONFIG.hotlineTel));
+}
+
+/* ---------- شبكة المنتجات ---------- */
+function cardHTML(p) {
+  const d = discount(p), wished = state.wish.includes(p.id), cmp = state.compare.includes(p.id);
+  const sub = p.old ? `<div class="text-[12px] font-bold text-emerald-400">وفّر ${fmtShortH(p.old - p.price)}</div>`
+    : p.price >= 300 ? `<div class="text-[12px] text-slate-500 font-medium">${monthly(p.price)}</div>`
+    : `<div class="text-[12px] text-slate-500 font-medium">توصيل مجاني ابتداءً من ${fmtShortH(CONFIG.freeShipping)}</div>`;
+  return `<article class="group relative flex flex-col rounded-2xl border border-slate-800/80 bg-gradient-to-b from-slate-900/80 to-slate-950/70 hover:border-blue-500/50 hover:-translate-y-1 hover:shadow-[0_24px_60px_-24px_rgba(37,99,235,.55)] transition duration-300 overflow-hidden">
+    <div class="relative aspect-[4/3] overflow-hidden cursor-pointer card-media" data-qv="${p.id}">
+      <div class="absolute inset-0 grid-bg opacity-40"></div>
+      <div class="absolute inset-0 p-4 sm:p-6 transition-transform duration-500 ease-out group-hover:scale-110">${pArt(p)}</div>
+      <div class="absolute top-2.5 start-2.5 flex flex-col gap-1.5 items-start">
+        ${d ? `<span class="rounded-lg bg-gradient-to-l from-rose-500 to-fuchsia-600 px-2 py-0.5 text-[11.5px] font-extrabold text-white shadow-lg shadow-rose-500/30 font-mono">${pct(d)}</span>` : ''}
+        ${p.tags.includes('new') ? '<span class="rounded-lg bg-blue-600/90 px-2 py-0.5 text-[11px] font-extrabold text-white">جديد</span>' : ''}
+      </div>
+      <div class="absolute top-2.5 end-2.5 flex flex-col gap-1.5 lg:opacity-0 lg:-translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition duration-300">
+        <button data-wish="${p.id}" aria-label="أضف للمفضلة" aria-pressed="${wished}" class="w-8 h-8 grid place-items-center rounded-lg border border-slate-700/70 bg-slate-950/75 backdrop-blur hover:text-rose-400 transition ${wished ? 'text-rose-400' : 'text-slate-300'}"><i data-lucide="heart" class="w-4 h-4 ${wished ? 'fill-current' : ''}"></i></button>
+        <button data-cmp="${p.id}" aria-label="قارن" aria-pressed="${cmp}" class="w-8 h-8 grid place-items-center rounded-lg border backdrop-blur transition ${cmp ? CMP_ON : CMP_OFF}"><i data-lucide="git-compare-arrows" class="w-4 h-4"></i></button>
+      </div>
+      <div class="hidden lg:flex absolute inset-x-3 bottom-3 gap-2 translate-y-[140%] group-hover:translate-y-0 transition duration-300">
+        <button data-add="${p.id}" class="flex-1 h-9 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-glow"><i data-lucide="shopping-cart" class="w-3.5 h-3.5"></i>أضف إلى السلة</button>
+        <button data-qv="${p.id}" class="h-9 px-3 rounded-lg bg-slate-950/85 border border-slate-600 text-white text-xs font-bold flex items-center gap-1.5 backdrop-blur hover:border-blue-400"><i data-lucide="eye" class="w-3.5 h-3.5"></i>نظرة سريعة</button>
+      </div>
+    </div>
+    <div class="flex flex-col flex-1 p-3 sm:p-4">
+      <div class="flex items-center justify-between gap-2">${stockBadge(p)}<span class="hidden sm:block text-[11px] font-extrabold text-slate-500 truncate" dir="ltr">${p.brand}</span></div>
+      <h3 class="mt-2 text-[13.5px] sm:text-[14.5px] font-bold text-white leading-[1.55] line-clamp-2 h-[3.1em] cursor-pointer hover:text-blue-300 transition" data-qv="${p.id}">${p.name}</h3>
+      <div class="mt-1.5 flex items-center gap-1.5">${stars(p.rating)}<span class="text-[12px] text-slate-500 font-semibold"><span dir="ltr">${String(p.rating).replace('.', ',')}</span> (${p.reviews})</span></div>
+      <div class="mt-2.5 flex flex-wrap gap-1">${p.specs.map((s, i) => `<span dir="auto" class="${i > 2 ? 'hidden sm:inline-flex' : 'inline-flex'} items-center rounded-md border border-slate-700/70 bg-slate-800/50 px-1.5 py-0.5 font-mono text-[10.5px] font-semibold text-slate-300 whitespace-nowrap">${s}</span>`).join('')}</div>
+      <div class="mt-auto pt-3">
+        <div class="flex items-baseline flex-wrap gap-x-2">${priceHTML(p.price, 'text-lg sm:text-xl')}${p.old ? `<span class="text-[12px] text-slate-500 line-through tabular-nums whitespace-nowrap">${fmtShortH(p.old)}</span>` : ''}</div>
+        ${sub}
+        <button data-add="${p.id}" class="mt-3 w-full h-10 rounded-xl border border-blue-500/40 bg-blue-600/10 hover:bg-blue-600 hover:border-blue-500 text-blue-100 hover:text-white text-[13.5px] font-bold flex items-center justify-center gap-2 transition"><i data-lucide="shopping-cart" class="w-4 h-4"></i><span class="sm:hidden">أضف</span><span class="hidden sm:inline">أضف إلى السلة</span></button>
+      </div>
+    </div>
+  </article>`;
+}
+const CMP_ON = 'border-blue-500/70 bg-blue-600/80 text-white', CMP_OFF = 'border-slate-700/70 bg-slate-950/75 text-slate-300 hover:text-blue-300';
+function renderGrid(list) {
+  const g = $('#productGrid');
+  g.classList.remove('fade-in'); void g.offsetWidth; g.classList.add('fade-in');
+  g.innerHTML = list.length ? list.map(cardHTML).join('') : `<div class="col-span-full rounded-2xl border border-slate-800 p-10 text-center text-slate-400">ما لقيناش منتج. جرّب « AirPods » ولا « بافل » ولا « كاسك ».</div>`;
+  icons();
+}
+function showTab(tab) {
+  state.tab = tab;
+  $$('#tabs [data-tab]').forEach(b => { const on = b.dataset.tab === tab; b.classList.toggle('is-active', on); b.setAttribute('aria-selected', on); });
+  $('#gridInfo').classList.add('hidden');
+  renderGrid(PRODUCTS.filter(p => p.tags.includes(tab)).slice(0, 8));
+}
+
+/* ---------- البحث ---------- */
+PRODUCTS.forEach(p => {
+  const c = CATS.find(x => x.key === p.cat);
+  const tagWords = p.tags.map(t => t === 'promo' ? 'promo تخفيض عرض عروض solde' : t === 'new' ? 'جديد nouveau' : 'الاكثر مبيعا').join(' ');
+  p._hay = norm([p.name, p.brand, p.specs.join(' '), p.kw, c ? c.label : '', tagWords].join(' '));
+});
+const STOP = ['و', 'في', 'من', 'مع', 'على', 'de', 'la', 'le', 'les', 'des'];
+const tokens = q => norm(q).split(/[^a-z0-9ء-ي]+/).filter(Boolean)
+  .map(t => /[a-z]/.test(t) ? (t.length > 3 && t.endsWith('s') ? t.slice(0, -1) : t) : (t.length > 4 && t.startsWith('ال') ? t.slice(2) : t))
+  .filter(t => !STOP.includes(t));
+function searchProducts(q) {
+  const ts = tokens(q); if (!ts.length) return [];
+  return PRODUCTS.filter(p => ts.every(t => p._hay.includes(t)))
+    .sort((a, b) => (norm(b.name).includes(ts[0]) ? 1 : 0) - (norm(a.name).includes(ts[0]) ? 1 : 0));
+}
+function hl(name, ts) {
+  const t = ts.filter(x => /^[a-z0-9]{2,}$/.test(x)); if (!t.length) return esc(name);
+  const re = new RegExp(`(${t.join('|')})`, 'gi');
+  return esc(name).replace(re, '<mark class="bg-blue-500/25 text-blue-100 rounded px-0.5">$1</mark>');
+}
+const srRow = (p, ts) => `<button data-sr data-qv="${p.id}" class="sr-item w-full flex items-center gap-3 p-2 rounded-xl text-start transition">
+    <div class="w-16 h-12 shrink-0 rounded-lg bg-slate-950/70 border border-slate-800 p-1">${pArt(p)}</div>
+    <div class="min-w-0 flex-1"><div class="text-[13.5px] font-semibold text-white truncate">${hl(p.name, ts)}</div><div class="mt-0.5 flex items-center gap-2 text-[11px] text-slate-400 font-mono truncate"><span class="w-1.5 h-1.5 rounded-full shrink-0 ${p.stock === 'in' ? 'bg-emerald-400' : p.stock === 'limited' ? 'bg-amber-400' : 'bg-sky-400'}"></span><span dir="ltr">${p.specs.slice(0, 3).join(' · ')}</span></div></div>
+    <div class="text-end shrink-0"><div class="text-[13px] font-extrabold text-white tabular-nums">${fmtShortH(p.price)}</div>${p.old ? `<div class="text-[11px] text-rose-300 font-bold">${pct(discount(p))}</div>` : ''}</div>
+  </button>`;
+function searchHTML(q) {
+  const t = q.trim();
+  const chips = `<div class="flex flex-wrap gap-2 mt-2">${POPULAR.map(s => `<button data-sr data-sq="${esc(s)}" class="sr-item chip-btn"><i data-lucide="trending-up" class="w-3.5 h-3.5 text-blue-400"></i>${s}</button>`).join('')}</div>`;
+  if (!t) return `<div class="p-4"><div class="dd-title">الأكثر بحثاً</div>${chips}<div class="dd-title mt-5 mb-1">رائج هذه الأيام</div>${[1, 10, 7].map(id => srRow(byId(id), [])).join('')}</div>`;
+  const res = searchProducts(t), ts = tokens(t);
+  const cats = CATS.filter(c => ts.some(tk => tk.length > 2 && norm(c.label + ' ' + c.groups.flatMap(g => g[1]).join(' ')).includes(tk))).slice(0, 3);
+  if (!res.length && !cats.length) return `<div class="p-5"><div class="text-sm text-white font-semibold">ما فماش نتائج لـ « ${esc(t)} »</div><div class="text-xs text-slate-400 mt-1">ثبّت في الكتابة ولا جرّب بحث من هذوما:</div>${chips}</div>`;
+  return `<div class="p-2">
+    ${res.length ? `<div class="dd-title px-2 pt-2 pb-1 flex justify-between"><span>المنتجات</span><span class="text-blue-300 font-mono">${res.length}</span></div>${res.slice(0, 6).map(p => srRow(p, ts)).join('')}` : ''}
+    ${cats.length ? `<div class="dd-title px-2 pt-3">الأصناف</div><div class="flex flex-wrap gap-2 px-2 py-2">${cats.map(c => `<button data-sr data-sq="${esc(c.q)}" class="sr-item chip-btn"><i data-lucide="${c.icon}" class="w-3.5 h-3.5 text-violet-300"></i>${c.label}</button>`).join('')}</div>` : ''}
+    ${res.length ? `<button data-sr data-sfull="${esc(t)}" class="sr-item w-full mt-1 h-11 rounded-xl bg-blue-600/15 border border-blue-500/30 text-blue-100 text-[13.5px] font-bold flex items-center justify-center gap-2">شوف النتائج الكل (${res.length}) لـ « ${esc(t)} »<i data-lucide="arrow-left" class="w-4 h-4"></i></button>` : ''}
+  </div>`;
+}
+function hideDropdowns() { $$('[data-search-dd]').forEach(d => d.classList.add('hidden')); }
+function runFullSearch(q, label) {
+  const t = String(q || '').trim(); if (!t) return;
+  hideDropdowns(); hideMega(); closeAll();
+  const res = searchProducts(t);
+  state.tab = 'search';
+  $$('#tabs [data-tab]').forEach(b => { b.classList.remove('is-active'); b.setAttribute('aria-selected', 'false'); });
+  const info = $('#gridInfo');
+  info.innerHTML = `<div class="flex flex-wrap items-center gap-3 rounded-2xl border border-blue-500/30 bg-blue-600/10 px-4 py-3">
+      <i data-lucide="search" class="w-4 h-4 text-blue-300"></i><span class="text-sm text-slate-200"><b class="text-white">${res.length} نتيجة</b> لـ « ${esc(label || t)} »</span>
+      <button data-clear-search class="ms-auto chip-btn"><i data-lucide="x" class="w-3.5 h-3.5"></i>امسح البحث</button></div>`;
+  info.classList.remove('hidden');
+  renderGrid(res);
+  $$('[data-search-input]').forEach(i => i.value = t);
+  $('#produits').scrollIntoView({ behavior: 'smooth' });
+}
+function setupSearch(wrap) {
+  const input = $('[data-search-input]', wrap), dd = $('[data-search-dd]', wrap);
+  let idx = -1;
+  const show = () => { dd.innerHTML = searchHTML(input.value); dd.classList.remove('hidden'); idx = -1; icons(); };
+  input.addEventListener('input', show);
+  input.addEventListener('focus', show);
+  input.addEventListener('keydown', e => {
+    const items = $$('[data-sr]', dd);
+    const mark = () => { items.forEach((it, i) => it.classList.toggle('sr-active', i === idx)); if (items[idx]) items[idx].scrollIntoView({ block: 'nearest' }); };
+    if (e.key === 'ArrowDown' && items.length) { e.preventDefault(); idx = (idx + 1) % items.length; mark(); }
+    else if (e.key === 'ArrowUp' && items.length) { e.preventDefault(); idx = (idx - 1 + items.length) % items.length; mark(); }
+    else if (e.key === 'Enter') { e.preventDefault(); if (idx >= 0 && items[idx]) items[idx].click(); else runFullSearch(input.value); }
+    else if (e.key === 'Escape') { dd.classList.add('hidden'); input.blur(); }
+  });
+  $('[data-search-go]', wrap).addEventListener('click', () => input.value.trim() ? runFullSearch(input.value) : input.focus());
+}
+
+/* ---------- القائمة الكبيرة ---------- */
+let megaTimer = null, megaKey = null;
+function showMega(key) {
+  clearTimeout(megaTimer);
+  if (megaKey !== key) { megaKey = key; renderMega(key); }
+  $('#megaPanel').classList.remove('hidden');
+  $$('#navList [data-mega]').forEach(b => b.classList.toggle('is-active', b.dataset.mega === key));
+}
+function hideMega() { clearTimeout(megaTimer); $('#megaPanel').classList.add('hidden'); $$('#navList [data-mega]').forEach(b => b.classList.remove('is-active')); megaKey = null; }
+
+/* ---------- السلة ---------- */
+function addItem(item, qty = 1) {
+  const ex = state.cart.find(i => i.key === item.key);
+  if (ex) ex.qty = Math.min(10, ex.qty + qty); else state.cart.push({ ...item, qty: Math.min(10, qty) });
+  save(); updateCounts(); bump('cart');
+}
+function addProduct(id, qty = 1) {
+  const p = byId(id); if (!p) return;
+  addItem({ key: 'p' + p.id, id: p.id, name: p.name, price: p.price, type: p.type, accent: p.accent, artOpts: p.artOpts || {}, specs: p.specs.slice(0, 4) }, qty);
+  [$('#qvLayer'), $('#cmpLayer'), $('#menuLayer')].forEach(closeLayer);
+  openDrawer('cart');
+  toast({ title: 'تمت إضافة المنتج إلى السلة بنجاح!', msg: p.name, p });
+}
+function setQty(key, delta) {
+  const it = state.cart.find(i => i.key === key); if (!it) return;
+  it.qty += delta;
+  if (it.qty <= 0) state.cart = state.cart.filter(i => i.key !== key);
+  if (it.qty > 10) it.qty = 10;
+  save(); updateCounts(); renderDrawer();
+}
+function removeItem(key) { state.cart = state.cart.filter(i => i.key !== key); save(); updateCounts(); renderDrawer(); }
+function cartWhatsApp() {
+  const sub = cartSubtotal(), ship = shippingFor(sub);
+  const lines = state.cart.map(i => `• ${i.qty} × ${i.name} — ${fmt(i.price * i.qty)}`).join('\n');
+  return `مرحبا ${CONFIG.brand} 👋\nنحب نطلب:\n${lines}\n\nالمجموع: ${fmt(sub)}\nالتوصيل: ${ship ? fmt(ship) : 'مجاني'}\nالجملة: ${fmt(sub + ship)}\n\nيعيشك أكّدلي التوفّر و وقت التوصيل.`;
+}
+function openDrawer(mode) { state.drawer = mode; renderDrawer(); openLayer($('#drawerLayer')); }
+const emptyState = (ic, t, s) => `<div class="h-full min-h-[280px] flex flex-col items-center justify-center text-center px-6">
+    <span class="w-20 h-20 rounded-3xl grid place-items-center bg-gradient-to-br from-blue-600/20 to-violet-600/20 border border-slate-700 text-blue-300"><i data-lucide="${ic}" class="w-9 h-9"></i></span>
+    <div class="mt-4 font-extrabold text-white text-lg">${t}</div><div class="mt-1 text-sm text-slate-400">${s}</div></div>`;
+function renderDrawer() {
+  const isCart = state.drawer === 'cart';
+  $('#drawerTitle').textContent = isCart ? 'سلتي' : 'المفضلة';
+  $('#drawerIcon').innerHTML = `<i data-lucide="${isCart ? 'shopping-bag' : 'heart'}" class="w-5 h-5 ${isCart ? '' : 'text-rose-400'}"></i>`;
+  $('#drawerCount').textContent = isCart ? cartCount() : state.wish.length;
+  const ship = $('#drawerShip'), items = $('#drawerItems'), foot = $('#drawerFoot');
+  if (!isCart) {
+    ship.classList.add('hidden');
+    const list = state.wish.map(byId).filter(Boolean);
+    items.innerHTML = list.length ? list.map(p => `<div class="flex gap-3 rounded-2xl border border-slate-800 bg-slate-900/50 p-3">
+        <button data-qv="${p.id}" class="w-20 h-16 shrink-0 rounded-xl bg-slate-950/70 border border-slate-800 p-1">${pArt(p)}</button>
+        <div class="min-w-0 flex-1"><div class="text-[13.5px] font-bold text-white leading-snug line-clamp-2">${p.name}</div><div class="mt-1">${priceHTML(p.price, 'text-base')}</div>
+        <div class="mt-2 flex gap-2"><button data-add="${p.id}" class="h-8 px-3 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold inline-flex items-center gap-1.5"><i data-lucide="shopping-cart" class="w-3.5 h-3.5"></i>أضف</button><button data-wish="${p.id}" class="h-8 px-3 rounded-lg border border-slate-700 text-slate-300 hover:text-rose-300 text-xs font-bold">نحّي</button></div></div>
+      </div>`).join('') : emptyState('heart', 'ما عندك حتى منتج في المفضلة', 'انزل على ♥ في أي منتج باش تلقاه هنا.');
+    foot.innerHTML = `<button data-close class="w-full h-11 rounded-xl border border-slate-700 text-white text-sm font-bold hover:border-slate-500">كمّل التسوّق</button>`;
+    icons(); return;
+  }
+  ship.classList.remove('hidden');
+  const sub = cartSubtotal(), fee = shippingFor(sub), remain = Math.max(0, CONFIG.freeShipping - sub), pc = Math.min(100, sub / CONFIG.freeShipping * 100);
+  ship.innerHTML = state.cart.length ? `<div class="flex items-center gap-2 text-[13px] font-semibold ${remain ? 'text-slate-300' : 'text-emerald-300'}"><i data-lucide="truck" class="w-4 h-4 shrink-0"></i><span>${remain ? `بقي لك <b class="text-white"><span dir="ltr">${num(remain)}</span> ${CUR}</b> و التوصيل يولّي مجاني` : 'مبروك! التوصيل السريع <b>مجاني</b>.'}</span></div>
+      <div class="mt-2 h-1.5 rounded-full bg-slate-800 overflow-hidden"><div class="h-full rounded-full bg-gradient-to-l from-emerald-500 to-teal-400 transition-all duration-500" style="width:${pc}%"></div></div>` : `<div class="flex items-center gap-2 text-[13px] text-slate-400"><i data-lucide="truck" class="w-4 h-4 shrink-0"></i><span>توصيل مجاني ابتداءً من ${fmtShortH(CONFIG.freeShipping)}</span></div>`;
+  if (!state.cart.length) {
+    items.innerHTML = emptyState('shopping-cart', 'سلتك فارغة', 'اكتشف المنتجات الأكثر مبيعاً و آخر ما وصل.');
+    foot.innerHTML = `<button data-close data-goto-tab="best" class="w-full h-12 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold">اكتشف الأكثر مبيعاً</button>`;
+    icons(); return;
+  }
+  const upsell = [20, 17, 19].filter(id => !state.cart.some(i => i.id === id)).slice(0, 2).map(byId);
+  items.innerHTML = state.cart.map(i => `<div class="flex gap-3 rounded-2xl border border-slate-800 bg-slate-900/50 p-3">
+      <div class="w-20 h-16 shrink-0 rounded-xl bg-slate-950/70 border border-slate-800 p-1 ${i.id ? 'cursor-pointer' : ''}" ${i.id ? `data-qv="${i.id}"` : ''}>${art(i.type, i.accent, i.artOpts || {})}</div>
+      <div class="min-w-0 flex-1">
+        <div class="flex items-start justify-between gap-2"><div class="text-[13.5px] font-bold text-white leading-snug line-clamp-2">${esc(i.name)}</div><button data-remove="${i.key}" aria-label="حذف" class="shrink-0 w-7 h-7 grid place-items-center rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div>
+        <div class="mt-0.5 text-[11px] font-mono text-slate-500 truncate" dir="auto">${(i.specs || []).map(esc).join(' · ')}</div>
+        <div class="mt-2 flex items-center justify-between gap-2">
+          <div class="flex items-center rounded-lg border border-slate-700 bg-slate-950/60" dir="ltr"><button data-qty="${i.key}" data-d="-1" aria-label="نقّص" class="w-8 h-8 grid place-items-center text-slate-300 hover:text-white"><i data-lucide="minus" class="w-3.5 h-3.5"></i></button><span class="w-7 text-center text-sm font-bold text-white tabular-nums">${i.qty}</span><button data-qty="${i.key}" data-d="1" aria-label="زيد" class="w-8 h-8 grid place-items-center text-slate-300 hover:text-white"><i data-lucide="plus" class="w-3.5 h-3.5"></i></button></div>
+          ${priceHTML(i.price * i.qty, 'text-base')}
+        </div>
+      </div>
+    </div>`).join('') + (upsell.length ? `<div class="pt-2"><div class="dd-title mb-2">كمّل الباك متاعك</div><div class="grid grid-cols-2 gap-2">${upsell.map(p => `<div class="rounded-xl border border-slate-800 bg-slate-900/40 p-2.5"><div class="h-14 cursor-pointer" data-qv="${p.id}">${pArt(p)}</div><div class="mt-1 text-[12px] font-semibold text-white line-clamp-1">${p.name}</div><div class="mt-1 flex items-center justify-between"><span class="text-[12.5px] font-extrabold text-white">${fmtShortH(p.price)}</span><button data-add="${p.id}" aria-label="أضف ${esc(p.name)}" class="w-7 h-7 grid place-items-center rounded-lg bg-blue-600 hover:bg-blue-500 text-white"><i data-lucide="plus" class="w-3.5 h-3.5"></i></button></div></div>`).join('')}</div></div>` : '');
+  foot.innerHTML = `<div class="space-y-1.5 text-sm">
+      <div class="flex justify-between text-slate-400"><span>المجموع</span><span class="tabular-nums text-slate-200 font-semibold"><span dir="ltr">${num(sub)}</span> ${CUR}</span></div>
+      <div class="flex justify-between text-slate-400"><span>التوصيل 24/48 ساعة</span><span class="font-semibold ${fee ? 'text-slate-200' : 'text-emerald-400'}">${fee ? `<span dir="ltr">${num(fee)}</span> ${CUR}` : 'مجاني'}</span></div>
+      <div class="flex justify-between items-end pt-2 border-t border-slate-800"><span class="font-bold text-white">الجملة</span>${priceHTML(sub + fee, 'text-2xl')}</div>
+      ${sub + fee >= 300 ? `<div class="text-left text-[12px] text-slate-500">${monthly(sub + fee)} على ${CONFIG.months} شهر*</div>` : ''}
+    </div>
+    <button data-checkout class="mt-3 w-full h-12 rounded-xl bg-gradient-to-l from-blue-600 to-violet-600 hover:from-blue-500 hover:to-violet-500 text-white font-extrabold flex items-center justify-center gap-2 shadow-glow transition"><i data-lucide="lock" class="w-4 h-4"></i>تأكيد الطلبية</button>
+    <a data-wa-cart href="${esc(waLink(cartWhatsApp()))}" target="_blank" rel="noopener" class="mt-2 w-full h-11 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-bold flex items-center justify-center gap-2 transition"><i class="fa-brands fa-whatsapp text-lg"></i>اطلب عبر واتساب</a>
+    <div class="mt-3 flex items-center justify-center gap-2 text-[12px] text-slate-500"><i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-400"></i>الدفع عند الاستلام · بطاقة · تحويل</div>`;
+  icons();
+}
+
+/* ---------- المفضلة و المقارنة ---------- */
+function toggleWish(id) {
+  id = +id; const p = byId(id); const on = !state.wish.includes(id);
+  state.wish = on ? [...state.wish, id] : state.wish.filter(x => x !== id);
+  save(); updateCounts(); if (on) bump('wish');
+  $$(`[data-wish="${id}"]`).forEach(b => { b.classList.toggle('text-rose-400', on); b.classList.toggle('text-slate-300', !on); b.setAttribute('aria-pressed', on); const svg = $('svg', b); if (svg) svg.classList.toggle('fill-current', on); });
+  if (state.drawer === 'wish' && openLayers.includes($('#drawerLayer'))) renderDrawer();
+  toast({ title: on ? 'تزاد للمفضلة' : 'تنحّى من المفضلة', msg: p.name, type: 'wish' });
+}
+function toggleCompare(id) {
+  id = +id; const p = byId(id); const on = !state.compare.includes(id);
+  if (on && state.compare.length >= 4) { toast({ title: 'المقارنة مليانة', msg: 'أقصى حد 4 منتجات. نحّي واحد باش تكمّل.', type: 'warn' }); return; }
+  state.compare = on ? [...state.compare, id] : state.compare.filter(x => x !== id);
+  save(); updateCounts(); if (on) bump('compare');
+  $$(`#productGrid [data-cmp="${id}"]`).forEach(b => { b.setAttribute('aria-pressed', on); b.className = b.className.replace(on ? CMP_OFF : CMP_ON, on ? CMP_ON : CMP_OFF); });
+  if (openLayers.includes($('#cmpLayer'))) renderCompare();
+  toast({ title: on ? 'تزاد للمقارنة' : 'تنحّى من المقارنة', msg: p.name, type: 'info', action: { label: 'قارن', fn: openCompare } });
+}
+function renderCompare() {
+  const list = state.compare.map(byId).filter(Boolean);
+  $('#cmpCount').innerHTML = `<span dir="ltr">(${list.length}/4)</span>`;
+  if (!list.length) { $('#cmpBody').innerHTML = `<div class="p-6">${emptyState('git-compare-arrows', 'ما فماش منتجات للمقارنة', 'زيد منتجات بأيقونة ⇄ في البطاقات.')}</div>`; icons(); return; }
+  const labels = [...new Set(list.flatMap(p => p.details.map(d => d[0])))];
+  const cell = 'px-4 py-3 border-b border-slate-800/80 align-top';
+  $('#cmpBody').innerHTML = `<table class="w-full min-w-[640px] text-[13.5px]">
+    <thead><tr><th class="${cell} w-40 text-start text-[12px] text-slate-500 font-bold">المنتج</th>${list.map(p => `<th class="${cell} text-start font-normal">
+      <div class="relative rounded-2xl border border-slate-800 bg-slate-950/60 h-28 p-2 card-media">${pArt(p)}<button data-cmp="${p.id}" aria-label="نحّي" class="absolute top-2 left-2 w-7 h-7 grid place-items-center rounded-lg bg-slate-900/90 border border-slate-700 text-slate-300 hover:text-rose-400"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+      <div class="mt-2 font-bold text-white leading-snug line-clamp-2 cursor-pointer hover:text-blue-300" data-qv="${p.id}">${p.name}</div></th>`).join('')}</tr></thead>
+    <tbody>
+      <tr><td class="${cell} text-slate-400 font-semibold">السعر</td>${list.map(p => `<td class="${cell}">${priceHTML(p.price, 'text-lg')}${p.old ? `<div class="text-[12px] text-slate-500 line-through">${fmtShortH(p.old)}</div>` : ''}</td>`).join('')}</tr>
+      <tr><td class="${cell} text-slate-400 font-semibold">التوفّر</td>${list.map(p => `<td class="${cell}">${stockBadge(p)}</td>`).join('')}</tr>
+      <tr><td class="${cell} text-slate-400 font-semibold">التقييم</td>${list.map(p => `<td class="${cell}">${stars(p.rating)} <span class="text-slate-400 text-xs" dir="ltr">${String(p.rating).replace('.', ',')}</span></td>`).join('')}</tr>
+      ${labels.map(l => `<tr class="hover:bg-slate-800/20"><td class="${cell} text-slate-400 font-semibold">${l}</td>${list.map(p => { const d = p.details.find(x => x[0] === l); return `<td class="${cell} ${d ? 'text-slate-200' : 'text-slate-600'}">${d ? d[1] : '—'}</td>`; }).join('')}</tr>`).join('')}
+      <tr><td class="px-4 py-4"></td>${list.map(p => `<td class="px-4 py-4"><button data-add="${p.id}" class="w-full h-10 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold inline-flex items-center justify-center gap-1.5"><i data-lucide="shopping-cart" class="w-3.5 h-3.5"></i>أضف إلى السلة</button></td>`).join('')}</tr>
+    </tbody></table>`;
+  icons();
+}
+function openCompare() { closeLayer($('#menuLayer')); renderCompare(); openLayer($('#cmpLayer')); }
+
+/* ---------- نظرة سريعة ---------- */
+let qvQty = 1, qvId = null;
+function openQuickView(id) {
+  const p = byId(id); if (!p) return;
+  qvId = p.id; qvQty = 1;
+  hideDropdowns(); hideMega();
+  [$('#drawerLayer'), $('#cmpLayer'), $('#menuLayer')].forEach(closeLayer);
+  const d = discount(p);
+  const views = ['الصورة الرئيسية', 'تكبير', 'من الجنب', 'لون آخر'];
+  $('#qvBody').innerHTML = `<div class="grid md:grid-cols-2">
+    <div class="p-4 sm:p-7 border-b md:border-b-0 md:border-e border-slate-800 bg-gradient-to-b from-slate-900/60 to-transparent">
+      <div class="relative aspect-[4/3] rounded-2xl border border-slate-800 bg-slate-950/60 overflow-hidden live">
+        <div class="absolute inset-0 grid-bg opacity-50"></div>
+        <div id="qvMain" class="absolute inset-0 p-5 fade-in">${pArt(p, { float: true })}</div>
+        <div class="absolute top-3 start-3 flex gap-1.5">${d ? `<span class="rounded-lg bg-gradient-to-l from-rose-500 to-fuchsia-600 px-2 py-0.5 text-[11.5px] font-extrabold text-white font-mono">${pct(d)}</span>` : ''}${p.tags.includes('new') ? '<span class="rounded-lg bg-blue-600 px-2 py-0.5 text-[11px] font-extrabold text-white">جديد</span>' : ''}</div>
+        <span id="qvLabel" class="absolute bottom-3 start-3 rounded-lg bg-slate-950/80 border border-slate-700 px-2 py-1 text-[11.5px] font-bold text-slate-300">${views[0]}</span>
+      </div>
+      <div class="mt-3 grid grid-cols-4 gap-2">${views.map((v, i) => `<button data-qvthumb="${i}" aria-label="${v}" class="aspect-[4/3] rounded-xl border ${i === 0 ? 'border-blue-500 ring-2 ring-blue-500/30' : 'border-slate-800'} bg-slate-950/60 p-1.5 hover:border-blue-500/60 transition overflow-hidden">${pArt(p, { variant: i })}</button>`).join('')}</div>
+      <div class="mt-4 grid grid-cols-3 gap-2 text-center">
+        <div class="rounded-xl border border-slate-800 p-2.5"><i data-lucide="shield-check" class="w-4 h-4 mx-auto text-blue-400"></i><div class="mt-1 text-[12px] font-bold text-white">${p.warranty === '—' ? 'منتج أصلي' : 'ضمان ' + p.warranty}</div></div>
+        <div class="rounded-xl border border-slate-800 p-2.5"><i data-lucide="truck" class="w-4 h-4 mx-auto text-emerald-400"></i><div class="mt-1 text-[12px] font-bold text-white">توصيل 24/48 ساعة</div></div>
+        <div class="rounded-xl border border-slate-800 p-2.5"><i data-lucide="store" class="w-4 h-4 mx-auto text-violet-400"></i><div class="mt-1 text-[12px] font-bold text-white">استلام في ساعة</div></div>
+      </div>
+    </div>
+    <div class="p-5 sm:p-7 flex flex-col">
+      <div class="flex items-center gap-2 text-[12px] font-bold"><span class="text-blue-300" dir="ltr">${p.brand}</span><span class="text-slate-600">•</span><span class="text-slate-500">المرجع <span dir="ltr" class="font-mono">SD-${String(p.id).padStart(5, '0')}</span></span></div>
+      <h2 class="mt-2 pe-10 text-xl sm:text-2xl font-extrabold text-white leading-snug">${p.name}</h2>
+      <div class="mt-2 flex flex-wrap items-center gap-3">${stars(p.rating)}<span class="text-xs text-slate-400 font-semibold"><span dir="ltr">${String(p.rating).replace('.', ',')}</span> · ${p.reviews} تقييم</span>${stockBadge(p)}</div>
+      <div class="mt-4 rounded-2xl border border-slate-800 bg-slate-950/50 p-4">
+        <div class="flex items-baseline flex-wrap gap-x-3">${priceHTML(p.price, 'text-3xl sm:text-4xl')}${p.old ? `<span class="text-sm text-slate-500 line-through"><span dir="ltr">${num(p.old)}</span> ${CUR}</span><span class="rounded-md bg-rose-500/15 px-1.5 py-0.5 text-xs font-extrabold text-rose-300">${pct(d)}</span>` : ''}</div>
+        <div class="mt-1 text-xs text-slate-400">${p.old ? `<span class="text-emerald-400 font-bold">توفّر ${fmtShortH(p.old - p.price)}</span>` : ''}${p.old && p.price >= 300 ? ' · ' : ''}${p.price >= 300 ? `<b class="text-white">${monthly(p.price)}</b> على ${CONFIG.months} شهر*` : (!p.old ? 'السعر يشمل الأداءات' : '')}</div>
+      </div>
+      <div class="mt-4"><div class="dd-title mb-2">الخصائص</div>
+        <dl class="rounded-2xl border border-slate-800 divide-y divide-slate-800 overflow-hidden text-[13.5px]">${p.details.map(([k, v]) => `<div class="grid grid-cols-5 gap-3 px-3.5 py-2.5 odd:bg-slate-900/40"><dt class="col-span-2 text-slate-400 font-semibold">${k}</dt><dd class="col-span-3 text-slate-100">${v}</dd></div>`).join('')}</dl>
+      </div>
+      <div class="mt-5 flex gap-2">
+        <div class="flex items-center rounded-xl border border-slate-700 bg-slate-950/60 shrink-0" dir="ltr"><button data-qvq="-1" aria-label="نقّص" class="w-10 h-12 grid place-items-center text-slate-300 hover:text-white"><i data-lucide="minus" class="w-4 h-4"></i></button><span id="qvQty" class="w-8 text-center font-bold text-white tabular-nums">1</span><button data-qvq="1" aria-label="زيد" class="w-10 h-12 grid place-items-center text-slate-300 hover:text-white"><i data-lucide="plus" class="w-4 h-4"></i></button></div>
+        <button data-qvadd class="flex-1 h-12 rounded-xl bg-gradient-to-l from-blue-600 to-violet-600 hover:from-blue-500 hover:to-violet-500 text-white font-extrabold flex items-center justify-center gap-2 shadow-glow transition"><i data-lucide="shopping-cart" class="w-5 h-5"></i>أضف إلى السلة</button>
+        <button data-wish="${p.id}" aria-label="المفضلة" class="w-12 h-12 shrink-0 grid place-items-center rounded-xl border border-slate-700 hover:text-rose-400 ${state.wish.includes(p.id) ? 'text-rose-400' : 'text-slate-300'}"><i data-lucide="heart" class="w-5 h-5 ${state.wish.includes(p.id) ? 'fill-current' : ''}"></i></button>
+      </div>
+      <a data-wa="${esc(`مرحبا صدى، يهمني: ${p.name} (${fmt(p.price)}). متوفر؟`)}" href="#" target="_blank" rel="noopener" class="mt-2 h-11 rounded-xl border border-emerald-500/40 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20 text-sm font-bold flex items-center justify-center gap-2 transition"><i class="fa-brands fa-whatsapp text-base"></i>عندك سؤال؟ اسأل خبير</a>
+      <div class="mt-4 flex items-start gap-2 text-[12.5px] text-slate-400"><i data-lucide="package-check" class="w-4 h-4 shrink-0 text-emerald-400 mt-1"></i><span>${p.stock === 'order' ? `حسب الطلب: التوصيل المتوقّع يوم <b class="text-white">${deliveryDate(6)}</b>.` : `اطلب قبل الساعة 14:00: التوصيل المتوقّع بين <b class="text-white">${deliveryDate(1)}</b> و <b class="text-white">${deliveryDate(2)}</b>.`}</span></div>
+    </div>
+  </div>`;
+  openLayer($('#qvLayer'));
+}
+
+/* ---------- صانع الباك ---------- */
+const cfgOpt = k => CFG[k].opts.find(o => o.id === cfgSel[k]);
+const brandColor = b => ({ Apple: 'text-slate-200', Samsung: 'text-sky-400', Xiaomi: 'text-orange-400', JBL: 'text-orange-400', Anker: 'text-cyan-300' }[b] || 'text-violet-300');
+function cfgCalc() {
+  const b = cfgOpt('buds'), s = cfgOpt('spk'), w = cfgOpt('pow'), r = cfgOpt('prot');
+  const items = [b, s, w, r].filter(o => o.price > 0);
+  const gross = items.reduce((t, o) => t + o.price, 0);
+  const rate = items.length >= 4 ? 0.10 : items.length === 3 ? 0.07 : items.length === 2 ? 0.04 : 0;
+  const disc = Math.round(gross * rate);
+  const hours = b.batt + s.batt + (w.mah ? Math.round(w.mah / 10000 * 2 * 6) : 0);
+  return { b, s, w, r, items, gross, rate, disc, total: gross - disc, hours };
+}
+function renderCfgSteps() {
+  $('#cfgSteps').innerHTML = Object.entries(CFG).map(([key, st], i) => {
+    const sel = cfgOpt(key);
+    return `<div>
+      <div class="flex items-center justify-between gap-3 mb-3">
+        <div class="flex items-center gap-3"><span class="w-8 h-8 shrink-0 rounded-xl grid place-items-center bg-gradient-to-br from-blue-600 to-violet-600 text-white text-sm font-extrabold shadow-glow">${i + 1}</span><div><div class="font-extrabold text-white leading-tight">${st.title}</div><div class="text-[12px] text-slate-400">${st.hint}</div></div></div>
+        <span class="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-slate-700 bg-slate-800/60 px-2.5 py-1 text-[12px] font-bold text-slate-200"><i data-lucide="check" class="w-3 h-3 text-emerald-400"></i>${sel.name}</span>
+      </div>
+      <div class="grid grid-cols-2 ${st.opts.length === 4 ? 'xl:grid-cols-4' : 'xl:grid-cols-3'} gap-2.5">${st.opts.map(o => {
+        const on = o.id === cfgSel[key];
+        return `<button data-cfg="${key}:${o.id}" aria-pressed="${on}" class="relative text-start rounded-2xl border p-3 transition duration-200 ${on ? 'border-blue-500/80 bg-blue-500/10 ring-1 ring-blue-500/40 shadow-glow' : 'border-slate-800 bg-slate-900/50 hover:border-slate-600 hover:bg-slate-800/40'}">
+          ${o.tag ? `<span class="absolute -top-2.5 end-3 rounded-full bg-gradient-to-l from-blue-600 to-violet-600 px-2 py-0.5 text-[10px] font-extrabold text-white">${o.tag}</span>` : ''}
+          <div class="flex items-center justify-between gap-2"><span class="text-[11px] font-extrabold ${brandColor(o.brand)}" dir="ltr">${o.brand}</span><span class="w-4 h-4 shrink-0 rounded-full border-2 grid place-items-center ${on ? 'border-blue-400 bg-blue-500' : 'border-slate-600'}">${on ? '<span class="w-1.5 h-1.5 rounded-full bg-white"></span>' : ''}</span></div>
+          <div class="mt-1 text-[13.5px] sm:text-sm font-extrabold text-white leading-snug">${o.name}</div>
+          <div class="mt-0.5 text-[11.5px] text-slate-400 leading-snug min-h-[1.2em]">${o.sub}</div>
+          <div class="mt-2.5 flex items-center justify-between gap-2"><span class="flex gap-0.5" aria-label="المستوى ${o.perf}/5">${[1, 2, 3, 4, 5].map(n => `<span class="w-2.5 h-1.5 rounded-sm ${n <= o.perf ? 'bg-gradient-to-l from-blue-500 to-violet-500' : 'bg-slate-700'}"></span>`).join('')}</span><span class="font-mono text-[12px] font-bold text-blue-100 whitespace-nowrap">${o.price ? fmtShortH(o.price) : '—'}</span></div>
+        </button>`; }).join('')}</div>
+    </div>`;
+  }).join('<div class="h-px bg-slate-800/80"></div>');
+}
+let cfgShown = 0, cfgRaf = 0, cfgArtKey = null;
+function renderCfgSummary(initial) {
+  const c = cfgCalc();
+  const artKey = c.b.id + c.s.id + c.w.id;
+  if (cfgArtKey !== artKey) {
+    cfgArtKey = artKey;
+    const second = c.s.art || (c.w.id === 'c20' ? ['charger', '#60A5FA', { color: W, label: '20W' }] : c.w.mah ? ['powerbank', '#22D3EE', { color: '#1F2937', label: 'ANKER' }] : null);
+    $('#cfgArt').innerHTML = `<div class="grid ${second ? 'grid-cols-2' : 'grid-cols-1'} h-full gap-2">${art(c.b.art[0], c.b.art[1], { ...c.b.art[2], float: true })}${second ? art(second[0], second[1], { ...second[2], float: true }) : ''}</div>`;
+  }
+  const rows = [
+    { k: 'السماعة', name: `${c.b.brand} ${c.b.name}`, price: c.b.price },
+    c.s.price ? { k: 'البافل', name: `${c.s.brand} ${c.s.name}`, price: c.s.price } : null,
+    c.w.price ? { k: 'الشحن', name: `${c.w.brand} ${c.w.name}`, price: c.w.price } : null,
+    c.r.price ? { k: 'الحماية', name: c.r.name, price: c.r.price } : null,
+    c.disc ? { k: 'تخفيض', name: `خصم الباك ${Math.round(c.rate * 100)}%`, price: -c.disc, off: true } : null,
+    { k: 'هدية', name: 'تغليف هدية', price: 0, free: true }
+  ].filter(Boolean);
+  $('#cfgList').innerHTML = rows.map(x => `<li class="flex items-center justify-between gap-3">
+      <span class="flex items-center gap-2 min-w-0"><span class="text-[11px] font-bold text-slate-500 w-14 shrink-0">${x.k}</span><span class="truncate font-medium ${x.off ? 'text-emerald-300' : 'text-slate-200'}" dir="auto">${x.name}</span></span>
+      <span class="font-mono text-[12px] font-bold whitespace-nowrap ${x.off || x.free ? 'text-emerald-400' : 'text-slate-300'}">${x.free ? 'مجاني' : x.off ? `<span dir="ltr">-${Math.abs(x.price).toLocaleString('fr-FR')}</span> ${CUR}` : fmtShortH(x.price)}</span></li>`).join('');
+  const party = c.s.w >= 30, travel = c.b.anc >= 3 && c.w.mah;
+  const tier = party ? 'مثالي للخرجات و البحر' : travel ? 'مثالي للسفر' : c.items.length >= 3 ? 'باك كامل لكل يوم' : 'باك أساسي';
+  const IND = [
+    { name: 'جودة الصوت', val: c.b.snd, unit: '/100', w: c.b.snd },
+    { name: 'عزل الضوضاء', val: ['—', 'خفيف', 'قوي', 'ممتاز'][c.b.anc], unit: '', w: c.b.anc / 3 * 100 },
+    { name: 'مدة التشغيل الجملية', val: c.hours, unit: 'ساعة', w: c.hours / 110 * 100 },
+    { name: 'قوة البافل', val: c.s.w ? String(c.s.w).replace('.', ',') : '—', unit: c.s.w ? 'واط' : '', w: c.s.w / 40 * 100 }
+  ];
+  if (initial || !$('#cfgInd [data-ind]')) {
+    $('#cfgInd').innerHTML = `<div class="flex items-center justify-between gap-2"><span class="text-[12px] font-extrabold text-slate-400">أداء الباك</span><span id="cfgTier" class="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11.5px] font-bold text-emerald-300"></span></div>
+      <div class="mt-3 space-y-2.5">${IND.map((m, i) => `<div data-ind="${i}"><div class="flex justify-between gap-2 text-[12.5px]"><span class="text-slate-300 font-semibold">${m.name}</span><span class="font-bold text-white whitespace-nowrap"><span data-v class="font-mono" dir="ltr">0</span> <span data-u class="text-slate-500"></span></span></div>
+        <div class="mt-1 h-1.5 rounded-full bg-slate-800 overflow-hidden"><div data-bar class="h-full w-0 rounded-full bg-gradient-to-l from-blue-500 via-violet-500 to-fuchsia-500 transition-all duration-700 ease-out" style="margin-inline-start:0"></div></div></div>`).join('')}</div>
+      <div class="mt-2 text-[11px] text-slate-500">أرقام تقريبية حسب معطيات المصنّع.</div>`;
+  }
+  $('#cfgTier').textContent = tier;
+  $('#cfgBadge').innerHTML = c.disc ? `<i data-lucide="tag" class="w-3 h-3"></i>وفّرت <span dir="ltr">${c.disc}</span> ${CUR}` : '<i data-lucide="info" class="w-3 h-3"></i>زيد قطعة و خوذ تخفيض';
+  $('#cfgBadge').className = `inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11.5px] font-bold ${c.disc ? 'bg-emerald-500/15 text-emerald-300' : 'bg-amber-500/15 text-amber-300'}`;
+  requestAnimationFrame(() => $$('#cfgInd [data-ind]').forEach((el, i) => {
+    const m = IND[i];
+    $('[data-v]', el).textContent = m.val; $('[data-u]', el).textContent = m.unit;
+    $('[data-bar]', el).style.width = Math.max(m.w ? 4 : 0, Math.min(100, m.w)) + '%';
+  }));
+  $('#cfgSave').innerHTML = c.disc ? `<s class="text-slate-600">${fmtShortH(c.gross)}</s><br><span class="text-emerald-400 font-bold">${monthly(c.total)}</span>` : `${monthly(c.total)}<br>على 12 شهر*`;
+  cancelAnimationFrame(cfgRaf);
+  const from = cfgShown, to = c.total, t0 = performance.now();
+  const step = now => {
+    const k = Math.min(1, (now - t0) / 500), e = 1 - Math.pow(1 - k, 3);
+    cfgShown = Math.round(from + (to - from) * e);
+    $('#cfgTotal').innerHTML = priceHTML(cfgShown, 'text-3xl sm:text-[2.1rem]');
+    if (k < 1) cfgRaf = requestAnimationFrame(step);
+  };
+  cfgRaf = requestAnimationFrame(step);
+  icons();
+}
+function addConfigToCart() {
+  const c = cfgCalc();
+  const parts = [c.b.name, c.s.price ? `JBL ${c.s.name}` : '', c.w.price ? c.w.name : '', c.r.price ? c.r.name : ''].filter(Boolean);
+  const item = { key: 'pack-' + Object.values(cfgSel).join('-'), id: null, name: `باك صدى: ${parts.slice(0, 2).join(' + ')}${parts.length > 2 ? ' + ' + (parts.length - 2) : ''}`, price: c.total, type: c.b.art[0], accent: c.b.art[1], artOpts: c.b.art[2], specs: parts };
+  addItem(item);
+  openDrawer('cart');
+  toast({ title: 'تمت إضافة الباك إلى السلة بنجاح!', msg: c.disc ? `وفّرت ${fmtShort(c.disc)} · تغليف هدية مجاني` : 'تغليف هدية مجاني', p: { type: item.type, accent: item.accent, name: item.name, artOpts: item.artOpts } });
+}
+
+/* ---------- تأكيد الطلبية ---------- */
+let coForm = { delivery: 'home', pay: 'cod' };
+function coTotals() { const sub = cartSubtotal(); const ship = coForm.delivery === 'pickup' ? 0 : shippingFor(sub); return { sub, ship, total: sub + ship }; }
+function openCheckout() {
+  if (!state.cart.length) return;
+  closeLayer($('#drawerLayer'));
+  renderCheckout();
+  openLayer($('#coLayer'));
+}
+function renderCheckout() {
+  const t = coTotals();
+  $('#coBody').innerHTML = `<div class="grid md:grid-cols-5">
+    <form id="coForm" class="md:col-span-3 p-5 sm:p-7 space-y-5" novalidate>
+      <div><span class="eyebrow">دفع آمن</span><h2 class="mt-2 text-2xl font-extrabold text-white">كمّل طلبيتك</h2><p class="text-sm text-slate-400 mt-1">واحد من فريقنا يكلمك باش يأكّد في أقل من 30 دقيقة.</p></div>
+      <div class="grid sm:grid-cols-2 gap-3">
+        <div><label class="field-label" for="coName">الاسم و اللقب</label><input class="field" id="coName" name="name" autocomplete="name" placeholder="أحمد بن صالح" required></div>
+        <div><label class="field-label" for="coPhone">رقم الهاتف</label><div class="relative" dir="ltr"><span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400 font-mono">+216</span><input class="field !pl-14 text-left font-mono" id="coPhone" name="phone" inputmode="tel" autocomplete="tel-national" placeholder="20 123 456" required></div></div>
+        <div><label class="field-label" for="coGov">الولاية</label><select class="field" id="coGov" name="gov" required><option value="">اختار…</option>${GOUVERNORATS.map(g => `<option>${g}</option>`).join('')}</select></div>
+        <div><label class="field-label" for="coCity">المدينة / المعتمدية</label><input class="field" id="coCity" name="city" placeholder="المرسى" required></div>
+      </div>
+      <div>
+        <div class="field-label">طريقة الاستلام</div>
+        <div class="grid sm:grid-cols-2 gap-2">
+          <label class="opt-radio"><input type="radio" id="coDelHome" name="delivery" value="home" ${coForm.delivery === 'home' ? 'checked' : ''}><span><span class="block text-sm font-bold text-white">توصيل للدار</span><span class="block text-[12px] text-slate-400">24/48 ساعة · ${shippingFor(t.sub) ? fmt(CONFIG.shippingFee) : 'مجاني'}</span></span></label>
+          <label class="opt-radio"><input type="radio" id="coDelPick" name="delivery" value="pickup" ${coForm.delivery === 'pickup' ? 'checked' : ''}><span><span class="block text-sm font-bold text-white">استلام من المحل</span><span class="block text-[12px] text-slate-400">حاضر في ساعة · مجاني</span></span></label>
+        </div>
+      </div>
+      <div id="coAddrWrap" class="${coForm.delivery === 'pickup' ? 'hidden' : ''}"><label class="field-label" for="coAddr">العنوان كامل</label><input class="field" id="coAddr" name="addr" autocomplete="street-address" placeholder="النهج، الرقم، العمارة، الطابق…"></div>
+      <div id="coStoreWrap" class="${coForm.delivery === 'pickup' ? '' : 'hidden'}"><label class="field-label" for="coStore">المحل</label><select class="field" id="coStore" name="store">${STORES.map(s => `<option value="${s.city}">${s.city} — ${s.addr}</option>`).join('')}</select></div>
+      <div>
+        <div class="field-label">طريقة الدفع</div>
+        <div class="space-y-2">
+          <label class="opt-radio"><input type="radio" id="coPayCod" name="pay" value="cod" ${coForm.pay === 'cod' ? 'checked' : ''}><span class="flex-1"><span class="flex items-center gap-2 text-sm font-bold text-white"><i class="fa-solid fa-money-bill-wave text-emerald-400"></i>الدفع عند الاستلام</span><span class="block text-[12px] text-slate-400">نقداً كي توصلك الطلبية أو في المحل</span></span></label>
+          <label class="opt-radio"><input type="radio" id="coPayCard" name="pay" value="card" ${coForm.pay === 'card' ? 'checked' : ''}><span class="flex-1"><span class="flex items-center gap-2 text-sm font-bold text-white"><i class="fa-regular fa-credit-card text-blue-400"></i>بطاقة بنكية <span class="ms-auto flex gap-1.5 text-lg text-slate-400"><i class="fa-brands fa-cc-visa"></i><i class="fa-brands fa-cc-mastercard"></i></span></span><span class="block text-[12px] text-slate-400">CIB، e-Dinar، Visa، Mastercard · دفع آمن 3D Secure</span></span></label>
+          <label class="opt-radio"><input type="radio" id="coPayTr" name="pay" value="transfer" ${coForm.pay === 'transfer' ? 'checked' : ''}><span class="flex-1"><span class="flex items-center gap-2 text-sm font-bold text-white"><i class="fa-solid fa-building-columns text-violet-400"></i>تحويل بنكي أو شيك</span><span class="block text-[12px] text-slate-400">للشركات · فاتورة بالأداء</span></span></label>
+        </div>
+      </div>
+      <div><label class="field-label" for="coNote">ملاحظة <span class="text-slate-500 font-medium">(اختياري)</span></label><textarea class="field" id="coNote" name="note" rows="2" placeholder="وقت التوصيل اللي يناسبك، تغليف هدية…"></textarea></div>
+      <button type="submit" class="w-full h-12 rounded-xl bg-gradient-to-l from-blue-600 to-violet-600 hover:from-blue-500 hover:to-violet-500 text-white font-extrabold flex items-center justify-center gap-2 shadow-glow transition"><i data-lucide="lock" class="w-4 h-4"></i>أكّد الطلبية · <span id="coBtnTotal">${fmt(t.total)}</span></button>
+      <p class="text-[12px] text-slate-500 text-center">بتأكيد الطلبية توافق على شروط البيع. معطياتك محمية.</p>
+    </form>
+    <aside class="md:col-span-2 p-5 sm:p-7 bg-slate-950/50 border-t md:border-t-0 md:border-s border-slate-800">
+      <div class="dd-title">ملخّص الطلبية (${cartCount()} قطعة)</div>
+      <div class="mt-3 space-y-2.5 max-h-72 overflow-y-auto scroll-thin ps-1">${state.cart.map(i => `<div class="flex items-center gap-3"><div class="relative w-14 h-11 shrink-0 rounded-lg border border-slate-800 bg-slate-900 p-1">${art(i.type, i.accent, i.artOpts || {})}<span class="absolute -top-1.5 -end-1.5 w-5 h-5 rounded-full bg-slate-700 text-[10px] font-bold text-white grid place-items-center font-mono">${i.qty}</span></div><div class="min-w-0 flex-1 text-[13px] font-semibold text-slate-200 line-clamp-2">${esc(i.name)}</div><div class="text-[12.5px] font-bold text-white whitespace-nowrap tabular-nums">${fmtShortH(i.price * i.qty)}</div></div>`).join('')}</div>
+      <div class="mt-4 pt-4 border-t border-slate-800 space-y-1.5 text-sm" id="coTotals"></div>
+      <div class="mt-5 space-y-2.5 text-[12.5px] text-slate-400">
+        <div class="flex gap-2"><i data-lucide="shield-check" class="w-4 h-4 text-emerald-400 shrink-0 mt-0.5"></i>ضمان رسمي على كل المنتجات</div>
+        <div class="flex gap-2"><i data-lucide="rotate-ccw" class="w-4 h-4 text-blue-400 shrink-0 mt-0.5"></i>إرجاع في 7 أيام إذا المنتج موش مطابق</div>
+        <div class="flex gap-2"><i data-lucide="headphones" class="w-4 h-4 text-violet-400 shrink-0 mt-0.5"></i>نصيحة خبير على <span dir="ltr" class="font-mono">${CONFIG.hotline}</span></div>
+      </div>
+    </aside>
+  </div>`;
+  renderCoTotals();
+  const form = $('#coForm');
+  form.addEventListener('change', e => {
+    if (e.target.name === 'delivery') { coForm.delivery = e.target.value; $('#coAddrWrap').classList.toggle('hidden', coForm.delivery === 'pickup'); $('#coStoreWrap').classList.toggle('hidden', coForm.delivery !== 'pickup'); renderCoTotals(); }
+    if (e.target.name === 'pay') coForm.pay = e.target.value;
+  });
+  form.addEventListener('input', e => e.target.classList.remove('is-invalid'));
+  form.addEventListener('submit', submitCheckout);
+  icons();
+}
+function renderCoTotals() {
+  const t = coTotals();
+  $('#coTotals').innerHTML = `<div class="flex justify-between text-slate-400"><span>المجموع</span><span class="text-slate-200 font-semibold tabular-nums"><span dir="ltr">${num(t.sub)}</span> ${CUR}</span></div>
+    <div class="flex justify-between text-slate-400"><span>${coForm.delivery === 'pickup' ? 'استلام من المحل' : 'التوصيل 24/48 ساعة'}</span><span class="font-semibold ${t.ship ? 'text-slate-200' : 'text-emerald-400'}">${t.ship ? `<span dir="ltr">${num(t.ship)}</span> ${CUR}` : 'مجاني'}</span></div>
+    <div class="flex justify-between items-end pt-2"><span class="font-bold text-white">الجملة</span>${priceHTML(t.total, 'text-2xl')}</div>`;
+  const b = $('#coBtnTotal'); if (b) b.textContent = fmt(t.total);
+}
+function submitCheckout(e) {
+  e.preventDefault();
+  const f = e.target, bad = [];
+  const val = n => (f.elements[n] ? f.elements[n].value.trim() : '');
+  if (val('name').length < 3) bad.push('name');
+  const phone = val('phone').replace(/[\s.-]/g, '').replace(/^(\+?216)/, '');
+  if (!/^[2-9]\d{7}$/.test(phone)) bad.push('phone');
+  if (!val('gov')) bad.push('gov');
+  if (!val('city')) bad.push('city');
+  if (coForm.delivery === 'home' && val('addr').length < 5) bad.push('addr');
+  $$('.field', f).forEach(el => el.classList.toggle('is-invalid', bad.includes(el.name)));
+  if (bad.length) {
+    toast({ title: 'عمّر الخانات الناقصة', msg: bad.includes('phone') ? 'رقم تونسي متاع 8 أرقام (مثال: 20 123 456).' : 'فما خانات إجبارية ناقصة.', type: 'warn' });
+    const first = $('.is-invalid', f); if (first) first.focus();
+    return;
+  }
+  const t = coTotals();
+  const now = new Date();
+  const orderNo = `SD-${String(now.getFullYear()).slice(2)}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}-${Math.floor(1000 + Math.random() * 9000)}`;
+  const payLabel = { cod: 'الدفع عند الاستلام', card: 'بطاقة بنكية', transfer: 'تحويل بنكي / شيك' }[coForm.pay];
+  const where = coForm.delivery === 'pickup' ? `استلام من محل ${val('store')} — حاضرة في ساعة` : `التوصيل المتوقّع بين ${deliveryDate(1)} و ${deliveryDate(2)}`;
+  const firstName = val('name').split(' ')[0];
+  const waMsg = `مرحبا ${CONFIG.brand}، توا عملت الطلبية ${orderNo} (${fmt(t.total)}) باسم ${val('name')}. يعيشكم!`;
+  $('#coBody').innerHTML = `<div class="p-8 sm:p-12 text-center max-w-xl mx-auto">
+      <div class="check-pop mx-auto w-20 h-20 rounded-full grid place-items-center bg-gradient-to-br from-emerald-400 to-teal-500 text-white shadow-[0_20px_60px_-15px_rgba(16,185,129,.7)]"><i data-lucide="check" class="w-10 h-10"></i></div>
+      <h2 class="mt-6 text-2xl sm:text-3xl font-extrabold text-white">يعيشك ${esc(firstName)}، طلبيتك تأكّدت!</h2>
+      <p class="mt-2 text-slate-400">واحد من فريق ${CONFIG.brand} باش يكلمك على <b class="text-white font-mono" dir="ltr">+216 ${esc(phone.replace(/(\d{2})(\d{3})(\d{3})/, '$1 $2 $3'))}</b> في أقل من 30 دقيقة.</p>
+      <div class="mt-6 rounded-2xl border border-slate-800 bg-slate-950/60 p-5 text-start text-sm space-y-2.5">
+        <div class="flex justify-between gap-4"><span class="text-slate-400">رقم الطلبية</span><span class="font-mono font-bold text-white select-all" dir="ltr">${orderNo}</span></div>
+        <div class="flex justify-between gap-4"><span class="text-slate-400">المبلغ</span><span class="font-bold text-white">${fmt(t.total)}</span></div>
+        <div class="flex justify-between gap-4"><span class="text-slate-400">الدفع</span><span class="font-semibold text-white text-end">${payLabel}</span></div>
+        <div class="flex justify-between gap-4"><span class="text-slate-400">التوصيل</span><span class="font-semibold text-emerald-300 text-end">${where}</span></div>
+      </div>
+      <div class="mt-6 flex flex-col sm:flex-row gap-2 justify-center">
+        <a data-wa="${esc(waMsg)}" href="#" target="_blank" rel="noopener" class="h-12 px-6 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-bold inline-flex items-center justify-center gap-2"><i class="fa-brands fa-whatsapp text-lg"></i>تابع على واتساب</a>
+        <button data-close class="h-12 px-6 rounded-xl border border-slate-700 hover:border-slate-500 text-white font-bold">كمّل التسوّق</button>
+      </div>
+    </div>`;
+  state.cart = []; save(); updateCounts(); icons();
+  toast({ title: 'الطلبية ' + orderNo + ' تسجّلت', msg: 'باش نكلموك نأكّدو في أقل من 30 دقيقة.', type: 'success' });
+}
+
+/* ---------- العدّ التنازلي ---------- */
+function tickCountdown() {
+  const now = new Date(), end = new Date(now); end.setHours(23, 59, 59, 999);
+  let s = Math.max(0, Math.floor((end - now) / 1000));
+  const h = String(Math.floor(s / 3600)).padStart(2, '0'); s %= 3600;
+  const m = String(Math.floor(s / 60)).padStart(2, '0'), sec = String(s % 60).padStart(2, '0');
+  $$('[data-countdown]').forEach(el => el.innerHTML = `<span class="digit">${h}</span><span class="text-rose-300 font-bold">:</span><span class="digit">${m}</span><span class="text-rose-300 font-bold">:</span><span class="digit">${sec}</span>`);
+}
+
+/* ---------- الأحداث ---------- */
+document.addEventListener('click', e => {
+  const t = e.target;
+  const q = sel => t.closest(sel);
+  let el;
+  if ((el = q('[data-add]'))) { e.preventDefault(); addProduct(el.dataset.add); return; }
+  if ((el = q('[data-wish]'))) { e.preventDefault(); toggleWish(el.dataset.wish); return; }
+  if ((el = q('[data-cmp]'))) { e.preventDefault(); toggleCompare(el.dataset.cmp); return; }
+  if ((el = q('[data-remove]'))) { removeItem(el.dataset.remove); return; }
+  if ((el = q('[data-qty]'))) { setQty(el.dataset.qty, +el.dataset.d); return; }
+  if ((el = q('[data-qvthumb]'))) {
+    const v = +el.dataset.qvthumb, p = byId(qvId);
+    const main = $('#qvMain'); main.classList.remove('fade-in'); void main.offsetWidth; main.classList.add('fade-in');
+    main.innerHTML = pArt(p, { variant: v, float: v === 0 });
+    $('#qvLabel').textContent = el.getAttribute('aria-label');
+    $$('[data-qvthumb]').forEach(b => { const on = b === el; b.classList.toggle('border-blue-500', on); b.classList.toggle('ring-2', on); b.classList.toggle('ring-blue-500/30', on); b.classList.toggle('border-slate-800', !on); });
+    return;
+  }
+  if ((el = q('[data-qvq]'))) { qvQty = Math.max(1, Math.min(10, qvQty + +el.dataset.qvq)); $('#qvQty').textContent = qvQty; return; }
+  if (q('[data-qvadd]')) { addProduct(qvId, qvQty); return; }
+  if ((el = q('[data-qv]'))) { e.preventDefault(); openQuickView(el.dataset.qv); return; }
+  if ((el = q('[data-sq]'))) { const v = el.dataset.sq; const wrap = el.closest('[data-search]'); const inp = wrap ? $('[data-search-input]', wrap) : null; if (inp) { inp.value = v; inp.dispatchEvent(new Event('input')); inp.focus(); } return; }
+  if ((el = q('[data-sfull]'))) { runFullSearch(el.dataset.sfull); return; }
+  if ((el = q('[data-search-run]'))) { runFullSearch(el.dataset.searchRun); return; }
+  if ((el = q('[data-mlink]'))) {
+    const l = el.dataset.mlink, c = CATS.find(x => x.key === el.dataset.cat);
+    hideMega();
+    runFullSearch(searchProducts(l).length ? l : c.q, l);
+    return;
+  }
+  if (q('[data-clear-search]')) { $$('[data-search-input]').forEach(i => i.value = ''); showTab('best'); return; }
+  if ((el = q('[data-goto-tab]'))) { if (el.hasAttribute('data-close')) closeAll(); showTab(el.dataset.gotoTab); $('#produits').scrollIntoView({ behavior: 'smooth' }); return; }
+  if ((el = q('[data-tab]'))) { showTab(el.dataset.tab); return; }
+  if ((el = q('[data-cfg]'))) { const [k, v] = el.dataset.cfg.split(':'); cfgSel[k] = v; renderCfgSteps(); renderCfgSummary(); icons(); return; }
+  if (q('#cfgAdd')) { addConfigToCart(); return; }
+  if ((el = q('[data-open]'))) {
+    const w = el.dataset.open;
+    if (w === 'menu') { renderMenu(); openLayer($('#menuLayer')); updateCounts(); }
+    else if (w === 'compare') openCompare();
+    else { closeLayer($('#menuLayer')); openDrawer(w); }
+    return;
+  }
+  if (q('[data-checkout]')) { openCheckout(); return; }
+  if ((el = q('[data-close]'))) { closeLayer(el.closest('.layer')); return; }
+  if ((el = q('a[href^="#"]'))) { const layer = el.closest('.layer'); if (layer) closeLayer(layer); }
+});
+
+document.addEventListener('pointerdown', e => {
+  $$('[data-search]').forEach(w => { if (!w.contains(e.target)) $('[data-search-dd]', w).classList.add('hidden'); });
+  if (!$('#storesWrap').contains(e.target)) { $('#storesMenu').classList.add('hidden'); $('#storesBtn').setAttribute('aria-expanded', 'false'); }
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { if (openLayers.length) closeLayer(openLayers[openLayers.length - 1]); hideDropdowns(); hideMega(); }
+  if (e.key === '/' && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) {
+    e.preventDefault();
+    const inp = $$('[data-search-input]').find(i => i.offsetParent !== null); if (inp) inp.focus();
+  }
+  if ((e.key === 'Enter' || e.key === ' ') && document.activeElement.matches('[data-search-run][role="button"]')) { e.preventDefault(); document.activeElement.click(); }
+});
+$('#storesBtn').addEventListener('click', () => { const m = $('#storesMenu'); m.classList.toggle('hidden'); $('#storesBtn').setAttribute('aria-expanded', String(!m.classList.contains('hidden'))); icons(); });
+
+$('#navList').addEventListener('mouseover', e => { const b = e.target.closest('[data-mega]'); if (b) showMega(b.dataset.mega); });
+$('#navList').addEventListener('click', e => { const b = e.target.closest('[data-mega]'); if (!b) return; if (megaKey === b.dataset.mega && !$('#megaPanel').classList.contains('hidden')) hideMega(); else showMega(b.dataset.mega); });
+$('#megaNav').addEventListener('mouseleave', () => { megaTimer = setTimeout(hideMega, 160); });
+$('#megaNav').addEventListener('mouseenter', () => clearTimeout(megaTimer));
+
+$('#newsletter').addEventListener('submit', e => {
+  e.preventDefault();
+  const inp = $('#nlEmail');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(inp.value.trim())) { inp.classList.add('is-invalid'); toast({ title: 'البريد الإلكتروني غالط', msg: 'مثال: nom@email.tn', type: 'warn' }); return; }
+  inp.classList.remove('is-invalid'); inp.value = '';
+  toast({ title: 'مرحبا بيك في نادي صدى!', msg: 'كود التخفيض 5%: SADA5 باش يوصلك على الإيميل.', type: 'success' });
+});
+$('#nlEmail').addEventListener('input', e => e.target.classList.remove('is-invalid'));
+
+const header = $('#header');
+const onScroll = () => header.classList.toggle('shadow-[0_10px_40px_-10px_rgba(0,0,0,.7)]', window.scrollY > 8);
+window.addEventListener('scroll', onScroll, { passive: true });
+
+/* ---------- الانطلاق ---------- */
+renderTicker(); renderStores(); renderNav(); renderTiles(); renderFooter();
+$('#heroArt').innerHTML = art('buds', '#3B82F6', { color: W, float: true, alt: 'AirPods Pro 2' });
+$('#flashArt').innerHTML = pArt(byId(10), { float: true });
+$('#headArt').innerHTML = art('headphones', '#8B5CF6', { color: '#1F2937', alt: 'كاسك' });
+$$('[data-search]').forEach(setupSearch);
+renderCfgSteps(); renderCfgSummary(true);
+showTab('best');
+updateCounts();
+tickCountdown(); setInterval(tickCountdown, 1000);
+onScroll();
+icons();
+})();
+</script>
+</body>
+</html>
