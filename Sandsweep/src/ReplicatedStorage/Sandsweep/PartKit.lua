@@ -76,8 +76,10 @@ function PartKit.Ball(parent, diameter, cframe, props)
 end
 
 -- Make a model ready for use. anchored=false welds all parts to the primary part.
+-- The model's pivot is the origin it was designed around (not the primary part's own frame).
 function PartKit.Finalize(model, primaryPart, anchored)
 	model.PrimaryPart = primaryPart
+	primaryPart.PivotOffset = primaryPart.CFrame:Inverse()
 	for _, descendant in ipairs(model:GetDescendants()) do
 		if descendant:IsA("BasePart") then
 			descendant.Anchored = anchored

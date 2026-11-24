@@ -34,23 +34,26 @@ GameConfig.Palette = {
 -- THE LOT (Smooth Terrain dig site). All values multiples of 4 (voxel grid).
 --------------------------------------------------------------------------
 GameConfig.Lot = {
-	Name = "Sunbaked Lot",
+	Name = "Sunbaked Desert",
 	CenterX = 0,
 	CenterZ = 0,
-	BottomY = 0, -- top surface of the bedrock slab
-	SizeX = 64,
-	SizeZ = 64,
-	Depth = 16, -- sand column height (studs)
-	SurfaceMin = 12.6, -- lowest initial sand surface (studs above bottom)
-	SurfaceMax = 15.6, -- highest initial sand surface
-	NoiseScale = 0.045,
+	BottomY = 0, -- top of the hard bedrock floor under the whole desert
+	SizeX = 160, -- the diggable desert (every grain inside counts)
+	SizeZ = 160,
+	Depth = 28, -- tallest possible dune above the bedrock
+	SurfaceMin = 7, -- dune valleys (studs above bedrock)
+	SurfaceMax = 22, -- dune crests
+	EdgeHeight = 2, -- sand height where the dig zone meets the outer desert
+	EdgeFalloff = 26, -- studs over which dunes taper down to the edge (no walls!)
+	NoiseScale = 0.022,
 	BedrockThickness = 6,
-	WallThickness = 4,
-	PlazaRadius = 96, -- half-size of the wooden/sand plaza around the lot
+	CampY = 4, -- ground height of the base camp (south of the dig zone)
+	CampDepth = 52, -- how far south of the dig zone the camp extends
+	WorldRadius = 320, -- outer decorative dunes (not diggable) extend this far
 	ClearedThreshold = 0.995, -- "every grain" threshold (99.5% counts as fully cleared)
 	RemnantThreshold = 0.2, -- leftover voxel occupancy that gets swept automatically
 	RegenDelay = 12, -- seconds after clearing before fresh sand is delivered
-	ClearBonusBase = 500,
+	ClearBonusBase = 2000,
 	ClearBonusPerKg = 0.35,
 }
 
@@ -82,7 +85,7 @@ GameConfig.Tools = {
 		Price = 0,
 		Radius = 1.8,
 		Cooldown = 0.45,
-		Range = 12,
+		Range = 14,
 		Mode = "Click",
 		Shake = 0.05,
 		Accent = Color3.fromRGB(190, 196, 204),
@@ -198,7 +201,7 @@ GameConfig.Skills = {
 }
 
 --------------------------------------------------------------------------
--- BURIED FINDS (14 relics). Depth = studs below the lot's top edge.
+-- BURIED FINDS (14 relics). Depth = studs below the local sand surface.
 --------------------------------------------------------------------------
 GameConfig.Rarities = {
 	Common = Color3.fromRGB(150, 130, 110),

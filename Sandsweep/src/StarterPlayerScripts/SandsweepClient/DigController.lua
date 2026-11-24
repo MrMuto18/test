@@ -11,6 +11,7 @@ local Workspace = game:GetService("Workspace")
 local Shared = ReplicatedStorage:WaitForChild("Sandsweep")
 local GameConfig = require(Shared:WaitForChild("GameConfig"))
 local ToolModels = require(Shared:WaitForChild("ToolModels"))
+local PartKit = require(Shared:WaitForChild("PartKit"))
 local Remotes = Shared:WaitForChild("Remotes")
 
 local ClientState = require(script.Parent:WaitForChild("ClientState"))
@@ -73,11 +74,69 @@ local function destroyViewmodel()
 	Effects.SetVacuum(false)
 end
 
+local SLEEVE = Color3.fromRGB(92, 128, 168)
+local CUFF = Color3.fromRGB(236, 222, 196)
+local DEFAULT_SKIN = Color3.fromRGB(234, 184, 146)
+-- direction each forearm runs in CAMERA space (back toward the bottom corners of the screen)
+local ARM_DIRECTIONS = {
+	Right = Vector3.new(0.5, -0.75, 1).Unit,
+	Left = Vector3.new(-0.65, -0.7, 1).Unit,
+}
+
+local function skinColor(side)
+	local character = player.Character
+	local bodyColors = character and character:FindFirstChildOfClass("BodyColors")
+	if bodyColors then
+		return side == "Left" and bodyColors.LeftArmColor3 or bodyColors.RightArmColor3
+	end
+	local hand = character and (character:FindFirstChild(side .. "Hand") or character:FindFirstChild(side .. " Arm"))
+	return hand and hand.Color or DEFAULT_SKIN
+end
+
+-- Procedural first-person arms holding the tool (fist, thumb, wrist, forearm, sleeve)
+local function addHands(model, toolId)
+	local hands = ToolModels.Hands[toolId]
+	local viewOffset = ToolModels.ViewOffsets[toolId]
+	if not hands or not viewOffset then
+		return
+	end
+	local base = model:GetPivot()
+	for _, hand in ipairs(hands) do
+		local skin = skinColor(hand.Side)
+		local mirror = hand.Side == "Left" and -1 or 1
+		local grip = base * CFrame.new(hand.Position)
+		local armDirection = base:VectorToWorldSpace(viewOffset:VectorToObjectSpace(ARM_DIRECTIONS[hand.Side]))
+		-- fist wrapped around the handle
+		PartKit.Ellipsoid(model, Vector3.new(0.56, 0.58, 0.64), grip, { Name = "Fist", Color = skin, CastShadow = false })
+		for index = 0, 3 do
+			PartKit.Ellipsoid(model, Vector3.new(0.2, 0.2, 0.17), grip * CFrame.new(-0.2 * mirror, 0.08 - index * 0.06, -0.22 + index * 0.15), {
+				Name = "Knuckle",
+				Color = skin:Lerp(Color3.new(0, 0, 0), 0.06),
+				CastShadow = false,
+			})
+		end
+		PartKit.Ellipsoid(model, Vector3.new(0.2, 0.2, 0.46), grip * CFrame.new(0.1 * mirror, 0.27, -0.12) * CFrame.Angles(math.rad(-12), 0, 0), {
+			Name = "Thumb",
+			Color = skin,
+			CastShadow = false,
+		})
+		-- forearm, cuff and sleeve running back toward the camera
+		local wrist = grip.Position + armDirection * 0.25
+		local function along(distance)
+			return CFrame.lookAt(wrist + armDirection * distance, wrist + armDirection * (distance + 1))
+		end
+		PartKit.Cylinder(model, 1.5, 0.42, along(0.75), "Z", { Name = "Forearm", Color = skin, CastShadow = false })
+		PartKit.Cylinder(model, 0.3, 0.6, along(1.55), "Z", { Name = "Cuff", Color = CUFF, CastShadow = false })
+		PartKit.Cylinder(model, 2.6, 0.62, along(2.95), "Z", { Name = "Sleeve", Material = Enum.Material.Fabric, Color = SLEEVE, CastShadow = false })
+	end
+end
+
 local function buildViewmodel(toolId)
 	destroyViewmodel()
 	local camera = Workspace.CurrentCamera
 	local model = ToolModels.Build(toolId, true)
 	model.Name = "SandsweepViewmodel"
+	addHands(model, toolId)
 	local pivot = model:GetPivot()
 	local entry = {
 		ToolId = toolId,
@@ -295,8 +354,11 @@ local function aim(camera, stats)
 	if not result then
 		return nil, ray.Direction, "idle"
 	end
-	if result.Instance ~= Workspace.Terrain or result.Material ~= Enum.Material.Sand or not insideLot(result.Position) then
+	if result.Instance ~= Workspace.Terrain or result.Material ~= Enum.Material.Sand then
 		return nil, ray.Direction, "idle"
+	end
+	if not insideLot(result.Position) then
+		return nil, ray.Direction, "outside"
 	end
 	local character = player.Character
 	local head = character and character:FindFirstChild("Head")

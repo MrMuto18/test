@@ -1143,9 +1143,9 @@ local function onNotify(payload)
 		confetti(90)
 		local body = payload.Bonus and payload.Bonus > 0 and string.format("You moved %s kg. Clearing bonus: %s!", Util.FormatKg(payload.Contributed or 0), Util.FormatCash(payload.Bonus))
 			or "Fresh sand is on its way."
-		showBanner("LOT CLEARED! Every last grain.", body .. string.format(" New sand in %ds.", payload.Delay or 10), "Sage", 6)
+		showBanner("DESERT CLEARED! Not a grain left.", body .. string.format(" New sand in %ds.", payload.Delay or 10), "Sage", 6)
 	elseif kind == "LotReady" then
-		showBanner("Fresh sand delivered!", "A brand new lot with 14 new relics buried inside.", "Ochre", 4)
+		showBanner("Fresh sand delivered!", "A brand new desert with 14 new relics buried inside.", "Ochre", 4)
 		Effects.Play("Splash", 1, 0.7)
 	elseif kind == "Toast" then
 		Interface.Toast(payload.Text or "", payload.Color or "Ochre", payload.Icon)
@@ -1218,6 +1218,10 @@ local function frame(dt)
 		hud.Cross.BackgroundColor3 = C.Terracotta
 		hud.RingStroke.Color = C.Terracotta
 		hud.CrossHint.Text = "Bag full"
+	elseif crosshair == "outside" then
+		hud.Cross.BackgroundColor3 = C.Locked
+		hud.RingStroke.Color = C.Locked
+		hud.CrossHint.Text = "Outside the dig zone (past the flags)"
 	elseif crosshair == "far" then
 		hud.Cross.BackgroundColor3 = C.Locked
 		hud.RingStroke.Color = C.Locked

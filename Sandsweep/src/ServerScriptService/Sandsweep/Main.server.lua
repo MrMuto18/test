@@ -167,7 +167,7 @@ local function attachTool(player)
 	weld.Part0 = hand
 	weld.Part1 = handle
 	weld.C0 = handOffset * CFrame.new(-grip)
-	weld.C1 = CFrame.identity
+	weld.C1 = handle.CFrame:ToObjectSpace(hand.CFrame * weld.C0)
 	weld.Parent = handle
 	model.Parent = character
 	player:SetAttribute("EquippedTool", toolId)

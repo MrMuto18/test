@@ -20,28 +20,12 @@ FindsService.OnUncovered = nil -- function(findId)
 
 local Lot = GameConfig.Lot
 local COVER_OCCUPANCY = 0.3
-local MIN_SPACING = 9
-local EDGE_MARGIN = 5
+local MIN_SPACING = 18
+local EDGE_MARGIN = Lot.EdgeFalloff
 
 local function getFolder()
 	local root = Workspace:WaitForChild("SandsweepWorld")
 	return root:WaitForChild("Finds")
-end
-
-local function nearLadder(x, z)
-	local cx, cz = Lot.CenterX, Lot.CenterZ
-	local spots = {
-		Vector2.new(cx, cz - Lot.SizeZ / 2),
-		Vector2.new(cx, cz + Lot.SizeZ / 2),
-		Vector2.new(cx - Lot.SizeX / 2, cz),
-		Vector2.new(cx + Lot.SizeX / 2, cz),
-	}
-	for _, spot in ipairs(spots) do
-		if (Vector2.new(x, z) - spot).Magnitude < 6 then
-			return true
-		end
-	end
-	return false
 end
 
 local function clearAll()
@@ -154,30 +138,33 @@ function FindsService.Spawn(seed)
 
 	for _, config in ipairs(GameConfig.Finds) do
 		local position
-		for _ = 1, 80 do
+		for attempt = 1, 120 do
 			local x = Lot.CenterX + rng:NextNumber(-halfX, halfX)
 			local z = Lot.CenterZ + rng:NextNumber(-halfZ, halfZ)
-			local depth = rng:NextNumber(config.DepthMin, config.DepthMax)
-			local y = math.max(Lot.BottomY + 1.4, LotService.Top - depth)
-			local candidate = Vector3.new(x, y, z)
-			local ok = not nearLadder(x, z)
-			for _, other in ipairs(placed) do
-				if (Vector2.new(other.X, other.Z) - Vector2.new(x, z)).Magnitude < MIN_SPACING then
-					ok = false
+			local surface = LotService.SurfaceY(x, z)
+			local ok = surface ~= nil
+			if ok then
+				-- later attempts accept shallower burial if the dunes are too low
+				local depth = rng:NextNumber(config.DepthMin, config.DepthMax) * (attempt > 80 and 0.6 or 1)
+				local y = surface - depth
+				ok = y >= Lot.BottomY + 1.2 and y <= surface - 2
+				for _, other in ipairs(placed) do
+					if (Vector2.new(other.X, other.Z) - Vector2.new(x, z)).Magnitude < MIN_SPACING then
+						ok = false
+						break
+					end
+				end
+				if ok then
+					position = Vector3.new(x, y, z)
 					break
 				end
 			end
-			if ok then
-				position = candidate
-				break
-			end
 		end
 		if not position then
-			position = Vector3.new(
-				Lot.CenterX + rng:NextNumber(-halfX, halfX),
-				LotService.Top - config.DepthMax,
-				Lot.CenterZ + rng:NextNumber(-halfZ, halfZ)
-			)
+			local x = Lot.CenterX + rng:NextNumber(-halfX, halfX)
+			local z = Lot.CenterZ + rng:NextNumber(-halfZ, halfZ)
+			local surface = LotService.SurfaceY(x, z) or (Lot.BottomY + 4)
+			position = Vector3.new(x, math.max(Lot.BottomY + 1.2, surface - 2.5), z)
 		end
 		table.insert(placed, position)
 

@@ -31,6 +31,14 @@ ToolModels.Grips = {
 	TurbineVac = Vector3.new(0.8, 0, 0.2),
 }
 
+-- First-person hands: where each hand grips the tool (tool space) and which arm it is
+ToolModels.Hands = {
+	Spoon = { { Position = Vector3.new(0, 0, 0.5), Side = "Right" } },
+	Shovel = { { Position = Vector3.new(0, 0, 1.3), Side = "Right" }, { Position = Vector3.new(0, 0, -0.55), Side = "Left" } },
+	HandVac = { { Position = Vector3.new(0, 0.58, 0.45), Side = "Right" } },
+	TurbineVac = { { Position = Vector3.new(0.82, 0, 0.25), Side = "Right" }, { Position = Vector3.new(-0.2, 0.8, 0.6), Side = "Left" } },
+}
+
 local function addTip(handle, position)
 	local tip = Instance.new("Attachment")
 	tip.Name = "Tip"

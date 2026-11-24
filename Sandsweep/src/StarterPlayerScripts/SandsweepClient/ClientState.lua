@@ -26,7 +26,7 @@ ClientState.State = {
 ClientState.Lot = { Name = GameConfig.Lot.Name, Percent = 0, Generating = false, FindsRemaining = #GameConfig.Finds }
 ClientState.UIOpen = false
 ClientState.DigHeld = false -- set by the mobile DIG button
-ClientState.Crosshair = "idle" -- "idle" | "valid" | "full" | "far"
+ClientState.Crosshair = "idle" -- "idle" | "valid" | "full" | "far" | "outside"
 
 -- Pure-Lua signal (no table copying, safe to pass any value)
 local function newSignal()

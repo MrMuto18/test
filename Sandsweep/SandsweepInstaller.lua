@@ -84,23 +84,26 @@ GameConfig.Palette = {
 -- THE LOT (Smooth Terrain dig site). All values multiples of 4 (voxel grid).
 --------------------------------------------------------------------------
 GameConfig.Lot = {
-	Name = "Sunbaked Lot",
+	Name = "Sunbaked Desert",
 	CenterX = 0,
 	CenterZ = 0,
-	BottomY = 0, -- top surface of the bedrock slab
-	SizeX = 64,
-	SizeZ = 64,
-	Depth = 16, -- sand column height (studs)
-	SurfaceMin = 12.6, -- lowest initial sand surface (studs above bottom)
-	SurfaceMax = 15.6, -- highest initial sand surface
-	NoiseScale = 0.045,
+	BottomY = 0, -- top of the hard bedrock floor under the whole desert
+	SizeX = 160, -- the diggable desert (every grain inside counts)
+	SizeZ = 160,
+	Depth = 28, -- tallest possible dune above the bedrock
+	SurfaceMin = 7, -- dune valleys (studs above bedrock)
+	SurfaceMax = 22, -- dune crests
+	EdgeHeight = 2, -- sand height where the dig zone meets the outer desert
+	EdgeFalloff = 26, -- studs over which dunes taper down to the edge (no walls!)
+	NoiseScale = 0.022,
 	BedrockThickness = 6,
-	WallThickness = 4,
-	PlazaRadius = 96, -- half-size of the wooden/sand plaza around the lot
+	CampY = 4, -- ground height of the base camp (south of the dig zone)
+	CampDepth = 52, -- how far south of the dig zone the camp extends
+	WorldRadius = 320, -- outer decorative dunes (not diggable) extend this far
 	ClearedThreshold = 0.995, -- "every grain" threshold (99.5% counts as fully cleared)
 	RemnantThreshold = 0.2, -- leftover voxel occupancy that gets swept automatically
 	RegenDelay = 12, -- seconds after clearing before fresh sand is delivered
-	ClearBonusBase = 500,
+	ClearBonusBase = 2000,
 	ClearBonusPerKg = 0.35,
 }
 
@@ -132,7 +135,7 @@ GameConfig.Tools = {
 		Price = 0,
 		Radius = 1.8,
 		Cooldown = 0.45,
-		Range = 12,
+		Range = 14,
 		Mode = "Click",
 		Shake = 0.05,
 		Accent = Color3.fromRGB(190, 196, 204),
@@ -248,7 +251,7 @@ GameConfig.Skills = {
 }
 
 --------------------------------------------------------------------------
--- BURIED FINDS (14 relics). Depth = studs below the lot's top edge.
+-- BURIED FINDS (14 relics). Depth = studs below the local sand surface.
 --------------------------------------------------------------------------
 GameConfig.Rarities = {
 	Common = Color3.fromRGB(150, 130, 110),
@@ -573,8 +576,10 @@ function PartKit.Ball(parent, diameter, cframe, props)
 end
 
 -- Make a model ready for use. anchored=false welds all parts to the primary part.
+-- The model's pivot is the origin it was designed around (not the primary part's own frame).
 function PartKit.Finalize(model, primaryPart, anchored)
 	model.PrimaryPart = primaryPart
+	primaryPart.PivotOffset = primaryPart.CFrame:Inverse()
 	for _, descendant in ipairs(model:GetDescendants()) do
 		if descendant:IsA("BasePart") then
 			descendant.Anchored = anchored
@@ -645,6 +650,14 @@ ToolModels.Grips = {
 	Shovel = Vector3.new(0, 0, 1.15),
 	HandVac = Vector3.new(0, 0.55, 0.4),
 	TurbineVac = Vector3.new(0.8, 0, 0.2),
+}
+
+-- First-person hands: where each hand grips the tool (tool space) and which arm it is
+ToolModels.Hands = {
+	Spoon = { { Position = Vector3.new(0, 0, 0.5), Side = "Right" } },
+	Shovel = { { Position = Vector3.new(0, 0, 1.3), Side = "Right" }, { Position = Vector3.new(0, 0, -0.55), Side = "Left" } },
+	HandVac = { { Position = Vector3.new(0, 0.58, 0.45), Side = "Right" } },
+	TurbineVac = { { Position = Vector3.new(0.82, 0, 0.25), Side = "Right" }, { Position = Vector3.new(-0.2, 0.8, 0.6), Side = "Left" } },
 }
 
 local function addTip(handle, position)
@@ -1171,11 +1184,39 @@ WorldBuilder.Refs = {}
 local Palette = GameConfig.Palette
 local Lot = GameConfig.Lot
 
-local LOT_TOP = Lot.BottomY + Lot.Depth
 local HALF_X = Lot.SizeX / 2
 local HALF_Z = Lot.SizeZ / 2
-local WALL = Lot.WallThickness
-local PLAZA = Lot.PlazaRadius
+local WORLD_R = Lot.WorldRadius
+local CAMP_Y = Lot.CampY
+local CAMP_Z = Lot.CenterZ + HALF_Z + Lot.CampDepth / 2
+local CAMP_HALF_X = 56
+local RES = 4
+
+local function smoothstep(t)
+	t = math.clamp(t, 0, 1)
+	return t * t * (3 - 2 * t)
+end
+
+-- Height of the decorative outer desert (never diggable). Matches the dig
+-- zone's edge height at the border, rolls into big dunes further out, and is
+-- flattened where the base camp sits.
+local function outerHeight(x, z)
+	local dx = math.max(0, math.abs(x - Lot.CenterX) - HALF_X)
+	local dz = math.max(0, math.abs(z - Lot.CenterZ) - HALF_Z)
+	local e = math.sqrt(dx * dx + dz * dz)
+	local n = math.noise(x * 0.011, z * 0.011, 4.2) + math.noise(x * 0.027, z * 0.027, 9.1) * 0.4
+	local dunes = math.clamp(n * 0.6 + 0.5, 0, 1) * 30
+	local h = Lot.EdgeHeight + smoothstep(e / 70) * dunes
+	-- settle back down near the world rim
+	local rim = math.max(math.abs(x - Lot.CenterX), math.abs(z - Lot.CenterZ))
+	h += (4 - h) * smoothstep((rim - (WORLD_R - 70)) / 70)
+	-- flat ground for the base camp
+	local campOut = math.max((math.abs(x - Lot.CenterX) - CAMP_HALF_X) / 24, (math.abs(z - CAMP_Z) - Lot.CampDepth / 2) / 24)
+	local campHeight = Lot.EdgeHeight + (CAMP_Y - Lot.EdgeHeight) * smoothstep((z - (Lot.CenterZ + HALF_Z)) / 10)
+	h = campHeight + (h - campHeight) * smoothstep(campOut)
+	return math.clamp(h, 0.5, 48)
+end
+WorldBuilder.OuterHeight = outerHeight
 
 local function solid(parent, props)
 	props.CanCollide = props.CanCollide ~= false
@@ -1307,8 +1348,42 @@ function WorldBuilder.SetupLighting()
 end
 
 --------------------------------------------------------------------------
--- TERRAIN SURROUNDINGS (outside the lot: never part of the dig site)
+-- TERRAIN SURROUNDINGS (outer desert: looks like the same desert, never diggable)
 --------------------------------------------------------------------------
+local function writeHeightRegion(minX, maxX, minZ, maxZ)
+	local terrain = Workspace.Terrain
+	local top = 52
+	local region = Region3.new(Vector3.new(minX, 0, minZ), Vector3.new(maxX, top, maxZ)):ExpandToGrid(RES)
+	local regionMin = region.CFrame.Position - region.Size / 2
+	local nx = math.floor(region.Size.X / RES + 0.5)
+	local ny = math.floor(region.Size.Y / RES + 0.5)
+	local nz = math.floor(region.Size.Z / RES + 0.5)
+	local materials, occupancies = {}, {}
+	for x = 1, nx do
+		local mx, ox = {}, {}
+		materials[x], occupancies[x] = mx, ox
+		for y = 1, ny do
+			mx[y], ox[y] = {}, {}
+		end
+		for z = 1, nz do
+			local worldX = regionMin.X + (x - 0.5) * RES
+			local worldZ = regionMin.Z + (z - 0.5) * RES
+			local height = outerHeight(worldX, worldZ)
+			for y = 1, ny do
+				local occupancy = math.clamp((height - (regionMin.Y + (y - 1) * RES)) / RES, 0, 1)
+				if occupancy > 0.03 then
+					mx[y][z] = Enum.Material.Sand
+					ox[y][z] = occupancy
+				else
+					mx[y][z] = Enum.Material.Air
+					ox[y][z] = 0
+				end
+			end
+		end
+	end
+	terrain:WriteVoxels(region, RES, materials, occupancies)
+end
+
 local function buildTerrainSurroundings()
 	local terrain = Workspace.Terrain
 	terrain:Clear()
@@ -1320,32 +1395,32 @@ local function buildTerrainSurroundings()
 		terrain.Decoration = false
 	end)
 
-	local far = 480
-	local span = far - PLAZA
-	local midY = LOT_TOP - 4
-	-- desert floor around the plaza (top flush with plaza at LOT_TOP)
-	terrain:FillBlock(CFrame.new(0, midY, -(PLAZA + span / 2)), Vector3.new(far * 2, 8, span), Enum.Material.Sand)
-	terrain:FillBlock(CFrame.new(0, midY, PLAZA + span / 2), Vector3.new(far * 2, 8, span), Enum.Material.Sand)
-	terrain:FillBlock(CFrame.new(-(PLAZA + span / 2), midY, 0), Vector3.new(span, 8, PLAZA * 2), Enum.Material.Sand)
-	terrain:FillBlock(CFrame.new(PLAZA + span / 2, midY, 0), Vector3.new(span, 8, PLAZA * 2), Enum.Material.Sand)
+	local x0, x1 = Lot.CenterX - HALF_X, Lot.CenterX + HALF_X
+	local z0, z1 = Lot.CenterZ - HALF_Z, Lot.CenterZ + HALF_Z
+	local r = WORLD_R
+	-- four strips around the dig zone (the dig zone itself is written by LotService)
+	writeHeightRegion(Lot.CenterX - r, Lot.CenterX + r, Lot.CenterZ - r, z0)
+	writeHeightRegion(Lot.CenterX - r, Lot.CenterX + r, z1, Lot.CenterZ + r)
+	writeHeightRegion(Lot.CenterX - r, x0, z0, z1)
+	writeHeightRegion(x1, Lot.CenterX + r, z0, z1)
 
-	local rng = Random.new(1337)
-	-- rolling dunes
-	for _ = 1, 34 do
-		local radius = rng:NextNumber(18, 48)
-		local angle = rng:NextNumber(0, math.pi * 2)
-		local distance = rng:NextNumber(PLAZA + radius + 20, far - radius)
-		local center = Vector3.new(math.cos(angle) * distance, LOT_TOP - radius * rng:NextNumber(0.5, 0.75), math.sin(angle) * distance)
-		terrain:FillBall(center, radius, Enum.Material.Sand)
-	end
+	-- flat desert to the horizon
+	local far = 900
+	local span = far - r
+	terrain:FillBlock(CFrame.new(Lot.CenterX, 2, Lot.CenterZ - r - span / 2), Vector3.new(far * 2, 4, span), Enum.Material.Sand)
+	terrain:FillBlock(CFrame.new(Lot.CenterX, 2, Lot.CenterZ + r + span / 2), Vector3.new(far * 2, 4, span), Enum.Material.Sand)
+	terrain:FillBlock(CFrame.new(Lot.CenterX - r - span / 2, 2, Lot.CenterZ), Vector3.new(span, 4, r * 2), Enum.Material.Sand)
+	terrain:FillBlock(CFrame.new(Lot.CenterX + r + span / 2, 2, Lot.CenterZ), Vector3.new(span, 4, r * 2), Enum.Material.Sand)
+
 	-- terracotta mesas on the horizon
-	for _ = 1, 8 do
+	local rng = Random.new(1337)
+	for _ = 1, 10 do
 		local angle = rng:NextNumber(0, math.pi * 2)
-		local distance = rng:NextNumber(300, 420)
-		local height = rng:NextNumber(30, 70)
-		local width = rng:NextNumber(50, 100)
-		local depth = rng:NextNumber(40, 80)
-		local base = CFrame.new(math.cos(angle) * distance, LOT_TOP + height / 2 - 4, math.sin(angle) * distance)
+		local distance = rng:NextNumber(r + 60, r + 260)
+		local height = rng:NextNumber(35, 80)
+		local width = rng:NextNumber(60, 120)
+		local depth = rng:NextNumber(50, 90)
+		local base = CFrame.new(Lot.CenterX + math.cos(angle) * distance, height / 2, Lot.CenterZ + math.sin(angle) * distance)
 			* CFrame.Angles(0, rng:NextNumber(0, math.pi), 0)
 		terrain:FillBlock(base, Vector3.new(width, height, depth), Enum.Material.Sandstone)
 		terrain:FillBlock(base * CFrame.new(0, height / 2 + 4, 0), Vector3.new(width * 0.7, 8, depth * 0.7), Enum.Material.Sandstone)
@@ -1354,177 +1429,75 @@ local function buildTerrainSurroundings()
 end
 
 --------------------------------------------------------------------------
--- LOT STRUCTURE: bedrock, retaining walls, fence, ladders, plaza
+-- DIG ZONE: bedrock floor, edge stakes, world boundary (no walls, no pit)
 --------------------------------------------------------------------------
 local function buildLotStructure(parent)
-	local structure = folder("LotStructure", parent)
+	local structure = folder("DigZone", parent)
 	local bottom = Lot.BottomY
 	local cx, cz = Lot.CenterX, Lot.CenterZ
 
-	-- Unbreakable bedrock floor (a Part, so terrain digging can never reach the void)
+	-- Unbreakable hardpan floor under the whole desert (a Part, so digging can never reach the void)
 	local bedrock = solid(structure, {
 		Name = "Bedrock",
-		Size = Vector3.new(Lot.SizeX + WALL * 2, Lot.BedrockThickness, Lot.SizeZ + WALL * 2),
+		Size = Vector3.new(Lot.SizeX + 24, Lot.BedrockThickness, Lot.SizeZ + 24),
 		CFrame = CFrame.new(cx, bottom - Lot.BedrockThickness / 2, cz),
 		Material = Enum.Material.Slate,
-		Color = Color3.fromRGB(122, 100, 86),
+		Color = Color3.fromRGB(176, 124, 90),
 	})
-	-- safety net far below
 	solid(structure, {
 		Name = "SafetyNet",
-		Size = Vector3.new(Lot.SizeX + 40, 2, Lot.SizeZ + 40),
-		CFrame = CFrame.new(cx, bottom - 30, cz),
+		Size = Vector3.new(WORLD_R * 2, 2, WORLD_R * 2),
+		CFrame = CFrame.new(cx, bottom - 40, cz),
 		Transparency = 1,
 		CastShadow = false,
 	})
 
-	-- Retaining walls (wood planks) lining the pit
-	local wallBottom = bottom - Lot.BedrockThickness
-	local wallHeight = LOT_TOP - wallBottom
-	local wallY = wallBottom + wallHeight / 2
-	local wallColor = Color3.fromRGB(160, 110, 70)
-	local walls = {
-		{ Vector3.new(Lot.SizeX + WALL * 2, wallHeight, WALL), Vector3.new(cx, wallY, cz - HALF_Z - WALL / 2) },
-		{ Vector3.new(Lot.SizeX + WALL * 2, wallHeight, WALL), Vector3.new(cx, wallY, cz + HALF_Z + WALL / 2) },
-		{ Vector3.new(WALL, wallHeight, Lot.SizeZ), Vector3.new(cx - HALF_X - WALL / 2, wallY, cz) },
-		{ Vector3.new(WALL, wallHeight, Lot.SizeZ), Vector3.new(cx + HALF_X + WALL / 2, wallY, cz) },
-	}
-	for index, wall in ipairs(walls) do
-		solid(structure, {
-			Name = "RetainingWall" .. index,
-			Size = wall[1],
-			CFrame = CFrame.new(wall[2]),
-			Material = Enum.Material.WoodPlanks,
-			Color = wallColor,
-		})
-		-- top curb
-		solid(structure, {
-			Name = "Curb" .. index,
-			Size = Vector3.new(wall[1].X + 0.2, 0.5, wall[1].Z + 0.2),
-			CFrame = CFrame.new(wall[2].X, LOT_TOP + 0.25, wall[2].Z),
+	-- survey stakes with little flags marking the edge of the dig zone
+	local stakes = folder("EdgeStakes", structure)
+	local spacing = 16
+	local function stake(x, z)
+		solid(stakes, {
+			Name = "Stake",
+			Size = Vector3.new(0.4, 7, 0.4),
+			CFrame = CFrame.new(x, bottom + 3.5, z),
 			Material = Enum.Material.Wood,
 			Color = Palette.WoodDark,
+			CanCollide = false,
+			CanQuery = false,
+		})
+		PartKit.Part(stakes, {
+			Name = "Flag",
+			Size = Vector3.new(0.05, 0.8, 1.1),
+			CFrame = CFrame.new(x, bottom + 6.4, z + 0.55),
+			Material = Enum.Material.Fabric,
+			Color = Palette.Terracotta,
+			CastShadow = false,
 		})
 	end
-
-	-- Vertical support beams on the inner wall faces (cozy detail)
-	for i = -3, 3 do
-		local offset = i * (Lot.SizeX / 7)
-		for _, side in ipairs({ -1, 1 }) do
-			solid(structure, {
-				Name = "Beam",
-				Size = Vector3.new(1, wallHeight, 0.6),
-				CFrame = CFrame.new(cx + offset, wallY, cz + side * (HALF_Z + 0.3)),
-				Material = Enum.Material.Wood,
-				Color = Palette.WoodDark,
-				CanCollide = false,
-				CanQuery = false,
-			})
-			solid(structure, {
-				Name = "Beam",
-				Size = Vector3.new(0.6, wallHeight, 1),
-				CFrame = CFrame.new(cx + side * (HALF_X + 0.3), wallY, cz + offset),
-				Material = Enum.Material.Wood,
-				Color = Palette.WoodDark,
-				CanCollide = false,
-				CanQuery = false,
-			})
+	for t = -HALF_X, HALF_X, spacing do
+		stake(cx + t, cz - HALF_Z)
+		if math.abs(t) > 10 then
+			stake(cx + t, cz + HALF_Z) -- leave the camp entrance open
 		end
 	end
-
-	-- Plaza (flat sandy ground at the top of the walls)
-	local inner = HALF_X + WALL
-	local plazaThickness = 4
-	local plazaY = LOT_TOP - plazaThickness / 2
-	local plazaColor = Color3.fromRGB(228, 194, 138)
-	local outerSpan = PLAZA - inner
-	local plazas = {
-		{ Vector3.new(PLAZA * 2, plazaThickness, outerSpan), Vector3.new(cx, plazaY, cz - inner - outerSpan / 2) },
-		{ Vector3.new(PLAZA * 2, plazaThickness, outerSpan), Vector3.new(cx, plazaY, cz + inner + outerSpan / 2) },
-		{ Vector3.new(outerSpan, plazaThickness, inner * 2), Vector3.new(cx - inner - outerSpan / 2, plazaY, cz) },
-		{ Vector3.new(outerSpan, plazaThickness, inner * 2), Vector3.new(cx + inner + outerSpan / 2, plazaY, cz) },
-	}
-	for index, plaza in ipairs(plazas) do
-		solid(structure, {
-			Name = "Plaza" .. index,
-			Size = plaza[1],
-			CFrame = CFrame.new(plaza[2]),
-			Material = Enum.Material.Sand,
-			Color = plazaColor,
-		})
+	for t = -HALF_Z + spacing, HALF_Z - spacing, spacing do
+		stake(cx - HALF_X, cz + t)
+		stake(cx + HALF_X, cz + t)
 	end
 
-	-- Fence on the curb with gates in the middle of each side
-	local fence = folder("Fence", structure)
-	local fenceColor = Color3.fromRGB(176, 124, 78)
-	local gateHalf = 5
-	local fenceSpan = HALF_X + WALL / 2
-	local postSpacing = (fenceSpan * 2) / math.max(1, math.floor(fenceSpan * 2 / 6 + 0.5))
-	local fenceLine = HALF_X + WALL / 2
-	local function fenceSide(alongX, fixed)
-		local span = fenceSpan
-		local points = {}
-		local t = -span
-		while t <= span + 0.01 do
-			if math.abs(t) >= gateHalf then
-				table.insert(points, t)
-			end
-			t += postSpacing
-		end
-		for index, along in ipairs(points) do
-			local position = alongX and Vector3.new(cx + along, LOT_TOP + 2.25, cz + fixed) or Vector3.new(cx + fixed, LOT_TOP + 2.25, cz + along)
-			solid(fence, {
-				Name = "Post",
-				Size = Vector3.new(0.7, 3.5, 0.7),
-				CFrame = CFrame.new(position),
-				Material = Enum.Material.Wood,
-				Color = Palette.WoodDark,
-			})
-			local nextAlong = points[index + 1]
-			if nextAlong and (nextAlong - along) <= postSpacing + 0.01 then
-				local mid = (along + nextAlong) / 2
-				local length = nextAlong - along
-				for _, height in ipairs({ 1.4, 2.9 }) do
-					local railPos = alongX and Vector3.new(cx + mid, LOT_TOP + 0.5 + height, cz + fixed) or Vector3.new(cx + fixed, LOT_TOP + 0.5 + height, cz + mid)
-					local railSize = alongX and Vector3.new(length, 0.35, 0.3) or Vector3.new(0.3, 0.35, length)
-					solid(fence, {
-						Name = "Rail",
-						Size = railSize,
-						CFrame = CFrame.new(railPos),
-						Material = Enum.Material.Wood,
-						Color = fenceColor,
-					})
-				end
-			end
-		end
-	end
-	fenceSide(true, -fenceLine)
-	fenceSide(true, fenceLine)
-	fenceSide(false, -fenceLine)
-	fenceSide(false, fenceLine)
-
-	-- Ladders down into the pit at each gate
-	local ladders = folder("Ladders", structure)
-	local ladderHeight = Lot.Depth + 2
-	local ladderSpots = {
-		Vector3.new(cx, bottom + ladderHeight / 2, cz - HALF_Z + 1),
-		Vector3.new(cx, bottom + ladderHeight / 2, cz + HALF_Z - 1),
-		Vector3.new(cx - HALF_X + 1, bottom + ladderHeight / 2, cz),
-		Vector3.new(cx + HALF_X - 1, bottom + ladderHeight / 2, cz),
-	}
-	for index, spot in ipairs(ladderSpots) do
-		local truss = Instance.new("TrussPart")
-		truss.Name = "Ladder" .. index
-		truss.Size = Vector3.new(2, ladderHeight, 2)
-		truss.CFrame = CFrame.new(spot)
-		truss.Anchored = true
-		truss.Material = Enum.Material.Wood
-		truss.Color = Palette.WoodDark
-		truss.Parent = ladders
+	-- invisible world boundary far out in the dunes
+	local boundary = folder("WorldBoundary", structure)
+	local h = 300
+	for _, spec in ipairs({
+		{ Vector3.new(WORLD_R * 2, h, 4), Vector3.new(cx, h / 2, cz - WORLD_R) },
+		{ Vector3.new(WORLD_R * 2, h, 4), Vector3.new(cx, h / 2, cz + WORLD_R) },
+		{ Vector3.new(4, h, WORLD_R * 2), Vector3.new(cx - WORLD_R, h / 2, cz) },
+		{ Vector3.new(4, h, WORLD_R * 2), Vector3.new(cx + WORLD_R, h / 2, cz) },
+	}) do
+		solid(boundary, { Name = "Boundary", Size = spec[1], CFrame = CFrame.new(spec[2]), Transparency = 1, CastShadow = false, CanQuery = false })
 	end
 
 	WorldBuilder.Refs.Bedrock = bedrock
-	WorldBuilder.Refs.Ladders = ladders
 end
 
 --------------------------------------------------------------------------
@@ -1588,31 +1561,33 @@ local function buildLamp(parent, position)
 	model.Parent = parent
 end
 
+local function inCamp(x, z)
+	return math.abs(x - Lot.CenterX) < CAMP_HALF_X + 8 and math.abs(z - CAMP_Z) < Lot.CampDepth / 2 + 8
+end
+
+local function nearDigZone(x, z, margin)
+	return math.abs(x - Lot.CenterX) < HALF_X + margin and math.abs(z - Lot.CenterZ) < HALF_Z + margin
+end
+
 local function buildDecor(parent)
 	local decor = folder("Decor", parent)
 	local rng = Random.new(4242)
-	local placed = 0
-	local attempts = 0
-	while placed < 22 and attempts < 400 do
+	local placed, attempts = 0, 0
+	while placed < 40 and attempts < 800 do
 		attempts += 1
-		local x = rng:NextNumber(-150, 150)
-		local z = rng:NextNumber(-150, 150)
-		local nearLot = math.abs(x) < HALF_X + WALL + 10 and math.abs(z) < HALF_Z + WALL + 10
-		local nearStations = z > 40 and z < 75 and math.abs(x) < 38
-		if not nearLot and not nearStations then
-			buildCactus(decor, Vector3.new(x, LOT_TOP, z), rng:NextNumber(4, 8), rng)
+		local x = rng:NextNumber(-WORLD_R + 20, WORLD_R - 20)
+		local z = rng:NextNumber(-WORLD_R + 20, WORLD_R - 20)
+		if not nearDigZone(x, z, 10) and not inCamp(x, z) then
+			buildCactus(decor, Vector3.new(x, outerHeight(x, z) - 0.4, z), rng:NextNumber(4, 9), rng)
 			placed += 1
 		end
 	end
-	-- rocks
-	for _ = 1, 26 do
-		local x = rng:NextNumber(-170, 170)
-		local z = rng:NextNumber(-170, 170)
-		local nearLot = math.abs(x) < HALF_X + WALL + 8 and math.abs(z) < HALF_Z + WALL + 8
-		local nearStations = z > 40 and z < 75 and math.abs(x) < 38
-		if not nearLot and not nearStations then
-			local size = Vector3.new(rng:NextNumber(2, 6), rng:NextNumber(1.2, 3.2), rng:NextNumber(2, 6))
-			PartKit.Ellipsoid(decor, size, CFrame.new(x, LOT_TOP + size.Y * 0.25, z) * CFrame.Angles(0, rng:NextNumber(0, 6), 0), {
+	for _ = 1, 60 do
+		local x = rng:NextNumber(-WORLD_R + 20, WORLD_R - 20)
+		local z = rng:NextNumber(-WORLD_R + 20, WORLD_R - 20)
+		if not nearDigZone(x, z, 8) and not inCamp(x, z) then
+			local size = Vector3.new(rng:NextNumber(2, 7), rng:NextNumber(1.2, 3.5), rng:NextNumber(2, 7))
+			PartKit.Ellipsoid(decor, size, CFrame.new(x, outerHeight(x, z) + size.Y * 0.15, z) * CFrame.Angles(0, rng:NextNumber(0, 6), 0), {
 				Name = "Rock",
 				Material = Enum.Material.Sandstone,
 				Color = Color3.fromRGB(190, 128, 92):Lerp(Palette.Stone, rng:NextNumber(0, 0.6)),
@@ -1621,23 +1596,46 @@ local function buildDecor(parent)
 			})
 		end
 	end
-	-- lamps around the lot & stations
-	local edge = HALF_X + WALL + 3
-	for _, corner in ipairs({ Vector3.new(-edge, 0, -edge), Vector3.new(edge, 0, -edge), Vector3.new(-edge, 0, edge), Vector3.new(edge, 0, edge) }) do
-		buildLamp(decor, Vector3.new(Lot.CenterX + corner.X, LOT_TOP, Lot.CenterZ + corner.Z))
-	end
-	buildLamp(decor, Vector3.new(-8, LOT_TOP, 64))
-	buildLamp(decor, Vector3.new(8, LOT_TOP, 64))
 
-	-- boardwalk paths
+	-- camp lamps
+	for _, spot in ipairs({ Vector3.new(-12, 0, 10), Vector3.new(12, 0, 10), Vector3.new(-44, 0, -16), Vector3.new(44, 0, -16), Vector3.new(-9, 0, -18), Vector3.new(9, 0, -18) }) do
+		buildLamp(decor, Vector3.new(Lot.CenterX + spot.X, CAMP_Y, CAMP_Z + spot.Z))
+	end
+
+	-- boardwalks across the camp
 	local planks = Color3.fromRGB(170, 120, 76)
-	solid(decor, { Name = "Boardwalk", Size = Vector3.new(6, 0.2, 22), CFrame = CFrame.new(0, LOT_TOP + 0.1, 49), Material = Enum.Material.WoodPlanks, Color = planks })
-	solid(decor, { Name = "Boardwalk", Size = Vector3.new(12, 0.2, 5), CFrame = CFrame.new(-9, LOT_TOP + 0.1, 56), Material = Enum.Material.WoodPlanks, Color = planks })
-	solid(decor, { Name = "Boardwalk", Size = Vector3.new(12, 0.2, 5), CFrame = CFrame.new(9, LOT_TOP + 0.1, 56), Material = Enum.Material.WoodPlanks, Color = planks })
+	solid(decor, { Name = "Boardwalk", Size = Vector3.new(72, 0.3, 6), CFrame = CFrame.new(Lot.CenterX, CAMP_Y + 0.15, CAMP_Z), Material = Enum.Material.WoodPlanks, Color = planks })
+	solid(decor, { Name = "Boardwalk", Size = Vector3.new(6, 0.3, 34), CFrame = CFrame.new(Lot.CenterX, CAMP_Y + 0.15, CAMP_Z - 3), Material = Enum.Material.WoodPlanks, Color = planks })
+
+	-- gateway arch facing the desert
+	local archZ = Lot.CenterZ + HALF_Z + 6
+	for _, side in ipairs({ -1, 1 }) do
+		PartKit.Cylinder(decor, 11, 0.9, CFrame.new(Lot.CenterX + side * 7, CAMP_Y + 5.5, archZ), "Y", {
+			Name = "ArchPost",
+			Material = Enum.Material.Wood,
+			Color = Palette.WoodDark,
+			CanCollide = true,
+			CanQuery = true,
+		})
+	end
+	local archSign = PartKit.Part(decor, {
+		Name = "ArchSign",
+		Size = Vector3.new(15, 2.4, 0.4),
+		CFrame = CFrame.new(Lot.CenterX, CAMP_Y + 10.2, archZ),
+		Color = Palette.Cream,
+	})
+	addSurfaceText(archSign, Enum.NormalId.Front, {
+		{ Text = "BASE CAMP  ⛺", Height = 0.55 },
+		{ Text = "Weigh Station • Upgrade Booth", Height = 0.28, Font = Enum.Font.GothamBold, Color = Palette.InkSoft },
+	})
+	addSurfaceText(archSign, Enum.NormalId.Back, {
+		{ Text = string.upper(Lot.Name), Height = 0.55 },
+		{ Text = "Leave not a single grain", Height = 0.28, Font = Enum.Font.GothamBold, Color = Palette.InkSoft },
+	})
 
 	-- sand sack pile near the weigh station
 	for i = 0, 4 do
-		PartKit.Ellipsoid(decor, Vector3.new(2.2, 1.6, 1.6), CFrame.new(-33 + (i % 2) * 0.6, LOT_TOP + 0.8 + math.floor(i / 3) * 1.3, 52 + (i % 3) * 1.8) * CFrame.Angles(0, i, 0), {
+		PartKit.Ellipsoid(decor, Vector3.new(2.2, 1.6, 1.6), CFrame.new(Lot.CenterX - 44 + (i % 3) * 1.8, CAMP_Y + 0.8 + math.floor(i / 3) * 1.3, CAMP_Z + 4 + (i % 2) * 0.6) * CFrame.Angles(0, i, 0), {
 			Name = "Sack",
 			Material = Enum.Material.Fabric,
 			Color = Color3.fromRGB(196, 160, 108),
@@ -1652,7 +1650,7 @@ end
 --------------------------------------------------------------------------
 local function buildWeighStation(parent)
 	local station = folder("WeighStation", parent)
-	local origin = CFrame.new(-22, LOT_TOP, 56) * CFrame.Angles(0, math.rad(-90), 0)
+	local origin = CFrame.new(Lot.CenterX - 26, CAMP_Y, CAMP_Z)
 
 	solid(station, {
 		Name = "Base",
@@ -1773,7 +1771,7 @@ end
 --------------------------------------------------------------------------
 local function buildUpgradeBooth(parent)
 	local booth = folder("UpgradeBooth", parent)
-	local origin = CFrame.new(22, LOT_TOP, 56) * CFrame.Angles(0, math.rad(90), 0)
+	local origin = CFrame.new(Lot.CenterX + 26, CAMP_Y, CAMP_Z)
 	local wood = Color3.fromRGB(176, 122, 76)
 
 	solid(booth, { Name = "Floor", Size = Vector3.new(14, 0.4, 11), CFrame = origin * CFrame.new(Vector3.new(0, 0.2, 0.5)), Material = Enum.Material.WoodPlanks, Color = wood })
@@ -1839,7 +1837,7 @@ end
 --------------------------------------------------------------------------
 local function buildLotBoard(parent)
 	local boardFolder = folder("LotBoard", parent)
-	local origin = Vector3.new(-12, LOT_TOP, 44)
+	local origin = Vector3.new(Lot.CenterX - 14, CAMP_Y, CAMP_Z - 10)
 	for _, x in ipairs({ -3.6, 3.6 }) do
 		solid(boardFolder, { Name = "Leg", Size = Vector3.new(0.5, 6, 0.5), CFrame = CFrame.new(origin + Vector3.new(x, 3, 0)), Material = Enum.Material.Wood, Color = Palette.WoodDark })
 	end
@@ -1861,7 +1859,7 @@ local function buildSpawn(parent)
 	local spawn = Instance.new("SpawnLocation")
 	spawn.Name = "SandsweepSpawn"
 	spawn.Size = Vector3.new(8, 0.4, 8)
-	spawn.CFrame = CFrame.new(0, LOT_TOP + 0.2, 64)
+	spawn.CFrame = CFrame.new(Lot.CenterX, CAMP_Y + 0.2, CAMP_Z + 12)
 	spawn.Anchored = true
 	spawn.Neutral = true
 	spawn.Duration = 0
@@ -2000,12 +1998,6 @@ local function clampVector(v, minV, maxV)
 	return Vector3.new(math.clamp(v.X, minV.X, maxV.X), math.clamp(v.Y, minV.Y, maxV.Y), math.clamp(v.Z, minV.Z, maxV.Z))
 end
 
--- Lowest-corner world position of voxel (x, y, z) inside a region read at RES.
-local function voxelCenter(region, x, y, z)
-	local regionMin = region.CFrame.Position - region.Size / 2
-	return regionMin + Vector3.new((x - 0.5) * RES, (y - 0.5) * RES, (z - 0.5) * RES)
-end
-
 local function sumSand(materials, occupancies)
 	local size = materials.Size
 	local total = 0
@@ -2023,13 +2015,24 @@ local function sumSand(materials, occupancies)
 	return total * VOXEL_VOLUME
 end
 
--- Surface height (studs above lot bottom) for the initial gentle dunes
+-- Surface height (studs above bedrock) for the dunes. Dunes taper down to
+-- Lot.EdgeHeight at the border so the dig zone blends into the open desert.
+local function smoothstep(t)
+	t = math.clamp(t, 0, 1)
+	return t * t * (3 - 2 * t)
+end
+
 local function surfaceHeight(worldX, worldZ, seed)
 	local n1 = math.noise(worldX * Lot.NoiseScale, worldZ * Lot.NoiseScale, seed)
-	local n2 = math.noise(worldX * Lot.NoiseScale * 2.3, worldZ * Lot.NoiseScale * 2.3, seed + 17.3) * 0.4
-	local n = math.clamp((n1 + n2) * 0.9 + 0.5, 0, 1)
-	return Lot.SurfaceMin + (Lot.SurfaceMax - Lot.SurfaceMin) * n
+	local n2 = math.noise(worldX * Lot.NoiseScale * 2.6, worldZ * Lot.NoiseScale * 2.6, seed + 17.3) * 0.35
+	local n = math.clamp((n1 + n2) * 0.95 + 0.5, 0, 1)
+	local dunes = Lot.SurfaceMin + (Lot.SurfaceMax - Lot.SurfaceMin) * n
+	local edgeDistance = math.min(Lot.SizeX / 2 - math.abs(worldX - Lot.CenterX), Lot.SizeZ / 2 - math.abs(worldZ - Lot.CenterZ))
+	local taper = smoothstep(edgeDistance / Lot.EdgeFalloff)
+	return Lot.EdgeHeight + (dunes - Lot.EdgeHeight) * taper
 end
+
+LotService.SurfaceHeight = surfaceHeight
 
 function LotService.Generate(seed)
 	LotService.Generating = true
@@ -2083,48 +2086,106 @@ function LotService.IsInside(position, margin)
 		and position.Y <= LOT_MAX.Y + margin + 2
 end
 
+local SMALL_TOOL_RADIUS = 2.8
+local MIN_REMOVAL = 0.08 -- voxel occupancy every successful dig is guaranteed to remove
+
+local function isInsideColumn(position)
+	return position.X > LOT_MIN.X and position.X < LOT_MAX.X and position.Z > LOT_MIN.Z and position.Z < LOT_MAX.Z
+end
+
 -- Remove sand in a ball. Returns the exact sand volume (cubic studs) removed,
--- measured by reading voxels before and after FillBall. Air is never counted.
+-- measured by reading voxels before and after. Air is never counted.
+-- Big tools carve with Terrain:FillBall; tiny tools (spoon) carve the voxels
+-- directly so a scoop always bites, even when the ball is smaller than a voxel.
+-- Anything outside the dig zone is restored, so the outer desert never changes.
 function LotService.Dig(center, radius)
 	if LotService.Generating then
 		return 0
 	end
-	local pad = Vector3.new(radius + RES, radius + RES, radius + RES)
-	local readMin = clampVector(center - pad, LOT_MIN, LOT_MAX)
-	local readMax = clampVector(center + pad, LOT_MIN, LOT_MAX)
-	if readMax.X - readMin.X < 0.01 or readMax.Y - readMin.Y < 0.01 or readMax.Z - readMin.Z < 0.01 then
-		return 0
-	end
-	local region = Region3.new(readMin, readMax):ExpandToGrid(RES)
+	local pad = radius + RES
+	local low = Vector3.new(center.X - pad, math.max(LOT_MIN.Y, center.Y - pad), center.Z - pad)
+	local high = Vector3.new(center.X + pad, math.max(LOT_MIN.Y + RES, center.Y + pad), center.Z + pad)
+	local region = Region3.new(low, high):ExpandToGrid(RES)
+	local regionMin = region.CFrame.Position - region.Size / 2
 
 	local beforeMaterials, beforeOccupancies = terrain:ReadVoxels(region, RES)
-	terrain:FillBall(center, radius, AIR)
+	local smallTool = radius < SMALL_TOOL_RADIUS
+	if not smallTool then
+		terrain:FillBall(center, radius, AIR)
+	end
 	local afterMaterials, afterOccupancies = terrain:ReadVoxels(region, RES)
 
 	local size = beforeMaterials.Size
 	local removed = 0
-	local sweepDistance = radius + RES * 0.75
 	local rewrite = false
+	local sweepDistance = radius + RES * 0.75
+	local nearest, nearestDistance = nil, math.huge
+
+	local function setAfter(x, y, z, value)
+		if value <= 0.001 then
+			afterMaterials[x][y][z] = AIR
+			afterOccupancies[x][y][z] = 0
+		else
+			afterMaterials[x][y][z] = SAND
+			afterOccupancies[x][y][z] = value
+		end
+		rewrite = true
+	end
+
 	for x = 1, size.X do
 		for y = 1, size.Y do
 			for z = 1, size.Z do
-				local before = (beforeMaterials[x][y][z] == SAND) and beforeOccupancies[x][y][z] or 0
-				local after = (afterMaterials[x][y][z] == SAND) and afterOccupancies[x][y][z] or 0
-				-- Sweep up tiny remnants right next to the dig so "every grain" is reachable
-				if after > 0 and after < Lot.RemnantThreshold and before > 0 then
-					if (voxelCenter(region, x, y, z) - center).Magnitude <= sweepDistance then
-						afterMaterials[x][y][z] = AIR
-						afterOccupancies[x][y][z] = 0
-						after = 0
+				local voxelPosition = regionMin + Vector3.new((x - 0.5) * RES, (y - 0.5) * RES, (z - 0.5) * RES)
+				local beforeMaterial = beforeMaterials[x][y][z]
+				local beforeOccupancy = beforeOccupancies[x][y][z]
+				if not isInsideColumn(voxelPosition) or (beforeMaterial ~= SAND and beforeMaterial ~= AIR) then
+					-- protect the outer desert and any non-sand terrain
+					if afterMaterials[x][y][z] ~= beforeMaterial or afterOccupancies[x][y][z] ~= beforeOccupancy then
+						afterMaterials[x][y][z] = beforeMaterial
+						afterOccupancies[x][y][z] = beforeOccupancy
 						rewrite = true
 					end
-				end
-				if before > after then
-					removed += before - after
+				else
+					local before = (beforeMaterial == SAND) and beforeOccupancy or 0
+					local after = (afterMaterials[x][y][z] == SAND) and afterOccupancies[x][y][z] or 0
+					local distance = (voxelPosition - center).Magnitude
+					if smallTool and after > 0 then
+						local carve = math.clamp((radius + 1 - distance) / RES, 0, 1)
+						if carve > 0 then
+							after = math.max(0, after - carve)
+							setAfter(x, y, z, after)
+						end
+					end
+					-- sweep tiny remnants next to the dig so "every grain" is reachable
+					if after > 0 and after < Lot.RemnantThreshold and before > 0 and distance <= sweepDistance then
+						after = 0
+						setAfter(x, y, z, 0)
+					end
+					if after > 0 and distance < nearestDistance then
+						nearest, nearestDistance = Vector3.new(x, y, z), distance
+					end
+					if before > after then
+						removed += before - after
+					end
 				end
 			end
 		end
 	end
+
+	-- guarantee every scoop bites into the closest sand
+	if removed < MIN_REMOVAL and nearest and nearestDistance <= radius + RES then
+		local x, y, z = nearest.X, nearest.Y, nearest.Z
+		local current = afterOccupancies[x][y][z]
+		local bite = math.min(current, MIN_REMOVAL * 2)
+		local remaining = current - bite
+		if remaining < Lot.RemnantThreshold then
+			bite = current
+			remaining = 0
+		end
+		setAfter(x, y, z, remaining)
+		removed += bite
+	end
+
 	if rewrite then
 		terrain:WriteVoxels(region, RES, afterMaterials, afterOccupancies)
 	end
@@ -2187,6 +2248,16 @@ function LotService.IsCoveredAbove(position, clearance)
 	return result ~= nil and result.Material == SAND
 end
 
+-- World Y of the sand surface at (x, z), or nil when there is no sand above bedrock.
+function LotService.SurfaceY(x, z)
+	local origin = Vector3.new(x, LOT_MAX.Y + 40, z)
+	local result = Workspace:Raycast(origin, Vector3.new(0, -(origin.Y - LOT_MIN.Y + 1), 0), coverParams)
+	if result and result.Material == SAND then
+		return result.Position.Y
+	end
+	return nil
+end
+
 return LotService
 ]======]
 
@@ -2215,28 +2286,12 @@ FindsService.OnUncovered = nil -- function(findId)
 
 local Lot = GameConfig.Lot
 local COVER_OCCUPANCY = 0.3
-local MIN_SPACING = 9
-local EDGE_MARGIN = 5
+local MIN_SPACING = 18
+local EDGE_MARGIN = Lot.EdgeFalloff
 
 local function getFolder()
 	local root = Workspace:WaitForChild("SandsweepWorld")
 	return root:WaitForChild("Finds")
-end
-
-local function nearLadder(x, z)
-	local cx, cz = Lot.CenterX, Lot.CenterZ
-	local spots = {
-		Vector2.new(cx, cz - Lot.SizeZ / 2),
-		Vector2.new(cx, cz + Lot.SizeZ / 2),
-		Vector2.new(cx - Lot.SizeX / 2, cz),
-		Vector2.new(cx + Lot.SizeX / 2, cz),
-	}
-	for _, spot in ipairs(spots) do
-		if (Vector2.new(x, z) - spot).Magnitude < 6 then
-			return true
-		end
-	end
-	return false
 end
 
 local function clearAll()
@@ -2349,30 +2404,33 @@ function FindsService.Spawn(seed)
 
 	for _, config in ipairs(GameConfig.Finds) do
 		local position
-		for _ = 1, 80 do
+		for attempt = 1, 120 do
 			local x = Lot.CenterX + rng:NextNumber(-halfX, halfX)
 			local z = Lot.CenterZ + rng:NextNumber(-halfZ, halfZ)
-			local depth = rng:NextNumber(config.DepthMin, config.DepthMax)
-			local y = math.max(Lot.BottomY + 1.4, LotService.Top - depth)
-			local candidate = Vector3.new(x, y, z)
-			local ok = not nearLadder(x, z)
-			for _, other in ipairs(placed) do
-				if (Vector2.new(other.X, other.Z) - Vector2.new(x, z)).Magnitude < MIN_SPACING then
-					ok = false
+			local surface = LotService.SurfaceY(x, z)
+			local ok = surface ~= nil
+			if ok then
+				-- later attempts accept shallower burial if the dunes are too low
+				local depth = rng:NextNumber(config.DepthMin, config.DepthMax) * (attempt > 80 and 0.6 or 1)
+				local y = surface - depth
+				ok = y >= Lot.BottomY + 1.2 and y <= surface - 2
+				for _, other in ipairs(placed) do
+					if (Vector2.new(other.X, other.Z) - Vector2.new(x, z)).Magnitude < MIN_SPACING then
+						ok = false
+						break
+					end
+				end
+				if ok then
+					position = Vector3.new(x, y, z)
 					break
 				end
 			end
-			if ok then
-				position = candidate
-				break
-			end
 		end
 		if not position then
-			position = Vector3.new(
-				Lot.CenterX + rng:NextNumber(-halfX, halfX),
-				LotService.Top - config.DepthMax,
-				Lot.CenterZ + rng:NextNumber(-halfZ, halfZ)
-			)
+			local x = Lot.CenterX + rng:NextNumber(-halfX, halfX)
+			local z = Lot.CenterZ + rng:NextNumber(-halfZ, halfZ)
+			local surface = LotService.SurfaceY(x, z) or (Lot.BottomY + 4)
+			position = Vector3.new(x, math.max(Lot.BottomY + 1.2, surface - 2.5), z)
 		end
 		table.insert(placed, position)
 
@@ -2798,7 +2856,7 @@ local function attachTool(player)
 	weld.Part0 = hand
 	weld.Part1 = handle
 	weld.C0 = handOffset * CFrame.new(-grip)
-	weld.C1 = CFrame.identity
+	weld.C1 = handle.CFrame:ToObjectSpace(hand.CFrame * weld.C0)
 	weld.Parent = handle
 	model.Parent = character
 	player:SetAttribute("EquippedTool", toolId)
@@ -3381,7 +3439,7 @@ ClientState.State = {
 ClientState.Lot = { Name = GameConfig.Lot.Name, Percent = 0, Generating = false, FindsRemaining = #GameConfig.Finds }
 ClientState.UIOpen = false
 ClientState.DigHeld = false -- set by the mobile DIG button
-ClientState.Crosshair = "idle" -- "idle" | "valid" | "full" | "far"
+ClientState.Crosshair = "idle" -- "idle" | "valid" | "full" | "far" | "outside"
 
 -- Pure-Lua signal (no table copying, safe to pass any value)
 local function newSignal()
@@ -3926,6 +3984,7 @@ local Workspace = game:GetService("Workspace")
 local Shared = ReplicatedStorage:WaitForChild("Sandsweep")
 local GameConfig = require(Shared:WaitForChild("GameConfig"))
 local ToolModels = require(Shared:WaitForChild("ToolModels"))
+local PartKit = require(Shared:WaitForChild("PartKit"))
 local Remotes = Shared:WaitForChild("Remotes")
 
 local ClientState = require(script.Parent:WaitForChild("ClientState"))
@@ -3988,11 +4047,69 @@ local function destroyViewmodel()
 	Effects.SetVacuum(false)
 end
 
+local SLEEVE = Color3.fromRGB(92, 128, 168)
+local CUFF = Color3.fromRGB(236, 222, 196)
+local DEFAULT_SKIN = Color3.fromRGB(234, 184, 146)
+-- direction each forearm runs in CAMERA space (back toward the bottom corners of the screen)
+local ARM_DIRECTIONS = {
+	Right = Vector3.new(0.5, -0.75, 1).Unit,
+	Left = Vector3.new(-0.65, -0.7, 1).Unit,
+}
+
+local function skinColor(side)
+	local character = player.Character
+	local bodyColors = character and character:FindFirstChildOfClass("BodyColors")
+	if bodyColors then
+		return side == "Left" and bodyColors.LeftArmColor3 or bodyColors.RightArmColor3
+	end
+	local hand = character and (character:FindFirstChild(side .. "Hand") or character:FindFirstChild(side .. " Arm"))
+	return hand and hand.Color or DEFAULT_SKIN
+end
+
+-- Procedural first-person arms holding the tool (fist, thumb, wrist, forearm, sleeve)
+local function addHands(model, toolId)
+	local hands = ToolModels.Hands[toolId]
+	local viewOffset = ToolModels.ViewOffsets[toolId]
+	if not hands or not viewOffset then
+		return
+	end
+	local base = model:GetPivot()
+	for _, hand in ipairs(hands) do
+		local skin = skinColor(hand.Side)
+		local mirror = hand.Side == "Left" and -1 or 1
+		local grip = base * CFrame.new(hand.Position)
+		local armDirection = base:VectorToWorldSpace(viewOffset:VectorToObjectSpace(ARM_DIRECTIONS[hand.Side]))
+		-- fist wrapped around the handle
+		PartKit.Ellipsoid(model, Vector3.new(0.56, 0.58, 0.64), grip, { Name = "Fist", Color = skin, CastShadow = false })
+		for index = 0, 3 do
+			PartKit.Ellipsoid(model, Vector3.new(0.2, 0.2, 0.17), grip * CFrame.new(-0.2 * mirror, 0.08 - index * 0.06, -0.22 + index * 0.15), {
+				Name = "Knuckle",
+				Color = skin:Lerp(Color3.new(0, 0, 0), 0.06),
+				CastShadow = false,
+			})
+		end
+		PartKit.Ellipsoid(model, Vector3.new(0.2, 0.2, 0.46), grip * CFrame.new(0.1 * mirror, 0.27, -0.12) * CFrame.Angles(math.rad(-12), 0, 0), {
+			Name = "Thumb",
+			Color = skin,
+			CastShadow = false,
+		})
+		-- forearm, cuff and sleeve running back toward the camera
+		local wrist = grip.Position + armDirection * 0.25
+		local function along(distance)
+			return CFrame.lookAt(wrist + armDirection * distance, wrist + armDirection * (distance + 1))
+		end
+		PartKit.Cylinder(model, 1.5, 0.42, along(0.75), "Z", { Name = "Forearm", Color = skin, CastShadow = false })
+		PartKit.Cylinder(model, 0.3, 0.6, along(1.55), "Z", { Name = "Cuff", Color = CUFF, CastShadow = false })
+		PartKit.Cylinder(model, 2.6, 0.62, along(2.95), "Z", { Name = "Sleeve", Material = Enum.Material.Fabric, Color = SLEEVE, CastShadow = false })
+	end
+end
+
 local function buildViewmodel(toolId)
 	destroyViewmodel()
 	local camera = Workspace.CurrentCamera
 	local model = ToolModels.Build(toolId, true)
 	model.Name = "SandsweepViewmodel"
+	addHands(model, toolId)
 	local pivot = model:GetPivot()
 	local entry = {
 		ToolId = toolId,
@@ -4210,8 +4327,11 @@ local function aim(camera, stats)
 	if not result then
 		return nil, ray.Direction, "idle"
 	end
-	if result.Instance ~= Workspace.Terrain or result.Material ~= Enum.Material.Sand or not insideLot(result.Position) then
+	if result.Instance ~= Workspace.Terrain or result.Material ~= Enum.Material.Sand then
 		return nil, ray.Direction, "idle"
+	end
+	if not insideLot(result.Position) then
+		return nil, ray.Direction, "outside"
 	end
 	local character = player.Character
 	local head = character and character:FindFirstChild("Head")
@@ -5561,9 +5681,9 @@ local function onNotify(payload)
 		confetti(90)
 		local body = payload.Bonus and payload.Bonus > 0 and string.format("You moved %s kg. Clearing bonus: %s!", Util.FormatKg(payload.Contributed or 0), Util.FormatCash(payload.Bonus))
 			or "Fresh sand is on its way."
-		showBanner("LOT CLEARED! Every last grain.", body .. string.format(" New sand in %ds.", payload.Delay or 10), "Sage", 6)
+		showBanner("DESERT CLEARED! Not a grain left.", body .. string.format(" New sand in %ds.", payload.Delay or 10), "Sage", 6)
 	elseif kind == "LotReady" then
-		showBanner("Fresh sand delivered!", "A brand new lot with 14 new relics buried inside.", "Ochre", 4)
+		showBanner("Fresh sand delivered!", "A brand new desert with 14 new relics buried inside.", "Ochre", 4)
 		Effects.Play("Splash", 1, 0.7)
 	elseif kind == "Toast" then
 		Interface.Toast(payload.Text or "", payload.Color or "Ochre", payload.Icon)
@@ -5636,6 +5756,10 @@ local function frame(dt)
 		hud.Cross.BackgroundColor3 = C.Terracotta
 		hud.RingStroke.Color = C.Terracotta
 		hud.CrossHint.Text = "Bag full"
+	elseif crosshair == "outside" then
+		hud.Cross.BackgroundColor3 = C.Locked
+		hud.RingStroke.Color = C.Locked
+		hud.CrossHint.Text = "Outside the dig zone (past the flags)"
 	elseif crosshair == "far" then
 		hud.Cross.BackgroundColor3 = C.Locked
 		hud.RingStroke.Color = C.Locked
