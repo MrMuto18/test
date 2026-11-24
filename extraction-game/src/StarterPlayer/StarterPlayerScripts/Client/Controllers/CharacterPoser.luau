@@ -5,10 +5,11 @@
 	client (no animation assets needed):
 
 	  • Upper body follows aim pitch (Waist + Neck Motor6D C0 offsets)
-	  • Weapon Motor6D ("WeaponGrip", created by the server) is posed from the
-	    weapon class hold offsets: hip ↔ ADS blend, pitch, sprint low-ready,
-	    and a local recoil kick spring for your own gun
-	  • Both hands are IK-locked to the weapon's GripRight / GripLeft
+	  • The weapon is welded into the right hand by the server. A target frame
+	    on the UpperTorso (hold offsets: hip ↔ ADS blend, pitch, sprint
+	    low-ready, recoil kick) is where the right-arm IK (position AND
+	    rotation) puts the grip, so the gun is always in the hand and aimed
+	  • The left hand is IK-locked to the weapon's GripLeft (foregrip)
 	  • Crouch / slide: leg IK keeps feet planted while HipHeight drops, with a
 	    procedural crouch-walk step cycle driven by velocity
 
@@ -56,6 +57,7 @@ type Record = {
 	WeaponModel: Model?,
 	ArmRight: IKControl,
 	ArmLeft: IKControl,
+	WeaponTarget: Attachment,
 	LegRight: IKControl,
 	LegLeft: IKControl,
 	FootRight: Attachment,
@@ -79,14 +81,23 @@ local function newAttachment(parent: BasePart, name: string, position: Vector3, 
 	return attachment
 end
 
-local function newIK(record: { Humanoid: Humanoid }, name: string, chainRoot: BasePart, endEffector: BasePart, pole: Attachment, list: { Instance }): IKControl
+local function newIK(
+	record: { Humanoid: Humanoid },
+	name: string,
+	chainRoot: BasePart,
+	endEffector: Instance,
+	pole: Attachment,
+	list: { Instance },
+	ikType: Enum.IKControlType?,
+	priority: number?
+): IKControl
 	local ik = Instance.new("IKControl")
 	ik.Name = name
-	ik.Type = Enum.IKControlType.Position
+	ik.Type = ikType or Enum.IKControlType.Position
 	ik.ChainRoot = chainRoot
 	ik.EndEffector = endEffector
 	ik.Pole = pole
-	ik.Priority = 1
+	ik.Priority = priority or 1
 	ik.Weight = 0
 	ik.Enabled = false
 	pcall(function()
@@ -133,8 +144,11 @@ local function register(character: Model, isLocal: boolean)
 	local instances: { Instance } = {}
 	local holder = { Humanoid = humanoid }
 
-	local armPoleR = newAttachment(upper, "PoseArmPoleR", Vector3.new(1.6, -1.4, 0.8), instances)
-	local armPoleL = newAttachment(upper, "PoseArmPoleL", Vector3.new(-1.6, -1.4, 0.4), instances)
+	local armPoleR = newAttachment(upper, "PoseArmPoleR", Vector3.new(1.2, -2.0, 0.2), instances)
+	local armPoleL = newAttachment(upper, "PoseArmPoleL", Vector3.new(-1.2, -2.0, -0.2), instances)
+	local weaponTarget = newAttachment(upper, "PoseWeaponTarget", Vector3.new(0.35, 0, -0.75), instances)
+	local gripAttachment = rightHand:FindFirstChild("RightGripAttachment")
+	local rightEffector: Instance = if gripAttachment and gripAttachment:IsA("Attachment") then gripAttachment else rightHand
 	local kneePoleR = newAttachment(root, "PoseKneePoleR", Vector3.new(0.6, -1, -3), instances)
 	local kneePoleL = newAttachment(root, "PoseKneePoleL", Vector3.new(-0.6, -1, -3), instances)
 	local footR = newAttachment(root, "PoseFootR", Vector3.new(0.45, -3, 0), instances)
@@ -164,14 +178,17 @@ local function register(character: Model, isLocal: boolean)
 		StepPhase = 0,
 		Kick = if isLocal then Spring.new(Vector3.zero, 11, 0.5) else nil,
 		WeaponModel = nil,
-		ArmRight = newIK(holder, "PoseArmR", rightUpperArm, rightHand, armPoleR, instances),
-		ArmLeft = newIK(holder, "PoseArmL", leftUpperArm, leftHand, armPoleL, instances),
+		-- Right hand solves first (higher priority): it carries the weapon.
+		ArmRight = newIK(holder, "PoseArmR", rightUpperArm, rightEffector, armPoleR, instances, Enum.IKControlType.Transform, 3),
+		ArmLeft = newIK(holder, "PoseArmL", leftUpperArm, leftHand, armPoleL, instances, Enum.IKControlType.Position, 2),
+		WeaponTarget = weaponTarget,
 		LegRight = legR,
 		LegLeft = legL,
 		FootRight = footR,
 		FootLeft = footL,
 		Instances = instances,
 	}
+	record.ArmRight.Target = weaponTarget
 	records[character] = record
 
 	character.AncestryChanged:Connect(function(_, parent)
@@ -191,9 +208,8 @@ end
 
 local function poseWeapon(record: Record, dt: number)
 	local character = record.Character
-	local grip = record.UpperTorso:FindFirstChild("WeaponGrip")
 	local model = character:FindFirstChild("EquippedWeapon")
-	if not grip or not grip:IsA("Motor6D") or not model or not model:IsA("Model") then
+	if not model or not model:IsA("Model") then
 		record.ArmRight.Enabled = false
 		record.ArmLeft.Enabled = false
 		record.WeaponModel = nil
@@ -206,7 +222,6 @@ local function poseWeapon(record: Record, dt: number)
 			return
 		end
 		record.WeaponModel = model
-		record.ArmRight.Target = handles.GripRight
 		record.ArmLeft.Target = handles.GripLeft
 	end
 	record.ArmRight.Enabled = true
@@ -230,7 +245,8 @@ local function poseWeapon(record: Record, dt: number)
 	-- Low-ready when sprinting: barrel down and across the body.
 	local sprint = record.Sprint
 	local rotation = CFrame.Angles(record.Pitch * 0.55 - sprint * 0.75 + kickRot, sprint * 0.55, sprint * 0.2)
-	grip.C0 = CFrame.new(pivot) * rotation * CFrame.new(position - pivot + Vector3.new(0, 0, kickBack))
+	-- Where the grip goes: -Z = barrel direction.
+	record.WeaponTarget.CFrame = CFrame.new(pivot) * rotation * CFrame.new(position - pivot + Vector3.new(0, 0, kickBack))
 end
 
 local function poseLegs(record: Record, dt: number)

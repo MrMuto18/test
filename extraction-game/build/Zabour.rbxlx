@@ -1099,9 +1099,9 @@ local function buildRifle(ctx: Ctx)
 		end
 	end
 	add("BottomRail", Vector3.new(0.1, 0.04, 0.6), at(0, 0.23, -1.35), S.Anodized)
-	add("Foregrip", Vector3.new(0.1, 0.32, 0.1), at(0, 0.06, -0.95), S.Polymer)
-	add("ForegripCap", Vector3.new(0.11, 0.04, 0.11), at(0, -0.1, -0.95), S.Rubber)
-	add("ForegripClamp", Vector3.new(0.12, 0.06, 0.16), at(0, 0.21, -0.95), S.Anodized)
+	add("Foregrip", Vector3.new(0.1, 0.32, 0.1), at(0, 0.06, -0.85), S.Polymer)
+	add("ForegripCap", Vector3.new(0.11, 0.04, 0.11), at(0, -0.1, -0.85), S.Rubber)
+	add("ForegripClamp", Vector3.new(0.12, 0.06, 0.16), at(0, 0.21, -0.85), S.Anodized)
 
 	-- Light module
 	add("LightBody", Vector3.new(0.07, 0.1, 0.32), at(-0.16, 0.38, -1.55), S.Anodized)
@@ -1145,7 +1145,7 @@ local function buildRifle(ctx: Ctx)
 	ctx.attach("Muzzle", Vector3.new(0, 0.38, -3.0))
 	ctx.attach("Ejection", Vector3.new(0.14, 0.4, -0.15))
 	ctx.attach("GripRight", Vector3.new(0, 0, 0))
-	ctx.attach("GripLeft", Vector3.new(0, 0.02, -0.95))
+	ctx.attach("GripLeft", Vector3.new(0, 0.02, -0.85))
 end
 
 --------------------------------------------------------------------------------
@@ -1747,13 +1747,16 @@ Config.Combat = {
 	FireRateTolerance = 0.8, -- fraction of the real interval the server accepts
 	ShotBurstAllowance = 2, -- token bucket size for network jitter
 	AimSendRate = 12, -- pitch updates per second
-	-- Weapon pose relative to UpperTorso. Pivot is roughly the right shoulder.
+	-- Where the RIGHT HAND (and so the weapon grip) is placed, in UpperTorso
+	-- space. The weapon is welded to the hand; arm IK drives the hand here.
+	-- Pivot is roughly the right shoulder (pitch / low-ready rotate around it).
 	PosePivot = Vector3.new(0.3, 0.45, 0),
 	HoldOffsets = {
-		RIFLE = { Hip = Vector3.new(0.5, -0.05, -0.75), Ads = Vector3.new(0.32, 0.25, -0.7) },
-		SMG = { Hip = Vector3.new(0.48, -0.02, -0.85), Ads = Vector3.new(0.3, 0.25, -0.8) },
-		PISTOL = { Hip = Vector3.new(0.25, 0.2, -1.55), Ads = Vector3.new(0.12, 0.42, -1.6) },
+		RIFLE = { Hip = Vector3.new(0.35, 0.0, -0.75), Ads = Vector3.new(0.25, 0.3, -0.7) },
+		SMG = { Hip = Vector3.new(0.35, 0.02, -0.8), Ads = Vector3.new(0.25, 0.3, -0.75) },
+		PISTOL = { Hip = Vector3.new(0.3, 0.25, -1.45), Ads = Vector3.new(0.15, 0.45, -1.5) },
 	},
+	DamageNumbers = true,
 	Keybinds = {
 		Fire = { Enum.UserInputType.MouseButton1, Enum.KeyCode.ButtonR2 },
 		Aim = { Enum.UserInputType.MouseButton2, Enum.KeyCode.ButtonL2 },
@@ -2536,16 +2539,20 @@ local function holster(c: Combatant, weapon: WeaponState)
 	weapon.Handles.Model.Name = "Holstered_" .. weapon.Slot
 end
 
+-- R15 tool grip frame: barrel (-Z) runs along the hand's pointing direction.
+local DEFAULT_GRIP = CFrame.new(0, -0.15, 0) * CFrame.Angles(math.rad(-90), 0, 0)
+
 local function equip(c: Combatant, weapon: WeaponState)
 	clearJoint(weapon)
-	local offsets = Config.Combat.HoldOffsets[weapon.Def.Class]
-	local motor = Instance.new("Motor6D")
-	motor.Name = "WeaponGrip"
-	motor.Part0 = c.Torso
-	motor.Part1 = weapon.Handles.Handle
-	motor.C0 = CFrame.new(offsets.Hip)
-	motor.Parent = c.Torso
-	weapon.Joint = motor
+	local hand = limb(c.Character, "RightHand", "Right Arm") or c.Torso
+	local gripAttachment = hand:FindFirstChild("RightGripAttachment")
+	local weld = Instance.new("Weld")
+	weld.Name = "WeaponGrip"
+	weld.Part0 = hand
+	weld.Part1 = weapon.Handles.Handle
+	weld.C0 = if gripAttachment and gripAttachment:IsA("Attachment") then gripAttachment.CFrame else DEFAULT_GRIP
+	weld.Parent = hand
+	weapon.Joint = weld
 	weapon.Handles.Model.Name = "EquippedWeapon"
 	c.Character:SetAttribute("EquippedWeapon", weapon.Id)
 	c.Character:SetAttribute("WeaponClass", weapon.Def.Class)
@@ -5216,10 +5223,11 @@ return AudioController
 	client (no animation assets needed):
 
 	  • Upper body follows aim pitch (Waist + Neck Motor6D C0 offsets)
-	  • Weapon Motor6D ("WeaponGrip", created by the server) is posed from the
-	    weapon class hold offsets: hip ↔ ADS blend, pitch, sprint low-ready,
-	    and a local recoil kick spring for your own gun
-	  • Both hands are IK-locked to the weapon's GripRight / GripLeft
+	  • The weapon is welded into the right hand by the server. A target frame
+	    on the UpperTorso (hold offsets: hip ↔ ADS blend, pitch, sprint
+	    low-ready, recoil kick) is where the right-arm IK (position AND
+	    rotation) puts the grip, so the gun is always in the hand and aimed
+	  • The left hand is IK-locked to the weapon's GripLeft (foregrip)
 	  • Crouch / slide: leg IK keeps feet planted while HipHeight drops, with a
 	    procedural crouch-walk step cycle driven by velocity
 
@@ -5267,6 +5275,7 @@ type Record = {
 	WeaponModel: Model?,
 	ArmRight: IKControl,
 	ArmLeft: IKControl,
+	WeaponTarget: Attachment,
 	LegRight: IKControl,
 	LegLeft: IKControl,
 	FootRight: Attachment,
@@ -5290,14 +5299,23 @@ local function newAttachment(parent: BasePart, name: string, position: Vector3, 
 	return attachment
 end
 
-local function newIK(record: { Humanoid: Humanoid }, name: string, chainRoot: BasePart, endEffector: BasePart, pole: Attachment, list: { Instance }): IKControl
+local function newIK(
+	record: { Humanoid: Humanoid },
+	name: string,
+	chainRoot: BasePart,
+	endEffector: Instance,
+	pole: Attachment,
+	list: { Instance },
+	ikType: Enum.IKControlType?,
+	priority: number?
+): IKControl
 	local ik = Instance.new("IKControl")
 	ik.Name = name
-	ik.Type = Enum.IKControlType.Position
+	ik.Type = ikType or Enum.IKControlType.Position
 	ik.ChainRoot = chainRoot
 	ik.EndEffector = endEffector
 	ik.Pole = pole
-	ik.Priority = 1
+	ik.Priority = priority or 1
 	ik.Weight = 0
 	ik.Enabled = false
 	pcall(function()
@@ -5344,8 +5362,11 @@ local function register(character: Model, isLocal: boolean)
 	local instances: { Instance } = {}
 	local holder = { Humanoid = humanoid }
 
-	local armPoleR = newAttachment(upper, "PoseArmPoleR", Vector3.new(1.6, -1.4, 0.8), instances)
-	local armPoleL = newAttachment(upper, "PoseArmPoleL", Vector3.new(-1.6, -1.4, 0.4), instances)
+	local armPoleR = newAttachment(upper, "PoseArmPoleR", Vector3.new(1.2, -2.0, 0.2), instances)
+	local armPoleL = newAttachment(upper, "PoseArmPoleL", Vector3.new(-1.2, -2.0, -0.2), instances)
+	local weaponTarget = newAttachment(upper, "PoseWeaponTarget", Vector3.new(0.35, 0, -0.75), instances)
+	local gripAttachment = rightHand:FindFirstChild("RightGripAttachment")
+	local rightEffector: Instance = if gripAttachment and gripAttachment:IsA("Attachment") then gripAttachment else rightHand
 	local kneePoleR = newAttachment(root, "PoseKneePoleR", Vector3.new(0.6, -1, -3), instances)
 	local kneePoleL = newAttachment(root, "PoseKneePoleL", Vector3.new(-0.6, -1, -3), instances)
 	local footR = newAttachment(root, "PoseFootR", Vector3.new(0.45, -3, 0), instances)
@@ -5375,14 +5396,17 @@ local function register(character: Model, isLocal: boolean)
 		StepPhase = 0,
 		Kick = if isLocal then Spring.new(Vector3.zero, 11, 0.5) else nil,
 		WeaponModel = nil,
-		ArmRight = newIK(holder, "PoseArmR", rightUpperArm, rightHand, armPoleR, instances),
-		ArmLeft = newIK(holder, "PoseArmL", leftUpperArm, leftHand, armPoleL, instances),
+		-- Right hand solves first (higher priority): it carries the weapon.
+		ArmRight = newIK(holder, "PoseArmR", rightUpperArm, rightEffector, armPoleR, instances, Enum.IKControlType.Transform, 3),
+		ArmLeft = newIK(holder, "PoseArmL", leftUpperArm, leftHand, armPoleL, instances, Enum.IKControlType.Position, 2),
+		WeaponTarget = weaponTarget,
 		LegRight = legR,
 		LegLeft = legL,
 		FootRight = footR,
 		FootLeft = footL,
 		Instances = instances,
 	}
+	record.ArmRight.Target = weaponTarget
 	records[character] = record
 
 	character.AncestryChanged:Connect(function(_, parent)
@@ -5402,9 +5426,8 @@ end
 
 local function poseWeapon(record: Record, dt: number)
 	local character = record.Character
-	local grip = record.UpperTorso:FindFirstChild("WeaponGrip")
 	local model = character:FindFirstChild("EquippedWeapon")
-	if not grip or not grip:IsA("Motor6D") or not model or not model:IsA("Model") then
+	if not model or not model:IsA("Model") then
 		record.ArmRight.Enabled = false
 		record.ArmLeft.Enabled = false
 		record.WeaponModel = nil
@@ -5417,7 +5440,6 @@ local function poseWeapon(record: Record, dt: number)
 			return
 		end
 		record.WeaponModel = model
-		record.ArmRight.Target = handles.GripRight
 		record.ArmLeft.Target = handles.GripLeft
 	end
 	record.ArmRight.Enabled = true
@@ -5441,7 +5463,8 @@ local function poseWeapon(record: Record, dt: number)
 	-- Low-ready when sprinting: barrel down and across the body.
 	local sprint = record.Sprint
 	local rotation = CFrame.Angles(record.Pitch * 0.55 - sprint * 0.75 + kickRot, sprint * 0.55, sprint * 0.2)
-	grip.C0 = CFrame.new(pivot) * rotation * CFrame.new(position - pivot + Vector3.new(0, 0, kickBack))
+	-- Where the grip goes: -Z = barrel direction.
+	record.WeaponTarget.CFrame = CFrame.new(pivot) * rotation * CFrame.new(position - pivot + Vector3.new(0, 0, kickBack))
 end
 
 local function poseLegs(record: Record, dt: number)
@@ -7608,11 +7631,14 @@ local function onAmmoSync(slot: any, mag: any, reserve: any, serverReloading: an
 	end
 end
 
-local function onHitConfirm(kind: any, _damage: any, _position: any)
+local function onHitConfirm(kind: any, damage: any, position: any)
 	if typeof(kind) ~= "string" then
 		return
 	end
 	HUD.hitmarker(kind)
+	if Config.Combat.DamageNumbers and kind ~= "Blocked" and typeof(damage) == "number" and typeof(position) == "Vector3" then
+		WeaponFx.damageNumber(position, damage, kind)
+	end
 	if kind == "Kill" then
 		AudioController.play("HitKill", 0.02)
 	elseif kind == "Head" then
@@ -7749,9 +7775,11 @@ return WeaponController
 	  shell         physical brass ejecting right/up (Debris collision group)
 	  dropMagazine  physical mag falls out during reloads
 	  sound         3D one-shots at the muzzle (skipped if no asset id)
+	  damageNumber  floating, colour-coded damage pop at the hit point
 ]]
 
 local Debris = game:GetService("Debris")
+local TweenService = game:GetService("TweenService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
@@ -8083,6 +8111,85 @@ function WeaponFx.sound(name: string, at: Instance, volumeScale: number?)
 	sound.Parent = at
 	sound:Play()
 	Debris:AddItem(sound, 4)
+end
+
+local DAMAGE_COLORS: { [string]: Color3 } = {
+	Body = Color3.fromRGB(255, 255, 255),
+	Head = Color3.fromRGB(255, 70, 70),
+	Kill = Color3.fromRGB(255, 200, 80),
+}
+
+-- Floating damage number: pops in, drifts up and sideways, fades out.
+function WeaponFx.damageNumber(position: Vector3, damage: number, kind: string)
+	local color = DAMAGE_COLORS[kind] or DAMAGE_COLORS.Body
+	local big = kind == "Head" or kind == "Kill"
+
+	local anchor = Instance.new("Attachment")
+	anchor.Name = "DamageNumber"
+	anchor.WorldPosition = position
+	anchor.Parent = Workspace.Terrain
+
+	local gui = Instance.new("BillboardGui")
+	gui.Adornee = anchor
+	gui.AlwaysOnTop = true
+	gui.LightInfluence = 0
+	gui.MaxDistance = 400
+	gui.Size = UDim2.fromOffset(140, 44)
+	gui.StudsOffsetWorldSpace = Vector3.new(rng:NextNumber(-0.6, 0.6), 0.6, 0)
+	gui.Parent = anchor
+
+	local label = Instance.new("TextLabel")
+	label.BackgroundTransparency = 1
+	label.Size = UDim2.fromScale(1, 1)
+	label.Text = tostring(math.max(1, math.round(damage)))
+	label.TextColor3 = color
+	label.TextScaled = false
+	label.TextSize = if big then 30 else 22
+	label.FontFace = Font.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.ExtraBold)
+	label.Parent = gui
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = Color3.new(0, 0, 0)
+	stroke.Thickness = 1.5
+	stroke.Transparency = 0.25
+	stroke.Parent = label
+	local scale = Instance.new("UIScale")
+	scale.Scale = if big then 1.7 else 1.35
+	scale.Parent = label
+
+	if kind == "Head" or kind == "Kill" then
+		local tag = Instance.new("TextLabel")
+		tag.BackgroundTransparency = 1
+		tag.AnchorPoint = Vector2.new(0.5, 0)
+		tag.Position = UDim2.fromScale(0.5, 0.92)
+		tag.Size = UDim2.fromOffset(140, 14)
+		tag.Text = if kind == "Kill" then "ELIMINATED" else "HEADSHOT"
+		tag.TextColor3 = color
+		tag.TextSize = 11
+		tag.FontFace = Font.new("rbxasset://fonts/families/RobotoMono.json", Enum.FontWeight.Bold)
+		tag.Parent = label
+		local tagStroke = stroke:Clone()
+		tagStroke.Parent = tag
+	end
+
+	local pop = TweenInfo.new(0.18, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+	TweenService:Create(scale, pop, { Scale = 1 }):Play()
+	local drift = TweenInfo.new(0.9, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+	TweenService:Create(gui, drift, {
+		StudsOffsetWorldSpace = gui.StudsOffsetWorldSpace + Vector3.new(rng:NextNumber(-0.5, 0.5), 2.2, 0),
+	}):Play()
+	local fade = TweenInfo.new(0.35, Enum.EasingStyle.Sine, Enum.EasingDirection.In, 0, false, if big then 0.75 else 0.5)
+	TweenService:Create(label, fade, { TextTransparency = 1 }):Play()
+	TweenService:Create(stroke, fade, { Transparency = 1 }):Play()
+	for _, child in label:GetChildren() do
+		if child:IsA("TextLabel") then
+			TweenService:Create(child, fade, { TextTransparency = 1 }):Play()
+			local childStroke = child:FindFirstChildOfClass("UIStroke")
+			if childStroke then
+				TweenService:Create(childStroke, fade, { Transparency = 1 }):Play()
+			end
+		end
+	end
+	Debris:AddItem(anchor, 1.4)
 end
 
 function WeaponFx.getFolder(): Folder

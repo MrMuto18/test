@@ -137,16 +137,20 @@ local function holster(c: Combatant, weapon: WeaponState)
 	weapon.Handles.Model.Name = "Holstered_" .. weapon.Slot
 end
 
+-- R15 tool grip frame: barrel (-Z) runs along the hand's pointing direction.
+local DEFAULT_GRIP = CFrame.new(0, -0.15, 0) * CFrame.Angles(math.rad(-90), 0, 0)
+
 local function equip(c: Combatant, weapon: WeaponState)
 	clearJoint(weapon)
-	local offsets = Config.Combat.HoldOffsets[weapon.Def.Class]
-	local motor = Instance.new("Motor6D")
-	motor.Name = "WeaponGrip"
-	motor.Part0 = c.Torso
-	motor.Part1 = weapon.Handles.Handle
-	motor.C0 = CFrame.new(offsets.Hip)
-	motor.Parent = c.Torso
-	weapon.Joint = motor
+	local hand = limb(c.Character, "RightHand", "Right Arm") or c.Torso
+	local gripAttachment = hand:FindFirstChild("RightGripAttachment")
+	local weld = Instance.new("Weld")
+	weld.Name = "WeaponGrip"
+	weld.Part0 = hand
+	weld.Part1 = weapon.Handles.Handle
+	weld.C0 = if gripAttachment and gripAttachment:IsA("Attachment") then gripAttachment.CFrame else DEFAULT_GRIP
+	weld.Parent = hand
+	weapon.Joint = weld
 	weapon.Handles.Model.Name = "EquippedWeapon"
 	c.Character:SetAttribute("EquippedWeapon", weapon.Id)
 	c.Character:SetAttribute("WeaponClass", weapon.Def.Class)

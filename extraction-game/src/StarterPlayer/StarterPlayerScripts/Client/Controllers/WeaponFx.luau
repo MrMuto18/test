@@ -11,9 +11,11 @@
 	  shell         physical brass ejecting right/up (Debris collision group)
 	  dropMagazine  physical mag falls out during reloads
 	  sound         3D one-shots at the muzzle (skipped if no asset id)
+	  damageNumber  floating, colour-coded damage pop at the hit point
 ]]
 
 local Debris = game:GetService("Debris")
+local TweenService = game:GetService("TweenService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
@@ -345,6 +347,85 @@ function WeaponFx.sound(name: string, at: Instance, volumeScale: number?)
 	sound.Parent = at
 	sound:Play()
 	Debris:AddItem(sound, 4)
+end
+
+local DAMAGE_COLORS: { [string]: Color3 } = {
+	Body = Color3.fromRGB(255, 255, 255),
+	Head = Color3.fromRGB(255, 70, 70),
+	Kill = Color3.fromRGB(255, 200, 80),
+}
+
+-- Floating damage number: pops in, drifts up and sideways, fades out.
+function WeaponFx.damageNumber(position: Vector3, damage: number, kind: string)
+	local color = DAMAGE_COLORS[kind] or DAMAGE_COLORS.Body
+	local big = kind == "Head" or kind == "Kill"
+
+	local anchor = Instance.new("Attachment")
+	anchor.Name = "DamageNumber"
+	anchor.WorldPosition = position
+	anchor.Parent = Workspace.Terrain
+
+	local gui = Instance.new("BillboardGui")
+	gui.Adornee = anchor
+	gui.AlwaysOnTop = true
+	gui.LightInfluence = 0
+	gui.MaxDistance = 400
+	gui.Size = UDim2.fromOffset(140, 44)
+	gui.StudsOffsetWorldSpace = Vector3.new(rng:NextNumber(-0.6, 0.6), 0.6, 0)
+	gui.Parent = anchor
+
+	local label = Instance.new("TextLabel")
+	label.BackgroundTransparency = 1
+	label.Size = UDim2.fromScale(1, 1)
+	label.Text = tostring(math.max(1, math.round(damage)))
+	label.TextColor3 = color
+	label.TextScaled = false
+	label.TextSize = if big then 30 else 22
+	label.FontFace = Font.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.ExtraBold)
+	label.Parent = gui
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = Color3.new(0, 0, 0)
+	stroke.Thickness = 1.5
+	stroke.Transparency = 0.25
+	stroke.Parent = label
+	local scale = Instance.new("UIScale")
+	scale.Scale = if big then 1.7 else 1.35
+	scale.Parent = label
+
+	if kind == "Head" or kind == "Kill" then
+		local tag = Instance.new("TextLabel")
+		tag.BackgroundTransparency = 1
+		tag.AnchorPoint = Vector2.new(0.5, 0)
+		tag.Position = UDim2.fromScale(0.5, 0.92)
+		tag.Size = UDim2.fromOffset(140, 14)
+		tag.Text = if kind == "Kill" then "ELIMINATED" else "HEADSHOT"
+		tag.TextColor3 = color
+		tag.TextSize = 11
+		tag.FontFace = Font.new("rbxasset://fonts/families/RobotoMono.json", Enum.FontWeight.Bold)
+		tag.Parent = label
+		local tagStroke = stroke:Clone()
+		tagStroke.Parent = tag
+	end
+
+	local pop = TweenInfo.new(0.18, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+	TweenService:Create(scale, pop, { Scale = 1 }):Play()
+	local drift = TweenInfo.new(0.9, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+	TweenService:Create(gui, drift, {
+		StudsOffsetWorldSpace = gui.StudsOffsetWorldSpace + Vector3.new(rng:NextNumber(-0.5, 0.5), 2.2, 0),
+	}):Play()
+	local fade = TweenInfo.new(0.35, Enum.EasingStyle.Sine, Enum.EasingDirection.In, 0, false, if big then 0.75 else 0.5)
+	TweenService:Create(label, fade, { TextTransparency = 1 }):Play()
+	TweenService:Create(stroke, fade, { Transparency = 1 }):Play()
+	for _, child in label:GetChildren() do
+		if child:IsA("TextLabel") then
+			TweenService:Create(child, fade, { TextTransparency = 1 }):Play()
+			local childStroke = child:FindFirstChildOfClass("UIStroke")
+			if childStroke then
+				TweenService:Create(childStroke, fade, { Transparency = 1 }):Play()
+			end
+		end
+	end
+	Debris:AddItem(anchor, 1.4)
 end
 
 function WeaponFx.getFolder(): Folder

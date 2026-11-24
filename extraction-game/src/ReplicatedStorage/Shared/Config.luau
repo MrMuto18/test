@@ -418,13 +418,16 @@ Config.Combat = {
 	FireRateTolerance = 0.8, -- fraction of the real interval the server accepts
 	ShotBurstAllowance = 2, -- token bucket size for network jitter
 	AimSendRate = 12, -- pitch updates per second
-	-- Weapon pose relative to UpperTorso. Pivot is roughly the right shoulder.
+	-- Where the RIGHT HAND (and so the weapon grip) is placed, in UpperTorso
+	-- space. The weapon is welded to the hand; arm IK drives the hand here.
+	-- Pivot is roughly the right shoulder (pitch / low-ready rotate around it).
 	PosePivot = Vector3.new(0.3, 0.45, 0),
 	HoldOffsets = {
-		RIFLE = { Hip = Vector3.new(0.5, -0.05, -0.75), Ads = Vector3.new(0.32, 0.25, -0.7) },
-		SMG = { Hip = Vector3.new(0.48, -0.02, -0.85), Ads = Vector3.new(0.3, 0.25, -0.8) },
-		PISTOL = { Hip = Vector3.new(0.25, 0.2, -1.55), Ads = Vector3.new(0.12, 0.42, -1.6) },
+		RIFLE = { Hip = Vector3.new(0.35, 0.0, -0.75), Ads = Vector3.new(0.25, 0.3, -0.7) },
+		SMG = { Hip = Vector3.new(0.35, 0.02, -0.8), Ads = Vector3.new(0.25, 0.3, -0.75) },
+		PISTOL = { Hip = Vector3.new(0.3, 0.25, -1.45), Ads = Vector3.new(0.15, 0.45, -1.5) },
 	},
+	DamageNumbers = true,
 	Keybinds = {
 		Fire = { Enum.UserInputType.MouseButton1, Enum.KeyCode.ButtonR2 },
 		Aim = { Enum.UserInputType.MouseButton2, Enum.KeyCode.ButtonL2 },

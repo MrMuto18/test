@@ -456,11 +456,14 @@ local function onAmmoSync(slot: any, mag: any, reserve: any, serverReloading: an
 	end
 end
 
-local function onHitConfirm(kind: any, _damage: any, _position: any)
+local function onHitConfirm(kind: any, damage: any, position: any)
 	if typeof(kind) ~= "string" then
 		return
 	end
 	HUD.hitmarker(kind)
+	if Config.Combat.DamageNumbers and kind ~= "Blocked" and typeof(damage) == "number" and typeof(position) == "Vector3" then
+		WeaponFx.damageNumber(position, damage, kind)
+	end
 	if kind == "Kill" then
 		AudioController.play("HitKill", 0.02)
 	elseif kind == "Head" then

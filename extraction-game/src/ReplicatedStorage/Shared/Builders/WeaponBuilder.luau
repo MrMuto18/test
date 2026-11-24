@@ -199,9 +199,9 @@ local function buildRifle(ctx: Ctx)
 		end
 	end
 	add("BottomRail", Vector3.new(0.1, 0.04, 0.6), at(0, 0.23, -1.35), S.Anodized)
-	add("Foregrip", Vector3.new(0.1, 0.32, 0.1), at(0, 0.06, -0.95), S.Polymer)
-	add("ForegripCap", Vector3.new(0.11, 0.04, 0.11), at(0, -0.1, -0.95), S.Rubber)
-	add("ForegripClamp", Vector3.new(0.12, 0.06, 0.16), at(0, 0.21, -0.95), S.Anodized)
+	add("Foregrip", Vector3.new(0.1, 0.32, 0.1), at(0, 0.06, -0.85), S.Polymer)
+	add("ForegripCap", Vector3.new(0.11, 0.04, 0.11), at(0, -0.1, -0.85), S.Rubber)
+	add("ForegripClamp", Vector3.new(0.12, 0.06, 0.16), at(0, 0.21, -0.85), S.Anodized)
 
 	-- Light module
 	add("LightBody", Vector3.new(0.07, 0.1, 0.32), at(-0.16, 0.38, -1.55), S.Anodized)
@@ -245,7 +245,7 @@ local function buildRifle(ctx: Ctx)
 	ctx.attach("Muzzle", Vector3.new(0, 0.38, -3.0))
 	ctx.attach("Ejection", Vector3.new(0.14, 0.4, -0.15))
 	ctx.attach("GripRight", Vector3.new(0, 0, 0))
-	ctx.attach("GripLeft", Vector3.new(0, 0.02, -0.95))
+	ctx.attach("GripLeft", Vector3.new(0, 0.02, -0.85))
 end
 
 --------------------------------------------------------------------------------
