@@ -1,6 +1,6 @@
 # Sandsweep: a cozy desert-digging incremental for Roblox
 
-A first-person game about digging and vacuuming sand. You clear the **Sunbaked Desert** (an open 160×160 stud field of Smooth Terrain dunes, up to 22 studs tall) one scoop at a time. There are no walls: the dig zone is marked by small flags and blends into decorative dunes that run to the horizon. You sell the sand by weight at the Weigh Station and dig up 14 buried relics. Cash buys better tools, bigger bags and skill-tree upgrades. Clear 99.5% or more of the desert and fresh dunes are delivered with new relics buried in them.
+A first-person game about digging and vacuuming sand. You clear the **Sunbaked Desert** (an open 160×160 stud field of Smooth Terrain dunes, up to 22 studs tall) one scoop at a time. There are no walls: the dig zone is marked by small flags and blends into decorative dunes that run to the horizon. You start with your bare hands, melt the sand into glass at the Glass Furnace (paid by weight) and dig up 14 buried relics. Cash buys better tools, bigger bags and skill-tree upgrades. Clear 99.5% or more of the desert and fresh dunes are delivered with new relics buried in them.
 
 Everything is built in code. There are no uploaded meshes, decals or audio. The only sounds are Roblox's built-in `rbxasset://sounds/...` files, shaped with EQ and distortion effects.
 
@@ -66,11 +66,11 @@ At runtime the server also creates `Workspace/SandsweepWorld/` (Map, Stations, F
 
 | Input | Action |
 |---|---|
-| Left click / R2 / **DIG** button (touch) | Dig. Spoon: click. Shovel: click or hold. Vacuums: hold. |
-| `1`–`4` | Swap to an owned tool |
+| Left click / R2 / **DIG** button (touch) | Dig. Hands and spoon: click. Shovel: click or hold. Vacuums: hold. |
+| `1`–`5` | Swap to an owned tool |
 | `B` / `K` / `J` | Shop / Skill Tree / Finds Journal |
 | `E` | Collect an uncovered relic · open the Upgrade Booth |
-| Walk onto the scale | Sell your whole bag |
+| Step on the furnace hot plate | Sell your whole bag |
 
 ## How the core systems work
 
@@ -84,13 +84,13 @@ At runtime the server also creates `Workspace/SandsweepWorld/` (Map, Stations, F
 
 If the request passes, the server runs `Terrain:ReadVoxels`, carves, then runs `ReadVoxels` again. It adds up only the drop in **Sand** occupancy, so swinging at air earns nothing. Weight = removed volume × `SandDensity`.
 - Shovel and vacuums carve with `Terrain:FillBall(center, radius, Air)`.
-- The spoon's ball is smaller than a 4-stud voxel, where `FillBall` often does nothing, so it carves the voxels directly with `WriteVoxels`. Every successful dig is also guaranteed to bite into the nearest sand.
+- Hands' and the spoon's ball is smaller than a 4-stud voxel, where `FillBall` often does nothing, so it carves the voxels directly with `WriteVoxels`. Every successful dig is also guaranteed to bite into the nearest sand.
 - Voxels outside the dig zone are restored after each dig, so the outer desert never changes.
 - Tiny leftover voxels near the dig are swept up automatically, so the desert can really reach ~100%. If the bag is nearly full, the scoop shrinks to fit.
 
 **No void, ever.** The whole dig zone sits on a solid hardpan bedrock **Part** that terrain operations can't touch. The server also clamps the dig centre above the bedrock line. An invisible safety net, a far-out invisible world boundary and a teleport-to-spawn check catch anything that still falls or wanders off.
 
-**Base camp.** Spawn, the Weigh Station and the Upgrade Booth sit on flat ground just south of the dig zone, under a gateway arch.
+**Base camp.** Spawn, the Glass Furnace (a brick kiln with real `Fire`, embers and chimney smoke; every sale pops a fresh glass vase onto its cooling table) and the Upgrade Booth sit on flat ground just south of the dig zone, under a gateway arch.
 
 **Finds.** The 14 relics are anchored, non-collidable models buried at random within each relic's depth band. Their `ProximityPrompt` stays disabled until two checks pass. First, the voxel column at and just above the relic is mostly empty (average Sand occupancy below 0.3). Second, at least 3 of 5 vertical raycasts reach the relic without hitting sand. Once uncovered, a relic gets a highlight, sparkles and a light pillar. The first time you collect a relic it pays its full bonus. Repeats pay 35%.
 
@@ -100,7 +100,8 @@ If the request passes, the server runs `Terrain:ReadVoxels`, carves, then runs `
 
 | Tool | Price | Radius | Cooldown | Mode |
 |---|---|---|---|---|
-| Rusty Spoon | free | 1.8 | 0.45 s | Click |
+| Bare Hands | free | 1.4 | 0.55 s | Click |
+| Rusty Spoon | $40 | 1.8 | 0.45 s | Click |
 | Trusty Shovel | $250 | 3.2 | 0.35 s | Click / Hold |
 | Hand Vacuum | $2,500 | 3.8 | 0.12 s | Stream |
 | Turbine Vacuum | $15,000 | 6.0 | 0.08 s | Stream |

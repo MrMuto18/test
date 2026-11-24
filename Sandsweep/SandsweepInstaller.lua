@@ -129,22 +129,38 @@ GameConfig.Economy = {
 --------------------------------------------------------------------------
 GameConfig.Tools = {
 	{
-		Id = "Spoon",
-		Name = "Rusty Spoon",
+		Id = "Hands",
+		Name = "Bare Hands",
+		Short = "Hands",
 		Tier = 1,
 		Price = 0,
+		Radius = 1.4,
+		Cooldown = 0.55,
+		Range = 11,
+		Mode = "Click",
+		Shake = 0.04,
+		Accent = Color3.fromRGB(234, 184, 146),
+		Description = "Day one. Just you, your palms and a whole lot of sand.",
+	},
+	{
+		Id = "Spoon",
+		Name = "Rusty Spoon",
+		Short = "Spoon",
+		Tier = 2,
+		Price = 40,
 		Radius = 1.8,
 		Cooldown = 0.45,
 		Range = 14,
 		Mode = "Click",
 		Shake = 0.05,
 		Accent = Color3.fromRGB(190, 196, 204),
-		Description = "Everyone starts somewhere. One heroic spoonful at a time.",
+		Description = "Finally, a utensil! One heroic spoonful at a time.",
 	},
 	{
 		Id = "Shovel",
 		Name = "Trusty Shovel",
-		Tier = 2,
+		Short = "Shovel",
+		Tier = 3,
 		Price = 250,
 		Radius = 3.2,
 		Cooldown = 0.35,
@@ -157,7 +173,8 @@ GameConfig.Tools = {
 	{
 		Id = "HandVac",
 		Name = "Hand Vacuum",
-		Tier = 3,
+		Short = "Vac",
+		Tier = 4,
 		Price = 2500,
 		Radius = 3.8,
 		Cooldown = 0.12,
@@ -170,7 +187,8 @@ GameConfig.Tools = {
 	{
 		Id = "TurbineVac",
 		Name = "Turbine Vacuum",
-		Tier = 4,
+		Short = "Turbo",
+		Tier = 5,
 		Price = 15000,
 		Radius = 6.0,
 		Cooldown = 0.08,
@@ -235,7 +253,7 @@ GameConfig.Skills = {
 		BaseCost = 250,
 		CostGrowth = 1.75,
 		PerLevel = 0.2, -- +20% sell value per level
-		Description = "Haggle better at the Weigh Station. Sand sells for more.",
+		Description = "Blow finer glass at the furnace. Sand sells for more.",
 	},
 	{
 		Id = "WalkSpeed",
@@ -396,8 +414,8 @@ GameConfig.DefaultData = {
 	Version = 1,
 	Cash = GameConfig.Economy.StartingCash,
 	BagKg = 0,
-	OwnedTools = { Spoon = true },
-	EquippedTool = "Spoon",
+	OwnedTools = { Hands = true },
+	EquippedTool = "Hands",
 	BagTier = 1,
 	Skills = { DigSpeed = 0, DigRadius = 0, SandValue = 0, WalkSpeed = 0 },
 	Finds = {},
@@ -638,6 +656,7 @@ local SAND = Color3.fromRGB(232, 196, 128)
 
 -- First-person placement relative to the camera
 ToolModels.ViewOffsets = {
+	Hands = CFrame.new(0, -1.15, -2.0) * CFrame.Angles(math.rad(18), 0, 0),
 	Spoon = CFrame.new(0.85, -0.8, -1.7) * CFrame.Angles(math.rad(10), math.rad(-10), math.rad(-4)),
 	Shovel = CFrame.new(1.05, -1.15, -1.6) * CFrame.Angles(math.rad(14), math.rad(-10), math.rad(-8)),
 	HandVac = CFrame.new(0.95, -0.95, -1.7) * CFrame.Angles(math.rad(6), math.rad(-7), 0),
@@ -646,6 +665,7 @@ ToolModels.ViewOffsets = {
 
 -- Grip point (tool space) that sits in the character's hand
 ToolModels.Grips = {
+	Hands = Vector3.new(0, 0, 0),
 	Spoon = Vector3.new(0, 0, 0.45),
 	Shovel = Vector3.new(0, 0, 1.15),
 	HandVac = Vector3.new(0, 0.55, 0.4),
@@ -654,6 +674,10 @@ ToolModels.Grips = {
 
 -- First-person hands: where each hand grips the tool (tool space) and which arm it is
 ToolModels.Hands = {
+	Hands = {
+		{ Position = Vector3.new(0.34, -0.05, -0.45), Side = "Right", Cupped = true },
+		{ Position = Vector3.new(-0.34, -0.05, -0.45), Side = "Left", Cupped = true },
+	},
 	Spoon = { { Position = Vector3.new(0, 0, 0.5), Side = "Right" } },
 	Shovel = { { Position = Vector3.new(0, 0, 1.3), Side = "Right" }, { Position = Vector3.new(0, 0, -0.55), Side = "Left" } },
 	HandVac = { { Position = Vector3.new(0, 0.58, 0.45), Side = "Right" } },
@@ -669,6 +693,26 @@ local function addTip(handle, position)
 end
 
 local builders = {}
+
+-- Bare hands: the visible palms are added by the first-person viewmodel;
+-- the model only carries an invisible handle, the sand scoop and the tip.
+builders.Hands = function(model)
+	local handle = PartKit.Part(model, {
+		Name = "Handle",
+		Size = Vector3.new(0.2, 0.2, 0.2),
+		CFrame = CFrame.new(0, 0, 0),
+		Transparency = 1,
+		CastShadow = false,
+	})
+	PartKit.Ellipsoid(model, Vector3.new(0.7, 0.32, 0.6), CFrame.new(0, 0.12, -0.5), {
+		Name = "SandScoop",
+		Color = SAND,
+		Material = Enum.Material.Sand,
+		Transparency = 1,
+	})
+	addTip(handle, Vector3.new(0, 0, -0.9))
+	return handle
+end
 
 builders.Spoon = function(model)
 	local silver = Color3.fromRGB(196, 200, 208)
@@ -1164,7 +1208,7 @@ created["WorldBuilder"] = make("ModuleScript", "WorldBuilder", Containers.SSS)
 created["WorldBuilder"].Source = [======[
 -- WorldBuilder (ModuleScript) - ServerScriptService/Sandsweep/WorldBuilder
 -- Builds the cozy desert: lighting, terrain dunes & mesas, bedrock, retaining
--- walls, fencing, ladders, plaza, Weigh Station, Upgrade Booth, lot board, decor.
+-- open desert, outer dunes, base camp, Glass Furnace, Upgrade Booth, lot board, decor.
 
 local Lighting = game:GetService("Lighting")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -1604,7 +1648,7 @@ local function buildDecor(parent)
 
 	-- boardwalks across the camp
 	local planks = Color3.fromRGB(170, 120, 76)
-	solid(decor, { Name = "Boardwalk", Size = Vector3.new(72, 0.3, 6), CFrame = CFrame.new(Lot.CenterX, CAMP_Y + 0.15, CAMP_Z), Material = Enum.Material.WoodPlanks, Color = planks })
+	solid(decor, { Name = "Boardwalk", Size = Vector3.new(34, 0.3, 6), CFrame = CFrame.new(Lot.CenterX, CAMP_Y + 0.15, CAMP_Z), Material = Enum.Material.WoodPlanks, Color = planks })
 	solid(decor, { Name = "Boardwalk", Size = Vector3.new(6, 0.3, 34), CFrame = CFrame.new(Lot.CenterX, CAMP_Y + 0.15, CAMP_Z - 3), Material = Enum.Material.WoodPlanks, Color = planks })
 
 	-- gateway arch facing the desert
@@ -1626,7 +1670,7 @@ local function buildDecor(parent)
 	})
 	addSurfaceText(archSign, Enum.NormalId.Front, {
 		{ Text = "BASE CAMP  ⛺", Height = 0.55 },
-		{ Text = "Weigh Station • Upgrade Booth", Height = 0.28, Font = Enum.Font.GothamBold, Color = Palette.InkSoft },
+		{ Text = "Glass Furnace • Upgrade Booth", Height = 0.28, Font = Enum.Font.GothamBold, Color = Palette.InkSoft },
 	})
 	addSurfaceText(archSign, Enum.NormalId.Back, {
 		{ Text = string.upper(Lot.Name), Height = 0.55 },
@@ -1646,124 +1690,236 @@ local function buildDecor(parent)
 end
 
 --------------------------------------------------------------------------
--- WEIGH STATION (sell zone)
+-- GLASS FURNACE (sell zone): sand goes in, glass vases come out
 --------------------------------------------------------------------------
-local function buildWeighStation(parent)
-	local station = folder("WeighStation", parent)
+local VASE_COLORS = {
+	Color3.fromRGB(96, 176, 206),
+	Color3.fromRGB(122, 204, 172),
+	Color3.fromRGB(236, 152, 92),
+	Color3.fromRGB(206, 112, 164),
+	Color3.fromRGB(244, 212, 112),
+	Color3.fromRGB(146, 154, 226),
+}
+
+local function glassProps(color)
+	return {
+		Material = Enum.Material.Glass,
+		Transparency = 0.22,
+		Reflectance = 0.12,
+		Color = color,
+		CastShadow = false,
+	}
+end
+
+-- A small procedural glass vase (3 shapes), built standing on its own origin.
+local function buildVase(color, style)
+	local model = Instance.new("Model")
+	model.Name = "GlassVase"
+	local core
+	if style == 1 then
+		core = PartKit.Ellipsoid(model, Vector3.new(1.0, 1.1, 1.0), CFrame.new(0, 0.55, 0), glassProps(color))
+		PartKit.Cylinder(model, 0.5, 0.36, CFrame.new(0, 1.25, 0), "Y", glassProps(color))
+		PartKit.Cylinder(model, 0.08, 0.56, CFrame.new(0, 1.5, 0), "Y", glassProps(color))
+	elseif style == 2 then
+		core = PartKit.Cylinder(model, 1.3, 0.72, CFrame.new(0, 0.65, 0), "Y", glassProps(color))
+		PartKit.Ellipsoid(model, Vector3.new(0.72, 0.42, 0.72), CFrame.new(0, 1.3, 0), glassProps(color))
+		PartKit.Cylinder(model, 0.32, 0.3, CFrame.new(0, 1.6, 0), "Y", glassProps(color))
+	else
+		core = PartKit.Ellipsoid(model, Vector3.new(1.3, 0.7, 1.3), CFrame.new(0, 0.35, 0), glassProps(color))
+		PartKit.Cylinder(model, 0.06, 1.12, CFrame.new(0, 0.68, 0), "Y", glassProps(color))
+	end
+	core.Name = "Body"
+	PartKit.Finalize(model, core, true)
+	return model
+end
+
+local function buildGlassFurnace(parent)
+	local station = folder("GlassFurnace", parent)
 	local origin = CFrame.new(Lot.CenterX - 26, CAMP_Y, CAMP_Z)
+	local brick = Color3.fromRGB(186, 94, 62)
+	local brickDark = Color3.fromRGB(138, 70, 50)
+	local ember = Color3.fromRGB(255, 140, 60)
 
 	solid(station, {
 		Name = "Base",
-		Size = Vector3.new(14, 0.6, 14),
-		CFrame = origin * CFrame.new(Vector3.new(0, 0.3, 0)),
-		Material = Enum.Material.Concrete,
-		Color = Color3.fromRGB(214, 194, 164),
+		Size = Vector3.new(20, 0.6, 18),
+		CFrame = origin * CFrame.new(0, 0.3, 1),
+		Material = Enum.Material.Cobblestone,
+		Color = Color3.fromRGB(172, 150, 128),
 	})
+	-- the hot plate players step on to sell
 	local pad = solid(station, {
 		Name = "SellPad",
-		Size = Vector3.new(10, 0.3, 10),
-		CFrame = origin * CFrame.new(Vector3.new(0, 0.75, 0)),
-		Material = Enum.Material.DiamondPlate,
-		Color = Color3.fromRGB(170, 176, 184),
+		Size = Vector3.new(9, 0.3, 6),
+		CFrame = origin * CFrame.new(0, 0.75, -4.6),
+		Material = Enum.Material.Slate,
+		Color = Color3.fromRGB(72, 58, 52),
 	})
 	local trims = {}
 	for _, spec in ipairs({
-		{ Vector3.new(10.4, 0.32, 0.4), Vector3.new(0, 0.76, -5) },
-		{ Vector3.new(10.4, 0.32, 0.4), Vector3.new(0, 0.76, 5) },
-		{ Vector3.new(0.4, 0.32, 10.4), Vector3.new(-5, 0.76, 0) },
-		{ Vector3.new(0.4, 0.32, 10.4), Vector3.new(5, 0.76, 0) },
+		{ Vector3.new(9.4, 0.32, 0.4), Vector3.new(0, 0.76, -7.6) },
+		{ Vector3.new(9.4, 0.32, 0.4), Vector3.new(0, 0.76, -1.6) },
+		{ Vector3.new(0.4, 0.32, 6.4), Vector3.new(-4.5, 0.76, -4.6) },
+		{ Vector3.new(0.4, 0.32, 6.4), Vector3.new(4.5, 0.76, -4.6) },
 	}) do
 		table.insert(trims, solid(station, {
 			Name = "Trim",
 			Size = spec[1],
 			CFrame = origin * CFrame.new(spec[2]),
 			Material = Enum.Material.Neon,
-			Color = Palette.Ochre,
+			Color = ember,
 			CastShadow = false,
 		}))
 	end
-	for _, corner in ipairs({ Vector3.new(-6.3, 0, -6.3), Vector3.new(6.3, 0, -6.3), Vector3.new(-6.3, 0, 6.3), Vector3.new(6.3, 0, 6.3) }) do
-		PartKit.Cylinder(station, 9.4, 0.7, origin * CFrame.new(corner + Vector3.new(0, 5.3, 0)), "Y", {
-			Name = "Post",
-			Material = Enum.Material.Wood,
-			Color = Palette.WoodDark,
-			CanCollide = true,
-			CanQuery = true,
-		})
-	end
-	-- striped canopy
-	for i = 0, 6 do
+
+	-- brick kiln: base ring + dome
+	PartKit.Cylinder(station, 2.4, 12, origin * CFrame.new(0, 1.8, 4), "Y", { Name = "KilnBase", Material = Enum.Material.Brick, Color = brickDark, CanCollide = true, CanQuery = true })
+	PartKit.Ellipsoid(station, Vector3.new(12, 13, 10), origin * CFrame.new(0, 5.5, 4), { Name = "KilnDome", Material = Enum.Material.Brick, Color = brick, CanCollide = true, CanQuery = true })
+	-- glowing mouth with a brick arch
+	PartKit.Ellipsoid(station, Vector3.new(4.6, 3.8, 1.4), origin * CFrame.new(0, 3.0, -0.6), { Name = "Mouth", Color = Color3.fromRGB(34, 22, 18), CastShadow = false })
+	local glow = PartKit.Ellipsoid(station, Vector3.new(3.3, 2.3, 0.8), origin * CFrame.new(0, 2.7, -1.0), {
+		Name = "Glow",
+		Material = Enum.Material.Neon,
+		Color = Color3.fromRGB(255, 150, 60),
+		CastShadow = false,
+	})
+	for i = 0, 8 do
+		local angle = math.rad(i * 22.5)
 		PartKit.Part(station, {
-			Name = "Canopy",
-			Size = Vector3.new(2.1, 0.35, 15),
-			CFrame = origin * CFrame.new(Vector3.new(-6.3 + i * 2.1, 10.1, 0)) * CFrame.Angles(math.rad(-6), 0, 0),
-			Color = (i % 2 == 0) and Palette.Terracotta or Palette.Cream,
+			Name = "ArchBrick",
+			Size = Vector3.new(0.9, 0.6, 0.9),
+			CFrame = origin * CFrame.new(math.cos(angle) * 2.6, 3.0 + math.sin(angle) * 2.2, -1.2) * CFrame.Angles(0, 0, angle - math.pi / 2),
+			Material = Enum.Material.Brick,
+			Color = Color3.fromRGB(206, 126, 86),
 		})
 	end
+	local light = Instance.new("PointLight")
+	light.Color = Color3.fromRGB(255, 150, 70)
+	light.Brightness = 2.5
+	light.Range = 24
+	light.Shadows = true
+	light.Parent = glow
+
+	-- real fire licking out of the mouth + rising embers
+	local firePart = PartKit.Part(station, {
+		Name = "FirePart",
+		Size = Vector3.new(1, 1, 1),
+		CFrame = origin * CFrame.new(0, 2.0, -1.2),
+		Transparency = 1,
+		CastShadow = false,
+	})
+	local fire = Instance.new("Fire")
+	fire.Size = 5
+	fire.Heat = 4
+	fire.Color = Color3.fromRGB(255, 150, 50)
+	fire.SecondaryColor = Color3.fromRGB(255, 70, 20)
+	fire.Parent = firePart
+	local sparks = Instance.new("ParticleEmitter")
+	sparks.Name = "Embers"
+	sparks.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+	sparks.Color = ColorSequence.new(Color3.fromRGB(255, 220, 120), Color3.fromRGB(255, 100, 40))
+	sparks.LightEmission = 1
+	sparks.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.25), NumberSequenceKeypoint.new(1, 0) })
+	sparks.Lifetime = NumberRange.new(1, 2)
+	sparks.Speed = NumberRange.new(2, 5)
+	sparks.SpreadAngle = Vector2.new(25, 25)
+	sparks.Acceleration = Vector3.new(0, 3, 0)
+	sparks.Rate = 6
+	sparks.EmissionDirection = Enum.NormalId.Top
+	sparks.Parent = firePart
+
+	-- chimney with smoke
+	PartKit.Cylinder(station, 8, 2, origin * CFrame.new(2.8, 13, 6), "Y", { Name = "Chimney", Material = Enum.Material.Brick, Color = brickDark, CanCollide = true, CanQuery = true })
+	PartKit.Cylinder(station, 0.4, 2.6, origin * CFrame.new(2.8, 17.1, 6), "Y", { Name = "ChimneyCap", Color = Color3.fromRGB(70, 56, 50) })
+	local smokePart = PartKit.Part(station, { Name = "SmokePart", Size = Vector3.new(1, 1, 1), CFrame = origin * CFrame.new(2.8, 17.6, 6), Transparency = 1, CastShadow = false })
+	local smoke = Instance.new("Smoke")
+	smoke.Color = Color3.fromRGB(130, 118, 110)
+	smoke.Opacity = 0.12
+	smoke.RiseVelocity = 4
+	smoke.Size = 3
+	smoke.Parent = smokePart
+
+	-- firewood pile & glassblowing pipe
+	for row = 0, 2 do
+		for k = 0, 2 - row do
+			PartKit.Cylinder(station, 2.6, 0.6, origin * CFrame.new(-7.8, 0.9 + row * 0.55, 0.4 + k * 0.62 + row * 0.31), "X", {
+				Name = "Log",
+				Material = Enum.Material.Wood,
+				Color = Color3.fromRGB(128, 86, 54),
+				CanCollide = true,
+				CanQuery = true,
+			})
+		end
+	end
+	PartKit.Cylinder(station, 5.2, 0.16, origin * CFrame.new(5.4, 2.9, -1.6) * CFrame.Angles(math.rad(-20), 0, math.rad(12)), "Y", { Name = "BlowPipe", Material = Enum.Material.Metal, Color = Color3.fromRGB(90, 90, 96) })
+
 	-- sign
+	for _, x in ipairs({ -6.8, 6.8 }) do
+		PartKit.Cylinder(station, 12.6, 0.5, origin * CFrame.new(x, 6.3, -2.4), "Y", { Name = "SignPost", Material = Enum.Material.Wood, Color = Palette.WoodDark, CanCollide = true, CanQuery = true })
+	end
 	local sign = PartKit.Part(station, {
 		Name = "Sign",
-		Size = Vector3.new(12, 2.6, 0.4),
-		CFrame = origin * CFrame.new(Vector3.new(0, 12.2, -6.6)),
+		Size = Vector3.new(13.6, 2.6, 0.4),
+		CFrame = origin * CFrame.new(0, 12.9, -2.4),
 		Color = Palette.Cream,
 	})
 	addSurfaceText(sign, Enum.NormalId.Front, {
-		{ Text = "⚖  WEIGH STATION", Height = 0.55 },
-		{ Text = "Step on the scale to sell your sand", Height = 0.28, Font = Enum.Font.GothamBold, Color = Palette.InkSoft },
+		{ Text = "🔥  GLASS FURNACE", Height = 0.55 },
+		{ Text = "Step on the hot plate to melt your sand into glass", Height = 0.28, Font = Enum.Font.GothamBold, Color = Palette.InkSoft },
 	})
-	-- readout board at the back of the pad
+
+	-- last-melt readout board
 	local board = PartKit.Part(station, {
 		Name = "ReadoutBoard",
-		Size = Vector3.new(7, 3.4, 0.4),
-		CFrame = origin * CFrame.new(Vector3.new(0, 3.6, 6.2)),
+		Size = Vector3.new(5.4, 3.2, 0.3),
+		CFrame = origin * CFrame.new(-7.6, 3.4, -5.8),
 		Color = Color3.fromRGB(60, 48, 40),
 		CanCollide = true,
 		CanQuery = true,
 	})
 	local _, labels = addSurfaceText(board, Enum.NormalId.Front, {
-		{ Name = "Title", Text = "LAST WEIGH-IN", Height = 0.25, Font = Enum.Font.GothamBold, Color = Palette.InkSoft },
+		{ Name = "Title", Text = "LAST MELT", Height = 0.25, Font = Enum.Font.GothamBold, Color = Palette.InkSoft },
 		{ Name = "Readout", Text = "0.0 kg", Height = 0.38 },
-		{ Name = "Detail", Text = "Waiting for sand...", Height = 0.22, Font = Enum.Font.GothamBold, Color = Palette.Terracotta },
+		{ Name = "Detail", Text = "The furnace is hungry...", Height = 0.22, Font = Enum.Font.GothamBold, Color = Palette.Terracotta },
 	})
-	PartKit.Part(station, { Name = "BoardLegs", Size = Vector3.new(0.5, 3.4, 0.5), CFrame = origin * CFrame.new(Vector3.new(-3, 1.7, 6.2)), Color = Color3.fromRGB(60, 48, 40) })
-	PartKit.Part(station, { Name = "BoardLegs", Size = Vector3.new(0.5, 3.4, 0.5), CFrame = origin * CFrame.new(Vector3.new(3, 1.7, 6.2)), Color = Color3.fromRGB(60, 48, 40) })
-	-- dial with needle
-	local dialCenter = origin * CFrame.new(Vector3.new(0, 7.4, 6.2))
-	PartKit.Cylinder(station, 0.3, 3.2, dialCenter, "Z", { Name = "Dial", Color = Palette.Cream })
-	PartKit.Cylinder(station, 0.32, 3.5, dialCenter * CFrame.new(0, 0, 0.02), "Z", { Name = "DialRim", Material = Enum.Material.Metal, Color = Palette.Ochre })
-	PartKit.Cylinder(station, 0.34, 3.0, dialCenter * CFrame.new(0, 0, -0.01), "Z", { Name = "DialFace", Color = Palette.Paper })
-	for i = 0, 8 do
-		local a = math.rad(-120 + i * 30)
-		PartKit.Part(station, {
-			Name = "Tick",
-			Size = Vector3.new(0.08, 0.35, 0.05),
-			CFrame = dialCenter * CFrame.new(0, 0, -0.2) * CFrame.Angles(0, 0, -a) * CFrame.new(0, 1.25, 0),
-			Color = Palette.Ink,
-		})
+	for _, x in ipairs({ -2.2, 2.2 }) do
+		PartKit.Part(station, { Name = "BoardLeg", Size = Vector3.new(0.4, 1.8, 0.4), CFrame = origin * CFrame.new(-7.6 + x, 0.9, -5.8), Color = Color3.fromRGB(60, 48, 40) })
 	end
-	local needle = PartKit.Part(station, {
-		Name = "Needle",
-		Size = Vector3.new(0.12, 1.3, 0.06),
-		CFrame = dialCenter * CFrame.new(0, 0, -0.25) * CFrame.Angles(0, 0, math.rad(120)) * CFrame.new(0, 0.6, 0),
-		Material = Enum.Material.Neon,
-		Color = Palette.Terracotta,
-		CastShadow = false,
-	})
-	PartKit.Cylinder(station, 0.2, 0.35, dialCenter * CFrame.new(0, 0, -0.25), "Z", { Name = "Pin", Material = Enum.Material.Metal, Color = Palette.Ink })
-	PartKit.Part(station, { Name = "DialPost", Size = Vector3.new(0.5, 2.2, 0.4), CFrame = origin * CFrame.new(Vector3.new(0, 5.4, 6.4)), Color = Color3.fromRGB(60, 48, 40) })
 
-	local needleAngle = Instance.new("NumberValue")
-	needleAngle.Name = "NeedleAngle"
-	needleAngle.Value = 120
-	needleAngle.Parent = station
-	needleAngle.Changed:Connect(function(value)
-		needle.CFrame = dialCenter * CFrame.new(0, 0, -0.25) * CFrame.Angles(0, 0, math.rad(value)) * CFrame.new(0, 0.6, 0)
-	end)
+	-- cooling table where fresh glass appears
+	local tableTop = 2.6
+	solid(station, { Name = "TableTop", Size = Vector3.new(3.4, 0.3, 9.2), CFrame = origin * CFrame.new(8.2, tableTop, 1.2), Material = Enum.Material.WoodPlanks, Color = Palette.Wood })
+	for _, leg in ipairs({ Vector3.new(-1.4, 0, -4.2), Vector3.new(1.4, 0, -4.2), Vector3.new(-1.4, 0, 4.2), Vector3.new(1.4, 0, 4.2) }) do
+		PartKit.Part(station, { Name = "TableLeg", Size = Vector3.new(0.35, tableTop, 0.35), CFrame = origin * CFrame.new(8.2 + leg.X, tableTop / 2, 1.2 + leg.Z), Material = Enum.Material.Wood, Color = Palette.WoodDark })
+	end
+	local slots = {}
+	for row = 0, 4 do
+		for column = 0, 1 do
+			table.insert(slots, origin * CFrame.new(8.2 + (column == 0 and -0.8 or 0.8), tableTop + 0.15, -2.4 + row * 1.8))
+		end
+	end
+	local vaseFolder = folder("Vases", station)
+	local placed = {}
+	for i = 1, 4 do
+		local vase = buildVase(VASE_COLORS[i], (i % 3) + 1)
+		vase:PivotTo(slots[i * 2 - 1])
+		vase.Parent = vaseFolder
+		placed[i * 2 - 1] = vase
+	end
 
 	WorldBuilder.Refs.SellPad = pad
 	WorldBuilder.Refs.SellTrims = trims
 	WorldBuilder.Refs.SellLabels = labels
-	WorldBuilder.Refs.NeedleAngle = needleAngle
+	WorldBuilder.Refs.Furnace = {
+		Fire = fire,
+		Light = light,
+		Glow = glow,
+		Mouth = origin * CFrame.new(0, 2.4, -1.6),
+		Slots = slots,
+		Placed = placed,
+		NextSlot = 2,
+		Folder = vaseFolder,
+	}
 end
 
 --------------------------------------------------------------------------
@@ -1807,7 +1963,13 @@ local function buildUpgradeBooth(parent)
 	-- shelf with tool displays
 	PartKit.Part(booth, { Name = "Shelf", Size = Vector3.new(11, 0.25, 1.4), CFrame = origin * CFrame.new(Vector3.new(0, 4.2, 4.3)), Material = Enum.Material.Wood, Color = Palette.WoodDark })
 	PartKit.Part(booth, { Name = "Shelf", Size = Vector3.new(11, 0.25, 1.4), CFrame = origin * CFrame.new(Vector3.new(0, 6.8, 4.3)), Material = Enum.Material.Wood, Color = Palette.WoodDark })
-	for index, tool in ipairs(GameConfig.Tools) do
+	local shelfTools = {}
+	for _, tool in ipairs(GameConfig.Tools) do
+		if tool.Id ~= "Hands" then
+			table.insert(shelfTools, tool)
+		end
+	end
+	for index, tool in ipairs(shelfTools) do
 		local display = ToolModels.Build(tool.Id, true)
 		local shelfY = index <= 2 and 4.9 or 7.6
 		local x = (index % 2 == 1) and -2.6 or 2.6
@@ -1899,7 +2061,7 @@ function WorldBuilder.Build()
 	buildTerrainSurroundings()
 	buildLotStructure(map)
 	buildDecor(map)
-	buildWeighStation(stations)
+	buildGlassFurnace(stations)
 	buildUpgradeBooth(stations)
 	buildLotBoard(stations)
 	buildSpawn(root)
@@ -1919,27 +2081,65 @@ function WorldBuilder.IsOnSellPad(position)
 		and localPos.Y <= 7
 end
 
+local roarToken = 0
 function WorldBuilder.AnimateSale(kg, cash, playerName)
 	local labels = WorldBuilder.Refs.SellLabels
 	if labels then
 		labels.Readout.Text = string.format("%s kg", Util.FormatKg(kg))
-		labels.Detail.Text = string.format("%s sold for %s", playerName, Util.FormatCash(cash))
-	end
-	local needle = WorldBuilder.Refs.NeedleAngle
-	if needle then
-		local capacityRef = GameConfig.Bags[#GameConfig.Bags].Capacity
-		local fraction = math.clamp(math.log10(1 + kg) / math.log10(1 + capacityRef), 0.05, 1)
-		local target = 120 - fraction * 240
-		local swingOut = TweenService:Create(needle, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Value = target })
-		swingOut:Play()
-		task.delay(2.2, function()
-			TweenService:Create(needle, TweenInfo.new(1.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), { Value = 120 }):Play()
-		end)
+		labels.Detail.Text = string.format("%s made %s of glass", playerName, Util.FormatCash(cash))
 	end
 	for _, trim in ipairs(WorldBuilder.Refs.SellTrims or {}) do
-		trim.Color = Palette.Sage
-		TweenService:Create(trim, TweenInfo.new(0.9), { Color = Palette.Ochre }):Play()
+		trim.Color = Color3.fromRGB(255, 240, 170)
+		TweenService:Create(trim, TweenInfo.new(0.9), { Color = Color3.fromRGB(255, 140, 60) }):Play()
 	end
+	local furnace = WorldBuilder.Refs.Furnace
+	if not furnace then
+		return
+	end
+	-- the furnace roars
+	roarToken += 1
+	local token = roarToken
+	TweenService:Create(furnace.Fire, TweenInfo.new(0.25), { Size = 11, Heat = 10 }):Play()
+	TweenService:Create(furnace.Light, TweenInfo.new(0.25), { Brightness = 6, Range = 34 }):Play()
+	furnace.Glow.Color = Color3.fromRGB(255, 230, 150)
+	TweenService:Create(furnace.Glow, TweenInfo.new(1.2), { Color = Color3.fromRGB(255, 150, 60) }):Play()
+	task.delay(1.1, function()
+		if token == roarToken then
+			TweenService:Create(furnace.Fire, TweenInfo.new(1.2), { Size = 5, Heat = 4 }):Play()
+			TweenService:Create(furnace.Light, TweenInfo.new(1.2), { Brightness = 2.5, Range = 24 }):Play()
+		end
+	end)
+
+	-- a fresh glass vase pops out of the mouth and lands on the cooling table
+	local slotIndex = furnace.NextSlot
+	furnace.NextSlot = slotIndex % #furnace.Slots + 1
+	local old = furnace.Placed[slotIndex]
+	if old then
+		old:Destroy()
+	end
+	local vase = buildVase(VASE_COLORS[math.random(1, #VASE_COLORS)], math.random(1, 3))
+	local scale = math.clamp(0.7 + math.log10(1 + kg) * 0.22, 0.7, 1.6)
+	pcall(function()
+		vase:ScaleTo(scale)
+	end)
+	vase:PivotTo(furnace.Mouth)
+	vase.Parent = furnace.Folder
+	furnace.Placed[slotIndex] = vase
+	local startCF, endCF = furnace.Mouth, furnace.Slots[slotIndex]
+	local progress = Instance.new("NumberValue")
+	progress.Name = "Flight"
+	progress.Parent = vase
+	progress.Changed:Connect(function(t)
+		if vase.Parent then
+			local position = startCF.Position:Lerp(endCF.Position, t) + Vector3.new(0, math.sin(t * math.pi) * 4, 0)
+			vase:PivotTo(CFrame.new(position) * endCF.Rotation * CFrame.Angles(0, t * math.pi * 4, 0))
+		end
+	end)
+	local flight = TweenService:Create(progress, TweenInfo.new(0.9, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Value = 1 })
+	flight.Completed:Connect(function()
+		progress:Destroy()
+	end)
+	flight:Play()
 end
 
 function WorldBuilder.UpdateLotBoard(percent, findsLeft, generating)
@@ -2593,10 +2793,10 @@ local function sanitize(data)
 			owned[toolId] = true
 		end
 	end
-	owned.Spoon = true
+	owned.Hands = true
 	data.OwnedTools = owned
 	if not (GameConfig.GetTool(data.EquippedTool) and owned[data.EquippedTool]) then
-		data.EquippedTool = "Spoon"
+		data.EquippedTool = "Hands"
 	end
 	for _, skill in ipairs(GameConfig.Skills) do
 		data.Skills[skill.Id] = math.clamp(math.floor(tonumber(data.Skills[skill.Id]) or 0), 0, skill.MaxLevel)
@@ -3085,7 +3285,7 @@ end
 Remotes.DigRequest.OnServerEvent:Connect(onDigRequest)
 
 --------------------------------------------------------------------------
--- SELLING (Weigh Station)
+-- SELLING (Glass Furnace)
 --------------------------------------------------------------------------
 local function trySell(player, session)
 	local data = session.Data
@@ -3428,8 +3628,8 @@ ClientState.State = {
 	Cash = 0,
 	BagKg = 0,
 	BagTier = 1,
-	EquippedTool = "Spoon",
-	OwnedTools = { Spoon = true },
+	EquippedTool = "Hands",
+	OwnedTools = { Hands = true },
 	Skills = { DigSpeed = 0, DigRadius = 0, SandValue = 0, WalkSpeed = 0 },
 	Finds = {},
 	Stats = {},
@@ -3583,6 +3783,7 @@ local trauma = 0
 local shakeTime = 0
 
 local BURST = {
+	Hands = { Grains = 8, Dust = 2, Speed = 7 },
 	Spoon = { Grains = 10, Dust = 2, Speed = 9 },
 	Shovel = { Grains = 24, Dust = 5, Speed = 13 },
 	HandVac = { Grains = 5, Dust = 2, Speed = 6 },
@@ -4079,20 +4280,40 @@ local function addHands(model, toolId)
 		local mirror = hand.Side == "Left" and -1 or 1
 		local grip = base * CFrame.new(hand.Position)
 		local armDirection = base:VectorToWorldSpace(viewOffset:VectorToObjectSpace(ARM_DIRECTIONS[hand.Side]))
-		-- fist wrapped around the handle
-		PartKit.Ellipsoid(model, Vector3.new(0.56, 0.58, 0.64), grip, { Name = "Fist", Color = skin, CastShadow = false })
-		for index = 0, 3 do
-			PartKit.Ellipsoid(model, Vector3.new(0.2, 0.2, 0.17), grip * CFrame.new(-0.2 * mirror, 0.08 - index * 0.06, -0.22 + index * 0.15), {
-				Name = "Knuckle",
-				Color = skin:Lerp(Color3.new(0, 0, 0), 0.06),
+		if hand.Cupped then
+			-- open palm, tilted inward like a scoop, with four fingers and a thumb
+			local palm = grip * CFrame.Angles(0, 0, math.rad(-22) * mirror)
+			PartKit.Ellipsoid(model, Vector3.new(0.62, 0.22, 0.7), palm, { Name = "Palm", Color = skin, CastShadow = false })
+			for index = 0, 3 do
+				local x = (-0.22 + index * 0.145) * mirror
+				local length = (index == 1 or index == 2) and 0.5 or 0.42
+				PartKit.Cylinder(model, length, 0.13, palm * CFrame.new(x, 0.03, -0.32 - length / 2) * CFrame.Angles(math.rad(14), 0, 0), "Z", {
+					Name = "Finger",
+					Color = skin,
+					CastShadow = false,
+				})
+			end
+			PartKit.Cylinder(model, 0.4, 0.15, palm * CFrame.new(-0.36 * mirror, 0.06, -0.12) * CFrame.Angles(0, math.rad(-35) * mirror, 0), "Z", {
+				Name = "Thumb",
+				Color = skin,
+				CastShadow = false,
+			})
+		else
+			-- fist wrapped around the handle
+			PartKit.Ellipsoid(model, Vector3.new(0.56, 0.58, 0.64), grip, { Name = "Fist", Color = skin, CastShadow = false })
+			for index = 0, 3 do
+				PartKit.Ellipsoid(model, Vector3.new(0.2, 0.2, 0.17), grip * CFrame.new(-0.2 * mirror, 0.08 - index * 0.06, -0.22 + index * 0.15), {
+					Name = "Knuckle",
+					Color = skin:Lerp(Color3.new(0, 0, 0), 0.06),
+					CastShadow = false,
+				})
+			end
+			PartKit.Ellipsoid(model, Vector3.new(0.2, 0.2, 0.46), grip * CFrame.new(0.1 * mirror, 0.27, -0.12) * CFrame.Angles(math.rad(-12), 0, 0), {
+				Name = "Thumb",
+				Color = skin,
 				CastShadow = false,
 			})
 		end
-		PartKit.Ellipsoid(model, Vector3.new(0.2, 0.2, 0.46), grip * CFrame.new(0.1 * mirror, 0.27, -0.12) * CFrame.Angles(math.rad(-12), 0, 0), {
-			Name = "Thumb",
-			Color = skin,
-			CastShadow = false,
-		})
 		-- forearm, cuff and sleeve running back toward the camera
 		local wrist = grip.Position + armDirection * 0.25
 		local function along(distance)
@@ -4194,7 +4415,10 @@ local function swingPose(toolId, t)
 		return CFrame.identity
 	end
 	local a = math.sin(t * math.pi)
-	if toolId == "Spoon" then
+	if toolId == "Hands" then
+		-- dive down into the sand and scoop back up
+		return CFrame.new(0, -0.45 * a, -0.55 * a) * CFrame.Angles(-0.75 * a, 0, 0)
+	elseif toolId == "Spoon" then
 		return CFrame.new(-0.05 * a, -0.18 * a, -0.4 * a) * CFrame.Angles(-0.95 * a, 0.1 * a, 0.2 * a)
 	elseif toolId == "Shovel" then
 		-- thrust down & forward, then lift the scoop back up
@@ -4468,6 +4692,7 @@ local EQUIP_KEYS = {
 	[Enum.KeyCode.Two] = 2,
 	[Enum.KeyCode.Three] = 3,
 	[Enum.KeyCode.Four] = 4,
+	[Enum.KeyCode.Five] = 5,
 }
 
 function DigController.Press()
@@ -4879,20 +5104,20 @@ local function buildHUD(playerGui)
 	hud.BagCard = bagCard
 	hud.BagStroke = bagCard:FindFirstChildOfClass("UIStroke")
 	local fullPill = card({ Name = "FullPill", Size = UDim2.fromOffset(330, 32), AnchorPoint = Vector2.new(0.5, 1), Position = UDim2.new(0.5, 0, 0, -8), BackgroundColor3 = C.Terracotta, Radius = 16, Visible = false, Parent = bagCard })
-	text({ Size = UDim2.fromScale(1, 1), Text = "BAG FULL - sell at the Weigh Station ⚖", Font = BOLD, TextSize = 14, TextColor3 = C.Cream, TextXAlignment = Enum.TextXAlignment.Center, Parent = fullPill })
+	text({ Size = UDim2.fromScale(1, 1), Text = "BAG FULL - melt it at the Glass Furnace 🔥", Font = BOLD, TextSize = 14, TextColor3 = C.Cream, TextXAlignment = Enum.TextXAlignment.Center, Parent = fullPill })
 	hud.FullPill = fullPill
 
 	-- TOOL
 	local toolCard = card({ Name = "Tool", Size = UDim2.fromOffset(260, 72), AnchorPoint = Vector2.new(0, 1), Position = UDim2.new(0, 16, 1, -20), Parent = gui }, { stroke(C.Ochre, 2) })
-	hud.ToolName = text({ Size = UDim2.new(1, -24, 0, 22), Position = UDim2.fromOffset(12, 7), Text = "Rusty Spoon", Font = TITLE, TextSize = 19, Parent = toolCard })
+	hud.ToolName = text({ Size = UDim2.new(1, -24, 0, 22), Position = UDim2.fromOffset(12, 7), Text = "Bare Hands", Font = TITLE, TextSize = 19, Parent = toolCard })
 	hud.ToolHint = text({ Size = UDim2.new(1, -24, 0, 16), Position = UDim2.fromOffset(12, 30), Text = "Click sand to dig", Font = BOLD, TextSize = 12, TextColor3 = C.InkSoft, Parent = toolCard })
 	hud.ToolStats = text({ Size = UDim2.new(1, -24, 0, 16), Position = UDim2.fromOffset(12, 48), Text = "", Font = BODY, TextSize = 12, TextColor3 = C.InkSoft, Parent = toolCard })
-	local hotbar = new("Frame", { Name = "Hotbar", Size = UDim2.fromOffset(260, 34), AnchorPoint = Vector2.new(0, 1), Position = UDim2.new(0, 16, 1, -100), BackgroundTransparency = 1, Parent = gui }, {
-		new("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 6), SortOrder = Enum.SortOrder.LayoutOrder }),
+	local hotbar = new("Frame", { Name = "Hotbar", Size = UDim2.fromOffset(350, 34), AnchorPoint = Vector2.new(0, 1), Position = UDim2.new(0, 16, 1, -100), BackgroundTransparency = 1, Parent = gui }, {
+		new("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 5), SortOrder = Enum.SortOrder.LayoutOrder }),
 	})
 	hud.Hotbar = {}
 	for index, tool in ipairs(GameConfig.Tools) do
-		local slot = makeButton({ Name = tool.Id, Size = UDim2.fromOffset(60, 34), Color = C.Paper, TextColor = C.InkSoft, Text = tostring(index), TextSize = 14, LayoutOrder = index, Parent = hotbar })
+		local slot = makeButton({ Name = tool.Id, Size = UDim2.fromOffset(66, 34), Color = C.Paper, TextColor = C.InkSoft, Text = tostring(index), TextSize = 12, LayoutOrder = index, Parent = hotbar })
 		stroke(C.Locked, 2).Parent = slot
 		slot.MouseButton1Click:Connect(function()
 			if ClientState.State.OwnedTools[tool.Id] then
@@ -4907,9 +5132,21 @@ local function buildHUD(playerGui)
 		hud.Hotbar[tool.Id] = slot
 	end
 
-	-- MENU BUTTONS
-	local side = new("Frame", { Name = "SideButtons", Size = UDim2.fromOffset(70, 236), AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -16, 0.5, 0), BackgroundTransparency = 1, Parent = gui }, {
-		new("UIListLayout", { Padding = UDim.new(0, 10), SortOrder = Enum.SortOrder.LayoutOrder }),
+	-- MENU BUTTONS (right edge on PC; a top-right row on touch so they never cover DIG/Jump)
+	local touch = UserInputService.TouchEnabled
+	local side = new("Frame", {
+		Name = "SideButtons",
+		Size = touch and UDim2.fromOffset(230, 70) or UDim2.fromOffset(70, 236),
+		AnchorPoint = touch and Vector2.new(1, 0) or Vector2.new(1, 0.5),
+		Position = touch and UDim2.new(1, -16, 0, 12) or UDim2.new(1, -16, 0.5, 0),
+		BackgroundTransparency = 1,
+		Parent = gui,
+	}, {
+		new("UIListLayout", {
+			Padding = UDim.new(0, 10),
+			SortOrder = Enum.SortOrder.LayoutOrder,
+			FillDirection = touch and Enum.FillDirection.Horizontal or Enum.FillDirection.Vertical,
+		}),
 	})
 	for index, spec in ipairs({ { "Shop", "🛠", "B" }, { "Skills", "✦", "K" }, { "Journal", "📖", "J" } }) do
 		local button = makeButton({ Name = spec[1], Size = UDim2.fromOffset(70, 70), Color = C.Paper, TextColor = C.Ink, Text = "", LayoutOrder = index, Parent = side })
@@ -4936,7 +5173,7 @@ local function buildHUD(playerGui)
 	hud.CrossHint = text({ Size = UDim2.fromOffset(240, 18), AnchorPoint = Vector2.new(0.5, 0), Position = UDim2.new(0.5, 0, 0.5, 24), Text = "", Font = BOLD, TextSize = 13, TextColor3 = C.Cream, TextStrokeTransparency = 0.4, TextStrokeColor3 = C.Ink, TextXAlignment = Enum.TextXAlignment.Center, Parent = gui })
 
 	-- TOASTS
-	hud.Toasts = new("Frame", { Name = "Toasts", Size = UDim2.fromOffset(300, 400), AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, -16, 0, 66), BackgroundTransparency = 1, Parent = gui }, {
+	hud.Toasts = new("Frame", { Name = "Toasts", Size = UDim2.fromOffset(300, 400), AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, -16, 0, touch and 96 or 66), BackgroundTransparency = 1, Parent = gui }, {
 		new("UIListLayout", { Padding = UDim.new(0, 8), SortOrder = Enum.SortOrder.LayoutOrder, HorizontalAlignment = Enum.HorizontalAlignment.Right }),
 	})
 
@@ -4959,7 +5196,8 @@ local function buildHUD(playerGui)
 
 	-- MOBILE DIG BUTTON
 	if UserInputService.TouchEnabled then
-		local digButton = makeButton({ Name = "DigButton", Size = UDim2.fromOffset(96, 96), AnchorPoint = Vector2.new(1, 1), Position = UDim2.new(1, -24, 1, -110), Color = C.Ochre, TextColor = C.Cream, Text = "DIG", Font = TITLE, TextSize = 28, Radius = 48, Parent = gui })
+		-- sits above Roblox's Jump button (which occupies roughly the bottom-right 180x150 px)
+		local digButton = makeButton({ Name = "DigButton", Size = UDim2.fromOffset(100, 100), AnchorPoint = Vector2.new(1, 1), Position = UDim2.new(1, -56, 1, -190), Color = C.Ochre, TextColor = C.Cream, Text = "DIG", Font = TITLE, TextSize = 28, Radius = 48, Parent = gui })
 		stroke(C.Cream, 3).Parent = digButton
 		digButton.InputBegan:Connect(function(input)
 			if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -4983,11 +5221,11 @@ local function refreshHUD(state)
 	local bag = GameConfig.GetBag(state.BagTier) or GameConfig.Bags[1]
 	hud.ToolName.Text = string.format("%s  ·  Tier %d", tool.Name, tool.Tier)
 	if tool.Mode == "Click" then
-		hud.ToolHint.Text = "Click sand to dig  ·  1-4 swap tools"
+		hud.ToolHint.Text = "Click sand to dig  ·  1-5 swap tools"
 	elseif tool.Mode == "Hold" then
-		hud.ToolHint.Text = "Click or hold to dig  ·  1-4 swap tools"
+		hud.ToolHint.Text = "Click or hold to dig  ·  1-5 swap tools"
 	else
-		hud.ToolHint.Text = "Hold to vacuum  ·  1-4 swap tools"
+		hud.ToolHint.Text = "Hold to vacuum  ·  1-5 swap tools"
 	end
 	hud.ToolStats.Text = string.format("Radius %.1f  ·  %.2fs  ·  x%.1f value", stats.Radius, stats.Cooldown, stats.ValueMultiplier)
 	hud.BagName.Text = string.format("%s  %s", bag.Icon, bag.Name)
@@ -4996,7 +5234,7 @@ local function refreshHUD(state)
 		local slot = hud.Hotbar[item.Id]
 		local owned = state.OwnedTools and state.OwnedTools[item.Id]
 		local equipped = state.EquippedTool == item.Id
-		slot.Text = owned and string.format("%d  %s", item.Index, item.Id == "TurbineVac" and "Turbo" or (item.Id == "HandVac" and "Vac" or item.Id)) or string.format("%d  🔒", item.Index)
+		slot.Text = owned and string.format("%d %s", item.Index, item.Short or item.Id) or string.format("%d 🔒", item.Index)
 		slot.TextColor3 = equipped and C.Cream or (owned and C.Ink or C.InkSoft)
 		slot.BackgroundColor3 = equipped and C.Ochre or C.Paper
 		local slotStroke = slot:FindFirstChildOfClass("UIStroke")
@@ -5140,7 +5378,11 @@ local function buildShop()
 	for index, tool in ipairs(GameConfig.Tools) do
 		local row = card({ Name = tool.Id, Size = UDim2.new(1, 0, 0, 108), LayoutOrder = index, BackgroundColor3 = C.Paper, Parent = shop.ToolList }, { stroke(C.Ochre, 2) })
 		local holder = new("Frame", { Size = UDim2.fromOffset(92, 92), Position = UDim2.fromOffset(8, 8), BackgroundColor3 = C.Cream, BorderSizePixel = 0, Parent = row }, { corner(46) })
-		makeViewport(holder, ToolModels.Build(tool.Id, true), { Size = UDim2.fromScale(1, 1), Direction = Vector3.new(1.4, 0.8, 0.3), Zoom = 0.9 })
+		if tool.Id == "Hands" then
+			text({ Size = UDim2.fromScale(1, 1), Text = "✋", Font = TITLE, TextSize = 46, TextXAlignment = Enum.TextXAlignment.Center, Parent = holder })
+		else
+			makeViewport(holder, ToolModels.Build(tool.Id, true), { Size = UDim2.fromScale(1, 1), Direction = Vector3.new(1.4, 0.8, 0.3), Zoom = 0.9 })
+		end
 		text({ Size = UDim2.new(1, -280, 0, 26), Position = UDim2.fromOffset(112, 8), Text = tool.Name, Font = TITLE, TextSize = 22, Parent = row })
 		local modeText = tool.Mode == "Click" and "Click to dig" or (tool.Mode == "Hold" and "Click / hold" or "Hold to vacuum")
 		text({ Size = UDim2.new(1, -280, 0, 18), Position = UDim2.fromOffset(112, 36), Text = string.format("Tier %d  ·  Radius %.1f  ·  every %.2fs  ·  %s", tool.Tier, tool.Radius, tool.Cooldown, modeText), Font = BOLD, TextSize = 13, TextColor3 = C.Terracotta, Parent = row })
@@ -5654,12 +5896,12 @@ local function onNotify(payload)
 	if kind == "Sell" then
 		Effects.CashRegister()
 		popText("+" .. Util.FormatCash(payload.Cash), C.Gold, 52)
-		Interface.Toast(string.format("Sold %s kg for %s", Util.FormatKg(payload.Kg), Util.FormatCash(payload.Cash)), "Sage", "⚖")
+		Interface.Toast(string.format("Melted %s kg of sand into glass for %s", Util.FormatKg(payload.Kg), Util.FormatCash(payload.Cash)), "Sage", "🔥")
 	elseif kind == "BagFull" then
 		local now = os.clock()
 		if now - lastBagFullToast > 4 then
 			lastBagFullToast = now
-			Interface.Toast("Your bag is full! Head to the Weigh Station to sell.", "Terracotta", "🎒")
+			Interface.Toast("Your bag is full! Melt it at the Glass Furnace in base camp.", "Terracotta", "🎒")
 		end
 		local bagStroke = hud.BagStroke
 		if bagStroke then
@@ -5827,7 +6069,7 @@ function Interface.Init(options)
 	RunService.RenderStepped:Connect(frame)
 
 	task.delay(2, function()
-		Interface.Toast("Welcome to the " .. GameConfig.Lot.Name .. "! Dig sand, sell it at the Weigh Station, find all 14 relics.", "Ochre", "🌵", 7)
+		Interface.Toast("Welcome to the " .. GameConfig.Lot.Name .. "! Dig sand with your hands, melt it into glass at the furnace, find all 14 relics.", "Ochre", "🌵", 7)
 	end)
 end
 

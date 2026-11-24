@@ -64,10 +64,10 @@ local function sanitize(data)
 			owned[toolId] = true
 		end
 	end
-	owned.Spoon = true
+	owned.Hands = true
 	data.OwnedTools = owned
 	if not (GameConfig.GetTool(data.EquippedTool) and owned[data.EquippedTool]) then
-		data.EquippedTool = "Spoon"
+		data.EquippedTool = "Hands"
 	end
 	for _, skill in ipairs(GameConfig.Skills) do
 		data.Skills[skill.Id] = math.clamp(math.floor(tonumber(data.Skills[skill.Id]) or 0), 0, skill.MaxLevel)

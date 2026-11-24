@@ -106,20 +106,40 @@ local function addHands(model, toolId)
 		local mirror = hand.Side == "Left" and -1 or 1
 		local grip = base * CFrame.new(hand.Position)
 		local armDirection = base:VectorToWorldSpace(viewOffset:VectorToObjectSpace(ARM_DIRECTIONS[hand.Side]))
-		-- fist wrapped around the handle
-		PartKit.Ellipsoid(model, Vector3.new(0.56, 0.58, 0.64), grip, { Name = "Fist", Color = skin, CastShadow = false })
-		for index = 0, 3 do
-			PartKit.Ellipsoid(model, Vector3.new(0.2, 0.2, 0.17), grip * CFrame.new(-0.2 * mirror, 0.08 - index * 0.06, -0.22 + index * 0.15), {
-				Name = "Knuckle",
-				Color = skin:Lerp(Color3.new(0, 0, 0), 0.06),
+		if hand.Cupped then
+			-- open palm, tilted inward like a scoop, with four fingers and a thumb
+			local palm = grip * CFrame.Angles(0, 0, math.rad(-22) * mirror)
+			PartKit.Ellipsoid(model, Vector3.new(0.62, 0.22, 0.7), palm, { Name = "Palm", Color = skin, CastShadow = false })
+			for index = 0, 3 do
+				local x = (-0.22 + index * 0.145) * mirror
+				local length = (index == 1 or index == 2) and 0.5 or 0.42
+				PartKit.Cylinder(model, length, 0.13, palm * CFrame.new(x, 0.03, -0.32 - length / 2) * CFrame.Angles(math.rad(14), 0, 0), "Z", {
+					Name = "Finger",
+					Color = skin,
+					CastShadow = false,
+				})
+			end
+			PartKit.Cylinder(model, 0.4, 0.15, palm * CFrame.new(-0.36 * mirror, 0.06, -0.12) * CFrame.Angles(0, math.rad(-35) * mirror, 0), "Z", {
+				Name = "Thumb",
+				Color = skin,
+				CastShadow = false,
+			})
+		else
+			-- fist wrapped around the handle
+			PartKit.Ellipsoid(model, Vector3.new(0.56, 0.58, 0.64), grip, { Name = "Fist", Color = skin, CastShadow = false })
+			for index = 0, 3 do
+				PartKit.Ellipsoid(model, Vector3.new(0.2, 0.2, 0.17), grip * CFrame.new(-0.2 * mirror, 0.08 - index * 0.06, -0.22 + index * 0.15), {
+					Name = "Knuckle",
+					Color = skin:Lerp(Color3.new(0, 0, 0), 0.06),
+					CastShadow = false,
+				})
+			end
+			PartKit.Ellipsoid(model, Vector3.new(0.2, 0.2, 0.46), grip * CFrame.new(0.1 * mirror, 0.27, -0.12) * CFrame.Angles(math.rad(-12), 0, 0), {
+				Name = "Thumb",
+				Color = skin,
 				CastShadow = false,
 			})
 		end
-		PartKit.Ellipsoid(model, Vector3.new(0.2, 0.2, 0.46), grip * CFrame.new(0.1 * mirror, 0.27, -0.12) * CFrame.Angles(math.rad(-12), 0, 0), {
-			Name = "Thumb",
-			Color = skin,
-			CastShadow = false,
-		})
 		-- forearm, cuff and sleeve running back toward the camera
 		local wrist = grip.Position + armDirection * 0.25
 		local function along(distance)
@@ -221,7 +241,10 @@ local function swingPose(toolId, t)
 		return CFrame.identity
 	end
 	local a = math.sin(t * math.pi)
-	if toolId == "Spoon" then
+	if toolId == "Hands" then
+		-- dive down into the sand and scoop back up
+		return CFrame.new(0, -0.45 * a, -0.55 * a) * CFrame.Angles(-0.75 * a, 0, 0)
+	elseif toolId == "Spoon" then
 		return CFrame.new(-0.05 * a, -0.18 * a, -0.4 * a) * CFrame.Angles(-0.95 * a, 0.1 * a, 0.2 * a)
 	elseif toolId == "Shovel" then
 		-- thrust down & forward, then lift the scoop back up
@@ -495,6 +518,7 @@ local EQUIP_KEYS = {
 	[Enum.KeyCode.Two] = 2,
 	[Enum.KeyCode.Three] = 3,
 	[Enum.KeyCode.Four] = 4,
+	[Enum.KeyCode.Five] = 5,
 }
 
 function DigController.Press()

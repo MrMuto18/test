@@ -30,6 +30,7 @@ local trauma = 0
 local shakeTime = 0
 
 local BURST = {
+	Hands = { Grains = 8, Dust = 2, Speed = 7 },
 	Spoon = { Grains = 10, Dust = 2, Speed = 9 },
 	Shovel = { Grains = 24, Dust = 5, Speed = 13 },
 	HandVac = { Grains = 5, Dust = 2, Speed = 6 },

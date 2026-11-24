@@ -396,7 +396,7 @@ end
 Remotes.DigRequest.OnServerEvent:Connect(onDigRequest)
 
 --------------------------------------------------------------------------
--- SELLING (Weigh Station)
+-- SELLING (Glass Furnace)
 --------------------------------------------------------------------------
 local function trySell(player, session)
 	local data = session.Data

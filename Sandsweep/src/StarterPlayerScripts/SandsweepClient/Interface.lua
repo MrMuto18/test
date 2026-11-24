@@ -341,20 +341,20 @@ local function buildHUD(playerGui)
 	hud.BagCard = bagCard
 	hud.BagStroke = bagCard:FindFirstChildOfClass("UIStroke")
 	local fullPill = card({ Name = "FullPill", Size = UDim2.fromOffset(330, 32), AnchorPoint = Vector2.new(0.5, 1), Position = UDim2.new(0.5, 0, 0, -8), BackgroundColor3 = C.Terracotta, Radius = 16, Visible = false, Parent = bagCard })
-	text({ Size = UDim2.fromScale(1, 1), Text = "BAG FULL - sell at the Weigh Station ⚖", Font = BOLD, TextSize = 14, TextColor3 = C.Cream, TextXAlignment = Enum.TextXAlignment.Center, Parent = fullPill })
+	text({ Size = UDim2.fromScale(1, 1), Text = "BAG FULL - melt it at the Glass Furnace 🔥", Font = BOLD, TextSize = 14, TextColor3 = C.Cream, TextXAlignment = Enum.TextXAlignment.Center, Parent = fullPill })
 	hud.FullPill = fullPill
 
 	-- TOOL
 	local toolCard = card({ Name = "Tool", Size = UDim2.fromOffset(260, 72), AnchorPoint = Vector2.new(0, 1), Position = UDim2.new(0, 16, 1, -20), Parent = gui }, { stroke(C.Ochre, 2) })
-	hud.ToolName = text({ Size = UDim2.new(1, -24, 0, 22), Position = UDim2.fromOffset(12, 7), Text = "Rusty Spoon", Font = TITLE, TextSize = 19, Parent = toolCard })
+	hud.ToolName = text({ Size = UDim2.new(1, -24, 0, 22), Position = UDim2.fromOffset(12, 7), Text = "Bare Hands", Font = TITLE, TextSize = 19, Parent = toolCard })
 	hud.ToolHint = text({ Size = UDim2.new(1, -24, 0, 16), Position = UDim2.fromOffset(12, 30), Text = "Click sand to dig", Font = BOLD, TextSize = 12, TextColor3 = C.InkSoft, Parent = toolCard })
 	hud.ToolStats = text({ Size = UDim2.new(1, -24, 0, 16), Position = UDim2.fromOffset(12, 48), Text = "", Font = BODY, TextSize = 12, TextColor3 = C.InkSoft, Parent = toolCard })
-	local hotbar = new("Frame", { Name = "Hotbar", Size = UDim2.fromOffset(260, 34), AnchorPoint = Vector2.new(0, 1), Position = UDim2.new(0, 16, 1, -100), BackgroundTransparency = 1, Parent = gui }, {
-		new("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 6), SortOrder = Enum.SortOrder.LayoutOrder }),
+	local hotbar = new("Frame", { Name = "Hotbar", Size = UDim2.fromOffset(350, 34), AnchorPoint = Vector2.new(0, 1), Position = UDim2.new(0, 16, 1, -100), BackgroundTransparency = 1, Parent = gui }, {
+		new("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 5), SortOrder = Enum.SortOrder.LayoutOrder }),
 	})
 	hud.Hotbar = {}
 	for index, tool in ipairs(GameConfig.Tools) do
-		local slot = makeButton({ Name = tool.Id, Size = UDim2.fromOffset(60, 34), Color = C.Paper, TextColor = C.InkSoft, Text = tostring(index), TextSize = 14, LayoutOrder = index, Parent = hotbar })
+		local slot = makeButton({ Name = tool.Id, Size = UDim2.fromOffset(66, 34), Color = C.Paper, TextColor = C.InkSoft, Text = tostring(index), TextSize = 12, LayoutOrder = index, Parent = hotbar })
 		stroke(C.Locked, 2).Parent = slot
 		slot.MouseButton1Click:Connect(function()
 			if ClientState.State.OwnedTools[tool.Id] then
@@ -369,9 +369,21 @@ local function buildHUD(playerGui)
 		hud.Hotbar[tool.Id] = slot
 	end
 
-	-- MENU BUTTONS
-	local side = new("Frame", { Name = "SideButtons", Size = UDim2.fromOffset(70, 236), AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -16, 0.5, 0), BackgroundTransparency = 1, Parent = gui }, {
-		new("UIListLayout", { Padding = UDim.new(0, 10), SortOrder = Enum.SortOrder.LayoutOrder }),
+	-- MENU BUTTONS (right edge on PC; a top-right row on touch so they never cover DIG/Jump)
+	local touch = UserInputService.TouchEnabled
+	local side = new("Frame", {
+		Name = "SideButtons",
+		Size = touch and UDim2.fromOffset(230, 70) or UDim2.fromOffset(70, 236),
+		AnchorPoint = touch and Vector2.new(1, 0) or Vector2.new(1, 0.5),
+		Position = touch and UDim2.new(1, -16, 0, 12) or UDim2.new(1, -16, 0.5, 0),
+		BackgroundTransparency = 1,
+		Parent = gui,
+	}, {
+		new("UIListLayout", {
+			Padding = UDim.new(0, 10),
+			SortOrder = Enum.SortOrder.LayoutOrder,
+			FillDirection = touch and Enum.FillDirection.Horizontal or Enum.FillDirection.Vertical,
+		}),
 	})
 	for index, spec in ipairs({ { "Shop", "🛠", "B" }, { "Skills", "✦", "K" }, { "Journal", "📖", "J" } }) do
 		local button = makeButton({ Name = spec[1], Size = UDim2.fromOffset(70, 70), Color = C.Paper, TextColor = C.Ink, Text = "", LayoutOrder = index, Parent = side })
@@ -398,7 +410,7 @@ local function buildHUD(playerGui)
 	hud.CrossHint = text({ Size = UDim2.fromOffset(240, 18), AnchorPoint = Vector2.new(0.5, 0), Position = UDim2.new(0.5, 0, 0.5, 24), Text = "", Font = BOLD, TextSize = 13, TextColor3 = C.Cream, TextStrokeTransparency = 0.4, TextStrokeColor3 = C.Ink, TextXAlignment = Enum.TextXAlignment.Center, Parent = gui })
 
 	-- TOASTS
-	hud.Toasts = new("Frame", { Name = "Toasts", Size = UDim2.fromOffset(300, 400), AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, -16, 0, 66), BackgroundTransparency = 1, Parent = gui }, {
+	hud.Toasts = new("Frame", { Name = "Toasts", Size = UDim2.fromOffset(300, 400), AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, -16, 0, touch and 96 or 66), BackgroundTransparency = 1, Parent = gui }, {
 		new("UIListLayout", { Padding = UDim.new(0, 8), SortOrder = Enum.SortOrder.LayoutOrder, HorizontalAlignment = Enum.HorizontalAlignment.Right }),
 	})
 
@@ -421,7 +433,8 @@ local function buildHUD(playerGui)
 
 	-- MOBILE DIG BUTTON
 	if UserInputService.TouchEnabled then
-		local digButton = makeButton({ Name = "DigButton", Size = UDim2.fromOffset(96, 96), AnchorPoint = Vector2.new(1, 1), Position = UDim2.new(1, -24, 1, -110), Color = C.Ochre, TextColor = C.Cream, Text = "DIG", Font = TITLE, TextSize = 28, Radius = 48, Parent = gui })
+		-- sits above Roblox's Jump button (which occupies roughly the bottom-right 180x150 px)
+		local digButton = makeButton({ Name = "DigButton", Size = UDim2.fromOffset(100, 100), AnchorPoint = Vector2.new(1, 1), Position = UDim2.new(1, -56, 1, -190), Color = C.Ochre, TextColor = C.Cream, Text = "DIG", Font = TITLE, TextSize = 28, Radius = 48, Parent = gui })
 		stroke(C.Cream, 3).Parent = digButton
 		digButton.InputBegan:Connect(function(input)
 			if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -445,11 +458,11 @@ local function refreshHUD(state)
 	local bag = GameConfig.GetBag(state.BagTier) or GameConfig.Bags[1]
 	hud.ToolName.Text = string.format("%s  ·  Tier %d", tool.Name, tool.Tier)
 	if tool.Mode == "Click" then
-		hud.ToolHint.Text = "Click sand to dig  ·  1-4 swap tools"
+		hud.ToolHint.Text = "Click sand to dig  ·  1-5 swap tools"
 	elseif tool.Mode == "Hold" then
-		hud.ToolHint.Text = "Click or hold to dig  ·  1-4 swap tools"
+		hud.ToolHint.Text = "Click or hold to dig  ·  1-5 swap tools"
 	else
-		hud.ToolHint.Text = "Hold to vacuum  ·  1-4 swap tools"
+		hud.ToolHint.Text = "Hold to vacuum  ·  1-5 swap tools"
 	end
 	hud.ToolStats.Text = string.format("Radius %.1f  ·  %.2fs  ·  x%.1f value", stats.Radius, stats.Cooldown, stats.ValueMultiplier)
 	hud.BagName.Text = string.format("%s  %s", bag.Icon, bag.Name)
@@ -458,7 +471,7 @@ local function refreshHUD(state)
 		local slot = hud.Hotbar[item.Id]
 		local owned = state.OwnedTools and state.OwnedTools[item.Id]
 		local equipped = state.EquippedTool == item.Id
-		slot.Text = owned and string.format("%d  %s", item.Index, item.Id == "TurbineVac" and "Turbo" or (item.Id == "HandVac" and "Vac" or item.Id)) or string.format("%d  🔒", item.Index)
+		slot.Text = owned and string.format("%d %s", item.Index, item.Short or item.Id) or string.format("%d 🔒", item.Index)
 		slot.TextColor3 = equipped and C.Cream or (owned and C.Ink or C.InkSoft)
 		slot.BackgroundColor3 = equipped and C.Ochre or C.Paper
 		local slotStroke = slot:FindFirstChildOfClass("UIStroke")
@@ -602,7 +615,11 @@ local function buildShop()
 	for index, tool in ipairs(GameConfig.Tools) do
 		local row = card({ Name = tool.Id, Size = UDim2.new(1, 0, 0, 108), LayoutOrder = index, BackgroundColor3 = C.Paper, Parent = shop.ToolList }, { stroke(C.Ochre, 2) })
 		local holder = new("Frame", { Size = UDim2.fromOffset(92, 92), Position = UDim2.fromOffset(8, 8), BackgroundColor3 = C.Cream, BorderSizePixel = 0, Parent = row }, { corner(46) })
-		makeViewport(holder, ToolModels.Build(tool.Id, true), { Size = UDim2.fromScale(1, 1), Direction = Vector3.new(1.4, 0.8, 0.3), Zoom = 0.9 })
+		if tool.Id == "Hands" then
+			text({ Size = UDim2.fromScale(1, 1), Text = "✋", Font = TITLE, TextSize = 46, TextXAlignment = Enum.TextXAlignment.Center, Parent = holder })
+		else
+			makeViewport(holder, ToolModels.Build(tool.Id, true), { Size = UDim2.fromScale(1, 1), Direction = Vector3.new(1.4, 0.8, 0.3), Zoom = 0.9 })
+		end
 		text({ Size = UDim2.new(1, -280, 0, 26), Position = UDim2.fromOffset(112, 8), Text = tool.Name, Font = TITLE, TextSize = 22, Parent = row })
 		local modeText = tool.Mode == "Click" and "Click to dig" or (tool.Mode == "Hold" and "Click / hold" or "Hold to vacuum")
 		text({ Size = UDim2.new(1, -280, 0, 18), Position = UDim2.fromOffset(112, 36), Text = string.format("Tier %d  ·  Radius %.1f  ·  every %.2fs  ·  %s", tool.Tier, tool.Radius, tool.Cooldown, modeText), Font = BOLD, TextSize = 13, TextColor3 = C.Terracotta, Parent = row })
@@ -1116,12 +1133,12 @@ local function onNotify(payload)
 	if kind == "Sell" then
 		Effects.CashRegister()
 		popText("+" .. Util.FormatCash(payload.Cash), C.Gold, 52)
-		Interface.Toast(string.format("Sold %s kg for %s", Util.FormatKg(payload.Kg), Util.FormatCash(payload.Cash)), "Sage", "⚖")
+		Interface.Toast(string.format("Melted %s kg of sand into glass for %s", Util.FormatKg(payload.Kg), Util.FormatCash(payload.Cash)), "Sage", "🔥")
 	elseif kind == "BagFull" then
 		local now = os.clock()
 		if now - lastBagFullToast > 4 then
 			lastBagFullToast = now
-			Interface.Toast("Your bag is full! Head to the Weigh Station to sell.", "Terracotta", "🎒")
+			Interface.Toast("Your bag is full! Melt it at the Glass Furnace in base camp.", "Terracotta", "🎒")
 		end
 		local bagStroke = hud.BagStroke
 		if bagStroke then
@@ -1289,7 +1306,7 @@ function Interface.Init(options)
 	RunService.RenderStepped:Connect(frame)
 
 	task.delay(2, function()
-		Interface.Toast("Welcome to the " .. GameConfig.Lot.Name .. "! Dig sand, sell it at the Weigh Station, find all 14 relics.", "Ochre", "🌵", 7)
+		Interface.Toast("Welcome to the " .. GameConfig.Lot.Name .. "! Dig sand with your hands, melt it into glass at the furnace, find all 14 relics.", "Ochre", "🌵", 7)
 	end)
 end
 

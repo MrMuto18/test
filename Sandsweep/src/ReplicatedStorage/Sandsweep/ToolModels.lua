@@ -17,6 +17,7 @@ local SAND = Color3.fromRGB(232, 196, 128)
 
 -- First-person placement relative to the camera
 ToolModels.ViewOffsets = {
+	Hands = CFrame.new(0, -1.15, -2.0) * CFrame.Angles(math.rad(18), 0, 0),
 	Spoon = CFrame.new(0.85, -0.8, -1.7) * CFrame.Angles(math.rad(10), math.rad(-10), math.rad(-4)),
 	Shovel = CFrame.new(1.05, -1.15, -1.6) * CFrame.Angles(math.rad(14), math.rad(-10), math.rad(-8)),
 	HandVac = CFrame.new(0.95, -0.95, -1.7) * CFrame.Angles(math.rad(6), math.rad(-7), 0),
@@ -25,6 +26,7 @@ ToolModels.ViewOffsets = {
 
 -- Grip point (tool space) that sits in the character's hand
 ToolModels.Grips = {
+	Hands = Vector3.new(0, 0, 0),
 	Spoon = Vector3.new(0, 0, 0.45),
 	Shovel = Vector3.new(0, 0, 1.15),
 	HandVac = Vector3.new(0, 0.55, 0.4),
@@ -33,6 +35,10 @@ ToolModels.Grips = {
 
 -- First-person hands: where each hand grips the tool (tool space) and which arm it is
 ToolModels.Hands = {
+	Hands = {
+		{ Position = Vector3.new(0.34, -0.05, -0.45), Side = "Right", Cupped = true },
+		{ Position = Vector3.new(-0.34, -0.05, -0.45), Side = "Left", Cupped = true },
+	},
 	Spoon = { { Position = Vector3.new(0, 0, 0.5), Side = "Right" } },
 	Shovel = { { Position = Vector3.new(0, 0, 1.3), Side = "Right" }, { Position = Vector3.new(0, 0, -0.55), Side = "Left" } },
 	HandVac = { { Position = Vector3.new(0, 0.58, 0.45), Side = "Right" } },
@@ -48,6 +54,26 @@ local function addTip(handle, position)
 end
 
 local builders = {}
+
+-- Bare hands: the visible palms are added by the first-person viewmodel;
+-- the model only carries an invisible handle, the sand scoop and the tip.
+builders.Hands = function(model)
+	local handle = PartKit.Part(model, {
+		Name = "Handle",
+		Size = Vector3.new(0.2, 0.2, 0.2),
+		CFrame = CFrame.new(0, 0, 0),
+		Transparency = 1,
+		CastShadow = false,
+	})
+	PartKit.Ellipsoid(model, Vector3.new(0.7, 0.32, 0.6), CFrame.new(0, 0.12, -0.5), {
+		Name = "SandScoop",
+		Color = SAND,
+		Material = Enum.Material.Sand,
+		Transparency = 1,
+	})
+	addTip(handle, Vector3.new(0, 0, -0.9))
+	return handle
+end
 
 builders.Spoon = function(model)
 	local silver = Color3.fromRGB(196, 200, 208)
