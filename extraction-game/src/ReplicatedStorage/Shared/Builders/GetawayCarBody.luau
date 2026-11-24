@@ -26,6 +26,8 @@ export type BuildOptions = {
 	PaintColor: Color3?,
 	Interior: boolean?,
 	PlateText: string?,
+	-- Phase 3: wheels are NOT welded to the body (VehicleChassis rigs them).
+	Physics: boolean?,
 }
 
 export type CarHandles = {
@@ -42,6 +44,11 @@ export type CarHandles = {
 	UnderglowLights: { PointLight },
 	EngineBay: BasePart,
 	TrunkLid: BasePart,
+	TrunkHinge: Weld,
+	Indicators: { BasePart },
+	ReverseLights: { BasePart },
+	DriverDoor: Attachment,
+	PassengerDoor: Attachment,
 }
 
 type Style = PartFactory.Style
@@ -51,6 +58,8 @@ type AddExtra = {
 	Shape: Enum.PartType?,
 	Collide: boolean?,
 	Parent: Instance?,
+	WeldTo: BasePart?,
+	NoWeld: boolean?,
 }
 
 local GetawayCarBody = {}
@@ -97,6 +106,7 @@ function GetawayCarBody.build(origin: CFrame, options: BuildOptions?): CarHandle
 	local anchored = if opts.Anchored == nil then true else opts.Anchored
 	local styles = makeStyles(opts.PaintColor or rgb(16, 16, 18))
 	local includeInterior = opts.Interior ~= false
+	local physics = opts.Physics == true
 
 	local model = Instance.new("Model")
 	model.Name = opts.Name or "Zabour"
@@ -133,7 +143,9 @@ function GetawayCarBody.build(origin: CFrame, options: BuildOptions?): CarHandle
 			Anchored = false,
 			Parent = e.Parent or bodyFolder,
 		})
-		PartFactory.weld(root, part)
+		if not e.NoWeld then
+			PartFactory.weld(e.WeldTo or root, part)
+		end
 		return part
 	end
 
@@ -173,8 +185,17 @@ function GetawayCarBody.build(origin: CFrame, options: BuildOptions?): CarHandle
 	add("RearBumper", Vector3.new(6.6, 2.1, 1.6), at(0, 1.8, 7.2), styles.Paint, { Collide = true })
 	add("Ducktail", Vector3.new(6.2, 0.3, 0.8), at(0, 3.0, 7.6), styles.Paint, { Class = "WedgePart" })
 
-	local trunkLid = add("TrunkLid", Vector3.new(5.6, 0.06, 2.0), at(0, 2.88, 6.4), styles.Paint)
+	-- Trunk lid hangs on a hinge Weld at its front edge so it can swing open.
+	local trunkLid = add("TrunkLid", Vector3.new(5.6, 0.06, 2.0), at(0, 2.88, 6.4), styles.Paint, { NoWeld = true })
 	trunkLid:SetAttribute("LootTrunk", true)
+	local trunkHinge = Instance.new("Weld")
+	trunkHinge.Name = "TrunkHinge"
+	trunkHinge.Part0 = root
+	trunkHinge.Part1 = trunkLid
+	trunkHinge.C0 = CFrame.new(0, 2.88 - 1.8, 5.4)
+	trunkHinge.C1 = CFrame.new(0, 0, -1.0)
+	trunkHinge.Parent = trunkLid
+	add("TrunkSpoilerLip", Vector3.new(5.6, 0.12, 0.08), at(0, 2.94, 7.38), styles.Paint, { WeldTo = trunkLid })
 	local trunkPrompt = Instance.new("Attachment")
 	trunkPrompt.Name = "TrunkPrompt"
 	trunkPrompt.Position = Vector3.new(0, 0.6, 1.4)
@@ -383,6 +404,20 @@ function GetawayCarBody.build(origin: CFrame, options: BuildOptions?): CarHandle
 		add("ReverseLamp_" .. side, Vector3.new(0.3, 0.1, 0.05), at(s * 1.75, 2.22, 8.08), PartFactory.style(rgb(200, 200, 200), Enum.Material.Glass, 0.2, 0.1), { Parent = lightsFolder })
 	end
 
+	local indicatorStyle = PartFactory.style(rgb(255, 150, 30), Enum.Material.Neon, 0, 1, false)
+	local indicators: { BasePart } = {}
+	for _, s in SIDES do
+		local side = if s < 0 then "L" else "R"
+		table.insert(indicators, add("IndicatorFront_" .. side, Vector3.new(0.3, 0.1, 0.05), at(s * 3.05, 1.6, -8.06), indicatorStyle, { Parent = lightsFolder }))
+		table.insert(indicators, add("IndicatorRear_" .. side, Vector3.new(0.3, 0.1, 0.05), at(s * 3.0, 2.42, 8.08), indicatorStyle, { Parent = lightsFolder }))
+	end
+	local reverseLights: { BasePart } = {}
+	for _, child in lightsFolder:GetChildren() do
+		if child:IsA("BasePart") and string.sub(child.Name, 1, 11) == "ReverseLamp" then
+			table.insert(reverseLights, child)
+		end
+	end
+
 	local rearPlate = add("RearPlate", Vector3.new(1.6, 0.5, 0.05), at(0, 1.6, 8.03), styles.Plate, { Parent = trimFolder })
 	local plateGui = Instance.new("SurfaceGui")
 	plateGui.Name = "PlateText"
@@ -540,22 +575,32 @@ function GetawayCarBody.build(origin: CFrame, options: BuildOptions?): CarHandle
 			Shape = Enum.PartType.Cylinder,
 			Collide = true,
 			Parent = wheelModel,
+			NoWeld = physics,
 		})
 		wheelModel.PrimaryPart = tire
-		add("Sidewall", Vector3.new(1.07, 2.25, 2.25), centre, PartFactory.style(rgb(30, 30, 32), RUBBER, 0), {
+		-- In physics mode every wheel part rides on its own tire.
+		local wheelAdd = function(name: string, size: Vector3, cf: CFrame, style: Style, extra: AddExtra?): BasePart
+			local e: AddExtra = extra or {}
+			e.Parent = wheelModel
+			if physics then
+				e.WeldTo = tire
+			end
+			return add(name, size, cf, style, e)
+		end
+		wheelAdd("Sidewall", Vector3.new(1.07, 2.25, 2.25), centre, PartFactory.style(rgb(30, 30, 32), RUBBER, 0), {
 			Shape = Enum.PartType.Cylinder,
 			Parent = wheelModel,
 		})
-		add("RimBarrel", Vector3.new(1.09, 1.85, 1.85), centre, styles.RimShadow, {
+		wheelAdd("RimBarrel", Vector3.new(1.09, 1.85, 1.85), centre, styles.RimShadow, {
 			Shape = Enum.PartType.Cylinder,
 			Parent = wheelModel,
 		})
-		add("RimLip", Vector3.new(0.05, 1.95, 1.95), centre * CFrame.new(s * 0.53, 0, 0), styles.Chrome, {
+		wheelAdd("RimLip", Vector3.new(0.05, 1.95, 1.95), centre * CFrame.new(s * 0.53, 0, 0), styles.Chrome, {
 			Shape = Enum.PartType.Cylinder,
 			Parent = wheelModel,
 		})
 		for i = 0, 4 do
-			add(
+			wheelAdd(
 				"Spoke" .. i,
 				Vector3.new(0.08, 0.16, 1.72),
 				centre * CFrame.new(s * 0.56, 0, 0) * CFrame.Angles(math.rad(i * 36), 0, 0),
@@ -563,11 +608,11 @@ function GetawayCarBody.build(origin: CFrame, options: BuildOptions?): CarHandle
 				{ Parent = wheelModel }
 			)
 		end
-		add("Hub", Vector3.new(0.14, 0.55, 0.55), centre * CFrame.new(s * 0.58, 0, 0), styles.Chrome, {
+		wheelAdd("Hub", Vector3.new(0.14, 0.55, 0.55), centre * CFrame.new(s * 0.58, 0, 0), styles.Chrome, {
 			Shape = Enum.PartType.Cylinder,
 			Parent = wheelModel,
 		})
-		add("CenterCap", Vector3.new(0.16, 0.28, 0.28), centre * CFrame.new(s * 0.6, 0, 0), styles.PaintAccent, {
+		wheelAdd("CenterCap", Vector3.new(0.16, 0.28, 0.28), centre * CFrame.new(s * 0.6, 0, 0), styles.PaintAccent, {
 			Shape = Enum.PartType.Cylinder,
 			Parent = wheelModel,
 		})
@@ -578,6 +623,14 @@ function GetawayCarBody.build(origin: CFrame, options: BuildOptions?): CarHandle
 	-- Anchors for other systems
 	----------------------------------------------------------------------------
 	local engineBay = add("EngineBay", Vector3.new(1, 1, 1), at(0, 1.6, -5.5), styles.Invisible, { Parent = model })
+	local driverDoor = Instance.new("Attachment")
+	driverDoor.Name = "DriverDoor"
+	driverDoor.Position = Vector3.new(-3.5, 0.6, -0.6)
+	driverDoor.Parent = root
+	local passengerDoor = Instance.new("Attachment")
+	passengerDoor.Name = "PassengerDoor"
+	passengerDoor.Position = Vector3.new(3.5, 0.6, -0.6)
+	passengerDoor.Parent = root
 
 	model.Parent = nil
 	return {
@@ -594,6 +647,11 @@ function GetawayCarBody.build(origin: CFrame, options: BuildOptions?): CarHandle
 		UnderglowLights = underglowLights,
 		EngineBay = engineBay,
 		TrunkLid = trunkLid,
+		TrunkHinge = trunkHinge,
+		Indicators = indicators,
+		ReverseLights = reverseLights,
+		DriverDoor = driverDoor,
+		PassengerDoor = passengerDoor,
 	}
 end
 
@@ -626,6 +684,24 @@ function GetawayCarBody.setUnderglow(handles: CarHandles, on: boolean)
 		light.Enabled = on
 	end
 	handles.Model:SetAttribute("Underglow", on)
+end
+
+function GetawayCarBody.setIndicators(handles: CarHandles, on: boolean)
+	for _, part in handles.Indicators do
+		part.Transparency = if on then 0 else 1
+	end
+end
+
+function GetawayCarBody.setReverse(handles: CarHandles, on: boolean)
+	for _, part in handles.ReverseLights do
+		part.Material = if on then Enum.Material.Neon else Enum.Material.Glass
+		part.Transparency = if on then 0 else 0.1
+	end
+end
+
+-- 0 = closed, 1 = fully open (~65°).
+function GetawayCarBody.trunkFrame(alpha: number): CFrame
+	return CFrame.new(0, 2.88 - 1.8, 5.4) * CFrame.Angles(-math.rad(65) * math.clamp(alpha, 0, 1), 0, 0)
 end
 
 return GetawayCarBody

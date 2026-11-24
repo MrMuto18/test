@@ -26,7 +26,8 @@ ReplicatedStorage
     └── Builders                 [Folder]
         ├── PartFactory          [ModuleScript]  src/ReplicatedStorage/Shared/Builders/PartFactory.luau
         ├── GetawayCarBody       [ModuleScript]  src/ReplicatedStorage/Shared/Builders/GetawayCarBody.luau
-        └── WeaponBuilder        [ModuleScript]  src/ReplicatedStorage/Shared/Builders/WeaponBuilder.luau   (Phase 2)
+        ├── WeaponBuilder        [ModuleScript]  src/ReplicatedStorage/Shared/Builders/WeaponBuilder.luau   (Phase 2)
+        └── LootBagBuilder       [ModuleScript]  src/ReplicatedStorage/Shared/Builders/LootBagBuilder.luau  (Phase 3)
 
 ServerScriptService
 └── Server                       [Folder]
@@ -35,10 +36,15 @@ ServerScriptService
     │   ├── LightingService      [ModuleScript]  src/ServerScriptService/Server/Services/LightingService.luau
     │   ├── PlayerDataService    [ModuleScript]  src/ServerScriptService/Server/Services/PlayerDataService.luau
     │   ├── DeployService        [ModuleScript]  src/ServerScriptService/Server/Services/DeployService.luau
-    │   └── CombatService        [ModuleScript]  src/ServerScriptService/Server/Services/CombatService.luau   (Phase 2)
+    │   ├── CombatService        [ModuleScript]  src/ServerScriptService/Server/Services/CombatService.luau   (Phase 2)
+    │   ├── LootService          [ModuleScript]  src/ServerScriptService/Server/Services/LootService.luau     (Phase 3)
+    │   └── VehicleService       [ModuleScript]  src/ServerScriptService/Server/Services/VehicleService.luau  (Phase 3)
+    ├── Vehicles                 [Folder]
+    │   └── VehicleChassis       [ModuleScript]  src/ServerScriptService/Server/Vehicles/VehicleChassis.luau  (Phase 3)
     └── World                    [Folder]
         ├── SafehouseBuilder     [ModuleScript]  src/ServerScriptService/Server/World/SafehouseBuilder.luau
-        └── TrainingRange        [ModuleScript]  src/ServerScriptService/Server/World/TrainingRange.luau      (Phase 2)
+        ├── TrainingRange        [ModuleScript]  src/ServerScriptService/Server/World/TrainingRange.luau      (Phase 2)
+        └── ProvingGround        [ModuleScript]  src/ServerScriptService/Server/World/ProvingGround.luau      (Phase 3)
 
 StarterPlayer
 └── StarterPlayerScripts
@@ -56,12 +62,16 @@ StarterPlayer
         │   ├── CharacterPoser       [ModuleScript]  .../Client/Controllers/CharacterPoser.luau       (Phase 2)
         │   ├── WeaponFx             [ModuleScript]  .../Client/Controllers/WeaponFx.luau             (Phase 2)
         │   ├── WeaponController     [ModuleScript]  .../Client/Controllers/WeaponController.luau     (Phase 2)
-        │   └── LoadoutDisplay       [ModuleScript]  .../Client/Controllers/LoadoutDisplay.luau       (Phase 2)
+        │   ├── LoadoutDisplay       [ModuleScript]  .../Client/Controllers/LoadoutDisplay.luau       (Phase 2)
+        │   ├── VehicleCamera        [ModuleScript]  .../Client/Controllers/VehicleCamera.luau        (Phase 3)
+        │   ├── VehicleController    [ModuleScript]  .../Client/Controllers/VehicleController.luau    (Phase 3)
+        │   └── VehicleFx            [ModuleScript]  .../Client/Controllers/VehicleFx.luau            (Phase 3)
         └── UI                   [Folder]
             ├── Theme            [ModuleScript]  .../Client/UI/Theme.luau
             ├── Widgets          [ModuleScript]  .../Client/UI/Widgets.luau
             ├── MenuUI           [ModuleScript]  .../Client/UI/MenuUI.luau
-            └── HUD              [ModuleScript]  .../Client/UI/HUD.luau                           (Phase 2)
+            ├── HUD              [ModuleScript]  .../Client/UI/HUD.luau                           (Phase 2)
+            └── PromptUI         [ModuleScript]  .../Client/UI/PromptUI.luau                      (Phase 3)
 ```
 
 Created at runtime (don't make these by hand):
@@ -147,13 +157,15 @@ Client
 | Deployed | WASD move · mouse / right stick look · **V** / D-pad → shoulder swap |
 | Movement | **Shift** / L3 sprint (hold) · **C** / Ctrl / (B) crouch · crouch while sprinting = **slide** · Space jump (costs stamina; cancels a slide into a hop) |
 | Weapons | **LMB** / R2 fire · **RMB** / L2 aim · **R** / (X) reload · **1** / **2** / wheel / (Y) switch weapon |
+| Loot | **E** (hold) grab bag / use trunk · **G** drop bag |
+| Car | **E** at the door: Drive / Ride · **W/S** throttle / brake / reverse · **A/D** steer · **Space** / (X) handbrake drift · **L** lights · **H** hazards · **U** underglow · **F** / (Y) exit · mouse = free look |
 
 ---
 
 ## 6. Phase 1 test checklist
 
 1. **Play** → a black ZABOUR card with a sweeping line, which dissolves into the rainy alley. The camera breathes and follows the mouse slightly, the car idles with exhaust smoke, the neon sign flickers, and lightning flashes now and then.
-2. Output shows `[Safehouse] built N parts`, `[PlayerData] backend: Mock` (or `DataStore`), `[Bootstrap] Phase 2 server ready.`, and a lighting warning only for properties that need setting by hand.
+2. Output shows `[Safehouse] built N parts`, `[PlayerData] backend: Mock` (or `DataStore`), `[Bootstrap] Phase 3 server ready.`, and a lighting warning only for properties that need setting by hand.
 3. Hover the options: the label slides right, the accent bar grows, a tick plays, and the hint text changes. Try the keyboard and a gamepad too.
 4. **LOADOUT** → the camera glides to the workbench and the panel slides in. Select the SMG; the accent marker moves and the stat bars animate. Stop and Play again: with real DataStore on, the choice persists.
 5. **SETTINGS** → the camera moves to the headlight close-up. Change quality to Low (rain thins, beams, mist and shadows switch off), then drag FOV and sensitivity.
@@ -185,3 +197,25 @@ Client
 4. Hold RMB: the camera tucks in, FOV drops and spread shrinks to a dot. Spray and feel the climb recover when you let go.
 5. R reloads (the magazine drops out). 2 / wheel switches to the pistol (semi-auto).
 6. With 2 players (Test → Start, 2 players): each sees the other's poses, tracers and flashes, and bullets on another player show "SAFE ZONE".
+
+---
+
+## 8. Phase 3: drivable getaway car + loot trunk
+
+**What it adds**
+* **Physics car:** the same Zabour body on a constraint chassis. Each wheel has a vertical slide plus a spring for suspension, and the spring rates are worked out from the real mass so the car rests at its design height. Front wheels have a steering servo; rear wheels are driven (RWD). The weight sits in one low ballast part, and downforce grows with speed².
+* **Driving:** throttle, brake and reverse; steering that tightens at speed; a **handbrake** that locks the rear wheels and drops rear grip so you can drift; a simulated 5-speed gearbox with a short torque cut on each shift. The driver's client simulates the car, so there is no input lag.
+* **Effects:** a chase camera that lags into slides, free look that recentres, an FOV kick and light shake at speed. Engine pitch follows RPM, the rear tyres smoke and leave skid marks while sliding, and the exhausts **backfire** on hard upshifts and when you lift off. Brake lights, reverse lights, hazards (H), headlights (L) and underglow (U) look the same for every player.
+* **Loot trunk:** grab a duffel bag (E, hold): it slings onto your back, slows you by 25% and blocks sprint. Press G to drop it. At the trunk, E loads the bag you carry (4 slots) or takes one out. The lid swings open and the bags show behind the seats. If you die, the bag drops where you fall.
+* **Proving ground:** the alley's north end now opens onto a 300 × 400 lot with lane markings, a cone slalom, a jump ramp, a drift circle with tyre stacks, shipping containers and high-mast lights. Two cars are parked behind the deploy area, and three practice loot bags sit by the garage (they come back 25 s after you take them).
+* **Other:** weapons holster automatically while seated and come back out when you exit. Prompts use a custom minimal UI (key, action, value, hold line). A car that ends up on its roof gets a **Flip** prompt.
+
+**Audio:** `EngineLoop` (or `EngineIdle`), `TireSkid` and `Backfire` in `Config.Audio` need Creator Store ids you have rights to. Until then the car is silent, but every visual works.
+
+**Phase 3 test checklist**
+1. DEPLOY, then turn around: two cars are parked behind you. Hold E at the driver door → the camera blends into the chase cam, the headlights come on and the gun is holstered.
+2. Drive north through the gate into the proving ground. Hold Space in a turn: the rear slides out, the tyres smoke and leave skid marks.
+3. Floor it through the gears and lift off: the RPM line and gear number change, and the exhausts pop flames.
+4. Press L / H / U to toggle lights, hazards and underglow. Press F to step out beside the door and draw your weapon again.
+5. Grab a loot bag by the garage, walk (slower, no sprint) to the car's trunk and press E to load it: the lid opens and a bag shows inside the car. Press E again with empty hands to take it back out.
+6. Roll the car off the ramp onto its roof → a **Flip** prompt appears.

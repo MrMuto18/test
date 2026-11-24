@@ -24,12 +24,17 @@ Net.Events = {
 	SetStance = "SetStance", -- client -> server (stance, sprinting)
 	HitConfirm = "HitConfirm", -- server -> shooter (kind, damage, position)
 	AmmoSync = "AmmoSync", -- server -> owner (slot, mag, reserve, reloading)
+	-- Phase 3 vehicles / loot
+	VehicleToggle = "VehicleToggle", -- client -> server (car, "Lights" | "Hazards" | "Underglow")
+	VehicleExit = "VehicleExit", -- client -> server
+	DropBag = "DropBag", -- client -> server
 }
 
 -- High-frequency, loss-tolerant traffic.
 Net.Unreliable = {
 	AimState = "AimState", -- client -> server (pitch, aiming)
 	ShotFx = "ShotFx", -- server -> other clients (character, weaponId, origin, hitPos, normal, material)
+	VehicleState = "VehicleState", -- driver -> server (car, throttle, brake, steer, handbrake, rpm, gear, backfires)
 }
 
 Net.Functions = {

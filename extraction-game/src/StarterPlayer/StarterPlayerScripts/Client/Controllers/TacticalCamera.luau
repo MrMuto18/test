@@ -82,6 +82,12 @@ castParams.FilterType = Enum.RaycastFilterType.Exclude
 local lastCF = CFrame.identity
 local lastFov = 72
 
+-- Optional blend-in when (re)starting from another camera (e.g. leaving a car).
+local blendFromCF: CFrame? = nil
+local blendFromFov = 72
+local blendTime = 0
+local blendDuration = 0
+
 local function sphereCast(origin: Vector3, offset: Vector3): Vector3
 	if offset.Magnitude < 1e-3 then
 		return origin + offset
@@ -309,6 +315,17 @@ function TacticalCamera.start()
 		camera.CameraType = Enum.CameraType.Scriptable
 		UserInputService.MouseBehavior = Enum.MouseBehavior.LockCenter
 		local cf, fov = TacticalCamera.evaluate(dt)
+		local from = blendFromCF
+		if from and blendDuration > 0 then
+			blendTime += dt
+			local t = math.clamp(blendTime / blendDuration, 0, 1)
+			local a = t * t * (3 - 2 * t)
+			cf = from:Lerp(cf, a)
+			fov = blendFromFov + (fov - blendFromFov) * a
+			if t >= 1 then
+				blendFromCF = nil
+			end
+		end
 		camera.CFrame = cf
 		camera.FieldOfView = fov
 	end)
@@ -374,6 +391,32 @@ end
 
 function TacticalCamera.setFovOffset(key: string, value: number?)
 	fovOffsets[key] = value
+end
+
+-- Restart from another camera's frame without a cut.
+function TacticalCamera.startBlended(fromCF: CFrame, fromFov: number, duration: number)
+	blendFromCF = fromCF
+	blendFromFov = fromFov
+	blendTime = 0
+	blendDuration = duration
+	TacticalCamera.start()
+end
+
+-- Seated in a vehicle: the facing constraint must not fight the seat weld.
+function TacticalCamera.setBodyControl(enabled: boolean)
+	local constraint = align
+	if constraint then
+		constraint.Enabled = enabled
+	end
+	local h = humanoid
+	if h and h.Parent then
+		h.AutoRotate = false
+	end
+end
+
+function TacticalCamera.setYaw(value: number)
+	yaw = value
+	bodyYaw = value
 end
 
 function TacticalCamera.getPitch(): number

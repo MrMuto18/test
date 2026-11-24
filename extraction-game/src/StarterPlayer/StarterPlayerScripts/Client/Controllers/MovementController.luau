@@ -58,6 +58,7 @@ local lastSlideEnd = -math.huge
 local lastSent = 0
 local pendingSend = false
 local controls: any = nil
+local enabled = true
 
 local function getControls(): any
 	if controls then
@@ -181,11 +182,12 @@ end
 local function update(dt: number)
 	local h = humanoid
 	local r = root
-	if not h or not r or h.Health <= 0 then
+	if not h or not r or h.Health <= 0 or not enabled then
 		return
 	end
 	local now = os.clock()
 	local moveDir = h.MoveDirection
+	local carrying = character ~= nil and (character :: Model):GetAttribute("CarryingBag") == true
 
 	-- Crouch/slide + jump interplay
 	if h.Jump then
@@ -212,6 +214,7 @@ local function update(dt: number)
 		-- Sprint gate
 		local forwardDot = if moveDir.Magnitude > 0.1 then moveDir.Unit:Dot(cameraForward()) else 0
 		local canSprint = sprintHeld
+			and not carrying
 			and stance == "Stand"
 			and not aiming
 			and not exhausted
@@ -233,6 +236,9 @@ local function update(dt: number)
 			target = M.AdsSpeed
 		end
 		target *= speedMultiplier
+		if carrying then
+			target *= Config.Loot.CarrySpeedMultiplier
+		end
 		h.WalkSpeed += (target - h.WalkSpeed) * (1 - math.exp(-dt * M.SpeedResponse))
 	end
 
@@ -265,6 +271,14 @@ local function bind()
 		return Enum.ContextActionResult.Sink
 	end, false, table.unpack(KEYS.Sprint))
 
+	ContextActionService:BindAction("MoveDropBag", function(_: string, state: Enum.UserInputState): Enum.ContextActionResult
+		if state == Enum.UserInputState.Begin and character and (character :: Model):GetAttribute("CarryingBag") == true then
+			Net.event(Net.Events.DropBag):FireServer()
+			return Enum.ContextActionResult.Sink
+		end
+		return Enum.ContextActionResult.Pass
+	end, false, table.unpack(KEYS.DropBag))
+
 	ContextActionService:BindAction("MoveCrouch", function(_: string, state: Enum.UserInputState): Enum.ContextActionResult
 		if state == Enum.UserInputState.Begin then
 			onCrouch()
@@ -276,6 +290,7 @@ end
 local function unbind()
 	ContextActionService:UnbindAction("MoveSprint")
 	ContextActionService:UnbindAction("MoveCrouch")
+	ContextActionService:UnbindAction("MoveDropBag")
 end
 
 function MovementController.attach(model: Model)
@@ -288,6 +303,7 @@ function MovementController.attach(model: Model)
 	character = model
 	humanoid = h
 	root = r
+	enabled = true
 	baseHipHeight = h.HipHeight
 	stance = "Stand"
 	sprinting = false
@@ -336,6 +352,33 @@ function MovementController.detach()
 	root = nil
 	stance = "Stand"
 	sprinting = false
+end
+
+-- Vehicles: no sprint/crouch input while seated; stand up first.
+function MovementController.setEnabled(value: boolean)
+	if enabled == value then
+		return
+	end
+	enabled = value
+	if not value then
+		unbind()
+		if stance == "Slide" then
+			endSlide("Stand")
+		end
+		if stance ~= "Stand" then
+			stance = "Stand"
+			local h = humanoid
+			if h then
+				h.HipHeight = baseHipHeight
+			end
+		end
+		sprinting = false
+		sprintHeld = false
+		TacticalCamera.setFovOffset("Sprint", nil)
+		replicate()
+	elseif character then
+		bind()
+	end
 end
 
 function MovementController.setAiming(value: boolean)

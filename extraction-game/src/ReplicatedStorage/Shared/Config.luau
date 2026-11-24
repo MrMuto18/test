@@ -443,6 +443,70 @@ Config.Combat = {
 }
 
 --------------------------------------------------------------------------------
+-- Vehicles (Phase 3)
+--------------------------------------------------------------------------------
+Config.Vehicle = {
+	-- Where drivable cars park (relative to World.Origin). Front faces +Z (toward the proving ground).
+	SpawnPads = {
+		CFrame.new(-7, 0, -30) * CFrame.Angles(0, math.pi, 0),
+		CFrame.new(7, 0, -46) * CFrame.Angles(0, math.pi, 0),
+	},
+	WheelRadius = 1.3,
+	-- Mass + suspension
+	BallastDensity = 1.6,
+	SuspensionTravel = 0.55,
+	SuspensionFrequency = 2.2, -- Hz at rest load
+	SuspensionDamping = 0.38, -- damping ratio
+	TireFriction = 1.6,
+	TireFrictionHandbrake = 0.35,
+	-- Drivetrain (RWD)
+	MaxSpeed = 125, -- studs/s
+	ReverseSpeed = 32,
+	DriveTorque = 2000, -- per rear wheel at peak
+	BrakeTorque = 3200, -- per wheel
+	HandbrakeTorque = 7000, -- rear wheels
+	CoastTorque = 120, -- engine braking when off throttle
+	Gears = { 0, 28, 52, 76, 100, 125 }, -- upshift speed thresholds (studs/s)
+	ShiftTime = 0.18,
+	-- Steering
+	SteerAngleLow = 32, -- degrees at low speed
+	SteerAngleHigh = 9, -- degrees at max speed
+	SteerSpeed = 3.2, -- input smoothing (1/s)
+	-- Aero
+	Downforce = 0.32, -- force = Downforce * speed²
+	-- Camera
+	CameraDistance = 13,
+	CameraHeight = 3.2,
+	CameraLift = 2.1,
+	CameraFovKick = 18,
+	CameraRecenterDelay = 1.4,
+	-- Networking
+	StateSendRate = 15,
+	FlipCheckInterval = 1,
+	TrunkCapacity = 4,
+}
+
+Config.Loot = {
+	CarrySpeedMultiplier = 0.75,
+	DropDistance = 3.5,
+	PracticeBags = {
+		{ Position = Vector3.new(11.8, 0.6, 21), Value = 4200 },
+		{ Position = Vector3.new(11.6, 0.6, 24.5), Value = 6800 },
+		{ Position = Vector3.new(11.9, 0.6, 28), Value = 9500 },
+	},
+	PracticeRespawn = 25, -- seconds after a practice bag leaves its pad
+}
+
+Config.VehicleKeys = {
+	Handbrake = { Enum.KeyCode.Space, Enum.KeyCode.ButtonX },
+	Exit = { Enum.KeyCode.F, Enum.KeyCode.ButtonY },
+	Lights = { Enum.KeyCode.L },
+	Hazards = { Enum.KeyCode.H },
+	Underglow = { Enum.KeyCode.U },
+}
+Config.Combat.Keybinds.DropBag = { Enum.KeyCode.G, Enum.KeyCode.DPadDown }
+
+--------------------------------------------------------------------------------
 -- Audio
 -- Built-in rbxasset:// sounds ship with every Roblox client. Rain / thunder /
 -- engine need Creator Store audio you have rights to: paste "rbxassetid://<id>".
@@ -468,6 +532,12 @@ local AUDIO: { [string]: Types.AudioDef } = {
 	HitBody = { Id = "rbxasset://sounds/clickfast.wav", Volume = 0.35, Speed = 2.0, Group = "UI" },
 	HitHead = { Id = "rbxasset://sounds/electronicpingshort.wav", Volume = 0.35, Speed = 1.4, Group = "UI" },
 	HitKill = { Id = "rbxasset://sounds/electronicpingshort.wav", Volume = 0.5, Speed = 0.9, Group = "UI" },
+	-- Vehicles. EngineLoop falls back to EngineIdle's id when empty.
+	EngineLoop = { Id = "", Volume = 0.6, Speed = 1, Group = "World" },
+	TireSkid = { Id = "", Volume = 0.5, Speed = 1, Group = "World" },
+	Backfire = { Id = "", Volume = 0.8, Speed = 1, Group = "World" },
+	DoorOpen = { Id = "rbxasset://sounds/button.wav", Volume = 0.4, Speed = 0.6, Group = "World" },
+	BagPickup = { Id = "rbxasset://sounds/swoosh.wav", Volume = 0.35, Speed = 0.8, Group = "World" },
 }
 Config.Audio = AUDIO
 

@@ -75,6 +75,7 @@ local reloadStart = 0
 local reloadEnd = 0
 local reloadToken = 0
 local lastAimSend = 0
+local enabled = true
 local rng = Random.new()
 
 local rayParams = RaycastParams.new()
@@ -336,7 +337,7 @@ local function step(dt: number)
 		return
 	end
 	local combat = state.Def.Combat
-	local alive = h.Health > 0
+	local alive = h.Health > 0 and enabled
 
 	-- Aim
 	local aiming = alive and aimingHeld and not reloading and os.clock() >= readyAt - combat.DrawTime * 0.5
@@ -526,6 +527,26 @@ function WeaponController.init()
 	end)
 end
 
+-- Vehicles: weapons are holstered by the server; drop all weapon input.
+function WeaponController.setEnabled(value: boolean)
+	if enabled == value then
+		return
+	end
+	enabled = value
+	if not value then
+		unbind()
+		cancelReload()
+		TacticalCamera.setAiming(false)
+		CharacterPoser.setLocalAim(false)
+	elseif trove then
+		local state = current()
+		readyAt = os.clock() + (if state then state.Def.Combat.DrawTime else 0.4)
+		nextShotTime = readyAt
+		handles = nil
+		bind()
+	end
+end
+
 function WeaponController.attach(model: Model, loadout: Types.Loadout)
 	WeaponController.detach()
 	local h = model:FindFirstChildOfClass("Humanoid")
@@ -536,6 +557,7 @@ function WeaponController.attach(model: Model, loadout: Types.Loadout)
 	character = model
 	humanoid = h
 	root = r
+	enabled = true
 	slots = {}
 	for _, slot in SLOTS do
 		local id = if slot == "Primary" then loadout.Primary else loadout.Secondary

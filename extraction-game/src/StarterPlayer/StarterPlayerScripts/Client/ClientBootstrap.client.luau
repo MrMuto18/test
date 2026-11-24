@@ -21,7 +21,11 @@ local CharacterPoser = require(Controllers.CharacterPoser)
 local MovementController = require(Controllers.MovementController)
 local WeaponController = require(Controllers.WeaponController)
 local LoadoutDisplay = require(Controllers.LoadoutDisplay)
+local VehicleCamera = require(Controllers.VehicleCamera)
+local VehicleController = require(Controllers.VehicleController)
+local VehicleFx = require(Controllers.VehicleFx)
 local HUD = require(script.Parent.UI.HUD)
+local PromptUI = require(script.Parent.UI.PromptUI)
 
 local player = Players.LocalPlayer
 
@@ -44,19 +48,39 @@ applyQuality(SettingsController.get())
 SettingsController.Changed:Connect(applyQuality)
 
 HUD.init()
+PromptUI.init()
 CharacterPoser.init()
 WeaponController.init()
 LoadoutDisplay.init()
+VehicleCamera.init()
+VehicleFx.init()
 MenuCamera.init()
 MenuController.init()
 
+local carryConnection: RBXScriptConnection? = nil
 MenuController.Deployed:Connect(function(character: any)
 	MovementController.attach(character)
 	WeaponController.attach(character, SettingsController.getLoadout())
+	VehicleController.attach(character)
+	HUD.setMode("OnFoot")
+	HUD.setCarry(nil)
+	if carryConnection then
+		carryConnection:Disconnect()
+	end
+	carryConnection = character:GetAttributeChangedSignal("CarryValue"):Connect(function()
+		local value = character:GetAttribute("CarryValue")
+		HUD.setCarry(if typeof(value) == "number" and value > 0 then value else nil)
+	end)
 end)
 MenuController.Entered:Connect(function()
+	VehicleController.detach()
 	WeaponController.detach()
 	MovementController.detach()
+	HUD.setCarry(nil)
+	if carryConnection then
+		carryConnection:Disconnect()
+		carryConnection = nil
+	end
 end)
 
 MenuController.enter(false)

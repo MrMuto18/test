@@ -57,6 +57,7 @@ type Combatant = {
 	ReadyAt: number,
 	LastAim: number,
 	LastStance: number,
+	Holstered: boolean,
 }
 
 local SLOTS: { Types.WeaponSlot } = { "Primary", "Secondary" }
@@ -222,7 +223,7 @@ local function onFire(player: Player, _shotId: any, origin: any, direction: any)
 	if not isFiniteVector(origin) or not isFiniteVector(direction) or direction.Magnitude < 0.5 then
 		return
 	end
-	if c.Humanoid.Health <= 0 or player:GetAttribute("State") ~= "Deployed" then
+	if c.Humanoid.Health <= 0 or c.Holstered or player:GetAttribute("State") ~= "Deployed" then
 		return
 	end
 
@@ -308,7 +309,7 @@ end
 
 local function onEquip(player: Player, slot: any)
 	local c = combatants[player]
-	if not c or (slot ~= "Primary" and slot ~= "Secondary") or c.Equipped == slot then
+	if not c or c.Holstered or (slot ~= "Primary" and slot ~= "Secondary") or c.Equipped == slot then
 		return
 	end
 	if c.Humanoid.Health <= 0 then
@@ -382,6 +383,7 @@ local function onDeployed(player: Player, character: Model, loadout: Types.Loado
 		ReadyAt = os.clock() + 0.5,
 		LastAim = 0,
 		LastStance = 0,
+		Holstered = false,
 	}
 
 	for _, slot in SLOTS do
@@ -424,6 +426,26 @@ local function onDeployed(player: Player, character: Model, loadout: Types.Loado
 			combatants[player] = nil
 		end
 	end)
+end
+
+-- Vehicles: weapons go away while seated and come back on exit.
+function CombatService.setHolstered(player: Player, holstered: boolean)
+	local c = combatants[player]
+	if not c or c.Holstered == holstered then
+		return
+	end
+	c.Holstered = holstered
+	local weapon = c.Weapons[c.Equipped]
+	if holstered then
+		cancelReload(player, weapon)
+		holster(c, weapon)
+		c.Character:SetAttribute("EquippedWeapon", nil)
+		c.Character:SetAttribute("WeaponClass", nil)
+	else
+		equip(c, weapon)
+		c.ReadyAt = os.clock() + weapon.Def.Combat.DrawTime
+	end
+	c.Character:SetAttribute("Holstered", holstered)
 end
 
 function CombatService.init(deployed: any, getLoadout: (Player) -> Types.Loadout)

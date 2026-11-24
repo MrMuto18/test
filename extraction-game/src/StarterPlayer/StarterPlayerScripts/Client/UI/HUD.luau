@@ -44,6 +44,14 @@ local healthLabel: TextLabel
 local damageEdges: Frame
 local toastLabel: TextLabel
 local scales: { UIScale } = {}
+local ammoFrame: Frame
+local vehicleFrame: Frame
+local speedLabel: TextLabel
+local gearLabel: TextLabel
+local rpmFill: Frame
+local carryLabel: TextLabel
+local mode: "OnFoot" | "Vehicle" | "Passenger" = "OnFoot"
+local shownSpeed = 0
 
 local gapTarget = 12
 local gap = 12
@@ -228,6 +236,73 @@ local function build()
 	})
 	reloadFill = Widgets.frame(reloadTrack, { Name = "Fill", Size = UDim2.fromScale(0, 1), Color = Theme.Colors.Accent, Transparency = 0 })
 	reloadTrack.Visible = false
+	ammoFrame = ammo
+
+	-- Vehicle cluster (bottom-right, replaces ammo while driving)
+	local vehicle = Widgets.frame(root, {
+		Name = "Vehicle",
+		Size = UDim2.fromOffset(300, 110),
+		Position = UDim2.fromScale(0.955, 0.925),
+		AnchorPoint = Vector2.new(1, 1),
+	})
+	scaled(vehicle)
+	vehicle.Visible = false
+	vehicleFrame = vehicle
+	Widgets.label(vehicle, {
+		Name = "Caption",
+		Text = Theme.track("ZABOUR  ·  KM/H"),
+		Font = Theme.Fonts.MonoBold,
+		TextSize = 11,
+		Transparency = 0.25,
+		Size = UDim2.new(1, 0, 0, 16),
+		XAlign = Enum.TextXAlignment.Right,
+	})
+	gearLabel = Widgets.label(vehicle, {
+		Name = "Gear",
+		Text = "N",
+		Font = Theme.Fonts.Heading,
+		TextSize = 26,
+		Color = Theme.Colors.Accent,
+		Size = UDim2.fromOffset(40, 52),
+		Position = UDim2.new(1, 0, 0, 30),
+		AnchorPoint = Vector2.new(1, 0),
+		XAlign = Enum.TextXAlignment.Right,
+		YAlign = Enum.TextYAlignment.Bottom,
+	})
+	speedLabel = Widgets.label(vehicle, {
+		Name = "Speed",
+		Text = "0",
+		Font = Theme.Fonts.Display,
+		TextSize = 46,
+		Size = UDim2.fromOffset(160, 52),
+		Position = UDim2.new(1, -52, 0, 30),
+		AnchorPoint = Vector2.new(1, 0),
+		XAlign = Enum.TextXAlignment.Right,
+		YAlign = Enum.TextYAlignment.Bottom,
+	})
+	local rpmTrack = Widgets.frame(vehicle, {
+		Name = "RpmTrack",
+		Size = UDim2.fromOffset(200, 2),
+		Position = UDim2.new(1, 0, 0, 92),
+		AnchorPoint = Vector2.new(1, 0),
+		Color = Theme.Colors.White,
+		Transparency = 0.85,
+	})
+	rpmFill = Widgets.frame(rpmTrack, { Name = "Fill", Size = UDim2.fromScale(0, 1), Color = Theme.Colors.Text, Transparency = 0 })
+
+	carryLabel = Widgets.label(root, {
+		Name = "Carry",
+		Text = "",
+		Font = Theme.Fonts.MonoBold,
+		TextSize = 12,
+		Color = Theme.Colors.Accent,
+		Transparency = 1,
+		Size = UDim2.fromOffset(500, 18),
+		Position = UDim2.fromScale(0.5, 0.86),
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		XAlign = Enum.TextXAlignment.Center,
+	})
+	scaled(carryLabel)
 
 	-- Stamina (bottom-centre)
 	staminaTrack = Widgets.frame(root, {
@@ -377,6 +452,73 @@ end
 function HUD.setReload(progress: number?)
 	if progress == nil then
 		reloadTrack.Visible = false
+	ammoFrame = ammo
+
+	-- Vehicle cluster (bottom-right, replaces ammo while driving)
+	local vehicle = Widgets.frame(root, {
+		Name = "Vehicle",
+		Size = UDim2.fromOffset(300, 110),
+		Position = UDim2.fromScale(0.955, 0.925),
+		AnchorPoint = Vector2.new(1, 1),
+	})
+	scaled(vehicle)
+	vehicle.Visible = false
+	vehicleFrame = vehicle
+	Widgets.label(vehicle, {
+		Name = "Caption",
+		Text = Theme.track("ZABOUR  ·  KM/H"),
+		Font = Theme.Fonts.MonoBold,
+		TextSize = 11,
+		Transparency = 0.25,
+		Size = UDim2.new(1, 0, 0, 16),
+		XAlign = Enum.TextXAlignment.Right,
+	})
+	gearLabel = Widgets.label(vehicle, {
+		Name = "Gear",
+		Text = "N",
+		Font = Theme.Fonts.Heading,
+		TextSize = 26,
+		Color = Theme.Colors.Accent,
+		Size = UDim2.fromOffset(40, 52),
+		Position = UDim2.new(1, 0, 0, 30),
+		AnchorPoint = Vector2.new(1, 0),
+		XAlign = Enum.TextXAlignment.Right,
+		YAlign = Enum.TextYAlignment.Bottom,
+	})
+	speedLabel = Widgets.label(vehicle, {
+		Name = "Speed",
+		Text = "0",
+		Font = Theme.Fonts.Display,
+		TextSize = 46,
+		Size = UDim2.fromOffset(160, 52),
+		Position = UDim2.new(1, -52, 0, 30),
+		AnchorPoint = Vector2.new(1, 0),
+		XAlign = Enum.TextXAlignment.Right,
+		YAlign = Enum.TextYAlignment.Bottom,
+	})
+	local rpmTrack = Widgets.frame(vehicle, {
+		Name = "RpmTrack",
+		Size = UDim2.fromOffset(200, 2),
+		Position = UDim2.new(1, 0, 0, 92),
+		AnchorPoint = Vector2.new(1, 0),
+		Color = Theme.Colors.White,
+		Transparency = 0.85,
+	})
+	rpmFill = Widgets.frame(rpmTrack, { Name = "Fill", Size = UDim2.fromScale(0, 1), Color = Theme.Colors.Text, Transparency = 0 })
+
+	carryLabel = Widgets.label(root, {
+		Name = "Carry",
+		Text = "",
+		Font = Theme.Fonts.MonoBold,
+		TextSize = 12,
+		Color = Theme.Colors.Accent,
+		Transparency = 1,
+		Size = UDim2.fromOffset(500, 18),
+		Position = UDim2.fromScale(0.5, 0.86),
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		XAlign = Enum.TextXAlignment.Center,
+	})
+	scaled(carryLabel)
 		return
 	end
 	reloadTrack.Visible = true
@@ -454,6 +596,43 @@ end
 function HUD.resetHealth(maxHealth: number)
 	lastHealth = maxHealth
 	HUD.setHealth(maxHealth, maxHealth)
+end
+
+function HUD.setMode(newMode: "OnFoot" | "Vehicle" | "Passenger")
+	mode = newMode
+	ammoFrame.Visible = newMode == "OnFoot"
+	vehicleFrame.Visible = newMode == "Vehicle"
+	crosshair.Visible = newMode == "OnFoot"
+	staminaTrack.Visible = newMode == "OnFoot"
+end
+
+function HUD.setVehicle(speed: number, gear: number, rpm: number)
+	if mode ~= "Vehicle" then
+		return
+	end
+	shownSpeed += (speed - shownSpeed) * 0.25
+	speedLabel.Text = tostring(math.floor(shownSpeed + 0.5))
+	gearLabel.Text = if gear < 0 then "R" elseif speed < 0.5 then "N" else tostring(gear)
+	rpmFill.Size = UDim2.fromScale(math.clamp(rpm, 0, 1), 1)
+	rpmFill.BackgroundColor3 = if rpm > 0.88 then Theme.Colors.Danger else Theme.Colors.Text
+end
+
+local function money(value: number): string
+	local s = tostring(math.floor(value))
+	local out = s:reverse():gsub("(%d%d%d)", "%1,"):reverse()
+	if out:sub(1, 1) == "," then
+		out = out:sub(2)
+	end
+	return "$" .. out
+end
+
+function HUD.setCarry(value: number?)
+	if value and value > 0 then
+		carryLabel.Text = Theme.track("CARRYING  " .. money(value) .. "   ·   G  DROP")
+		Widgets.tween(carryLabel, Theme.Tween.Medium, { TextTransparency = 0.05 })
+	else
+		Widgets.tween(carryLabel, Theme.Tween.Medium, { TextTransparency = 1 })
+	end
 end
 
 function HUD.toast(text: string)
