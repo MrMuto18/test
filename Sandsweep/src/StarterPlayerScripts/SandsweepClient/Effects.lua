@@ -15,7 +15,6 @@ local Effects = {}
 
 local Palette = GameConfig.Palette
 local SMOKE = "rbxasset://textures/particles/smoke_main.dds"
-local SPARKLE = "rbxasset://textures/particles/sparkles_main.dds"
 
 local fxFolder
 local anchorPart
@@ -324,7 +323,7 @@ end
 -- SUCTION STREAM
 --------------------------------------------------------------------------
 local vacuumActive = false
-function Effects.SetVacuum(active, toolId, tipAttachment, hitPosition, dt)
+function Effects.SetVacuum(active, toolId, tipAttachment, hitPosition)
 	local isTurbine = toolId == "TurbineVac"
 	if active and tipAttachment and hitPosition then
 		local tipPosition = tipAttachment.WorldPosition

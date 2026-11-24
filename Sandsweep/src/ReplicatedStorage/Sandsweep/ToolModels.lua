@@ -9,7 +9,6 @@ local PartKit = require(ReplicatedStorage:WaitForChild("Sandsweep"):WaitForChild
 local ToolModels = {}
 
 local METAL = Enum.Material.Metal
-local SMOOTH = Enum.Material.SmoothPlastic
 local WOOD = Enum.Material.Wood
 local GLASS = Enum.Material.Glass
 local NEON = Enum.Material.Neon

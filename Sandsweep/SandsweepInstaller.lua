@@ -625,7 +625,6 @@ local PartKit = require(ReplicatedStorage:WaitForChild("Sandsweep"):WaitForChild
 local ToolModels = {}
 
 local METAL = Enum.Material.Metal
-local SMOOTH = Enum.Material.SmoothPlastic
 local WOOD = Enum.Material.Wood
 local GLASS = Enum.Material.Glass
 local NEON = Enum.Material.Neon
@@ -3511,7 +3510,6 @@ local Effects = {}
 
 local Palette = GameConfig.Palette
 local SMOKE = "rbxasset://textures/particles/smoke_main.dds"
-local SPARKLE = "rbxasset://textures/particles/sparkles_main.dds"
 
 local fxFolder
 local anchorPart
@@ -3820,7 +3818,7 @@ end
 -- SUCTION STREAM
 --------------------------------------------------------------------------
 local vacuumActive = false
-function Effects.SetVacuum(active, toolId, tipAttachment, hitPosition, dt)
+function Effects.SetVacuum(active, toolId, tipAttachment, hitPosition)
 	local isTurbine = toolId == "TurbineVac"
 	if active and tipAttachment and hitPosition then
 		local tipPosition = tipAttachment.WorldPosition
@@ -4329,7 +4327,7 @@ local function step(dt)
 	end
 
 	-- suction VFX & motor sound
-	Effects.SetVacuum(sucking, stats.ToolId, vm and vm.Tip, hitPosition, dt)
+	Effects.SetVacuum(sucking, stats.ToolId, vm and vm.Tip, hitPosition)
 	Effects.UpdateVacuumSound(streaming and holding, stats.ToolId, sucking, dt)
 
 	pendingTimer += dt
@@ -5691,14 +5689,12 @@ function Interface.Init(options)
 		if gameProcessed then
 			return
 		end
-		if input.KeyCode == Enum.KeyCode.B then
+		if input.KeyCode == Enum.KeyCode.B or input.KeyCode == Enum.KeyCode.ButtonSelect then
 			Interface.Toggle("Shop")
 		elseif input.KeyCode == Enum.KeyCode.K then
 			Interface.Toggle("Skills")
 		elseif input.KeyCode == Enum.KeyCode.J then
 			Interface.Toggle("Journal")
-		elseif input.KeyCode == Enum.KeyCode.ButtonSelect then
-			Interface.Toggle("Shop")
 		end
 	end)
 

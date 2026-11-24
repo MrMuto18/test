@@ -412,7 +412,7 @@ local function step(dt)
 	end
 
 	-- suction VFX & motor sound
-	Effects.SetVacuum(sucking, stats.ToolId, vm and vm.Tip, hitPosition, dt)
+	Effects.SetVacuum(sucking, stats.ToolId, vm and vm.Tip, hitPosition)
 	Effects.UpdateVacuumSound(streaming and holding, stats.ToolId, sucking, dt)
 
 	pendingTimer += dt

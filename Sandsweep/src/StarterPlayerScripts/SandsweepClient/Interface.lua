@@ -1271,14 +1271,12 @@ function Interface.Init(options)
 		if gameProcessed then
 			return
 		end
-		if input.KeyCode == Enum.KeyCode.B then
+		if input.KeyCode == Enum.KeyCode.B or input.KeyCode == Enum.KeyCode.ButtonSelect then
 			Interface.Toggle("Shop")
 		elseif input.KeyCode == Enum.KeyCode.K then
 			Interface.Toggle("Skills")
 		elseif input.KeyCode == Enum.KeyCode.J then
 			Interface.Toggle("Journal")
-		elseif input.KeyCode == Enum.KeyCode.ButtonSelect then
-			Interface.Toggle("Shop")
 		end
 	end)
 
