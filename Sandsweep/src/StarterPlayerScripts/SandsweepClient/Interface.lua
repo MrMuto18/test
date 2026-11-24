@@ -14,6 +14,8 @@ local Shared = ReplicatedStorage:WaitForChild("Sandsweep")
 local GameConfig = require(Shared:WaitForChild("GameConfig"))
 local ToolModels = require(Shared:WaitForChild("ToolModels"))
 local FindModels = require(Shared:WaitForChild("FindModels"))
+local VehicleModels = require(Shared:WaitForChild("VehicleModels"))
+local Remotes = Shared:WaitForChild("Remotes")
 local Util = require(Shared:WaitForChild("Util"))
 
 local ClientState = require(script.Parent:WaitForChild("ClientState"))
@@ -29,7 +31,9 @@ local BOLD = Enum.Font.GothamBold
 
 local hud = {}
 local menu = {}
-local shop = { Tab = "Tools", ToolCards = {}, BagCards = {} }
+local shop = { Tab = "Tools", ToolCards = {}, BagCards = {}, VehicleCards = {}, MachineCards = {} }
+local onFlip = nil
+local wasInVehicle = false
 local skills = { Nodes = {}, Lines = {}, Selected = nil }
 local journal = { Cards = {}, Selected = nil }
 local currentTab = nil
@@ -341,7 +345,7 @@ local function buildHUD(playerGui)
 	hud.BagCard = bagCard
 	hud.BagStroke = bagCard:FindFirstChildOfClass("UIStroke")
 	local fullPill = card({ Name = "FullPill", Size = UDim2.fromOffset(330, 32), AnchorPoint = Vector2.new(0.5, 1), Position = UDim2.new(0.5, 0, 0, -8), BackgroundColor3 = C.Terracotta, Radius = 16, Visible = false, Parent = bagCard })
-	text({ Size = UDim2.fromScale(1, 1), Text = "BAG FULL - melt it at the Glass Furnace 🔥", Font = BOLD, TextSize = 14, TextColor3 = C.Cream, TextXAlignment = Enum.TextXAlignment.Center, Parent = fullPill })
+	hud.FullPillLabel = text({ Size = UDim2.fromScale(1, 1), Text = "BAG FULL - melt it at the Glass Furnace 🔥", Font = BOLD, TextSize = 14, TextColor3 = C.Cream, TextXAlignment = Enum.TextXAlignment.Center, Parent = fullPill })
 	hud.FullPill = fullPill
 
 	-- TOOL
@@ -449,6 +453,16 @@ local function buildHUD(playerGui)
 				ClientState.DigHeld = false
 			end
 		end)
+		hud.DigButton = digButton
+		local flipButton = makeButton({ Name = "FlipButton", Size = UDim2.fromOffset(72, 72), AnchorPoint = Vector2.new(1, 1), Position = UDim2.new(1, -172, 1, -200), Color = C.Sky, TextColor = C.Ink, Text = "FLIP", Font = TITLE, TextSize = 20, Radius = 36, Parent = gui })
+		flipButton.Visible = false
+		stroke(C.Cream, 3).Parent = flipButton
+		flipButton.MouseButton1Click:Connect(function()
+			if onFlip then
+				onFlip()
+			end
+		end)
+		hud.FlipButton = flipButton
 	end
 end
 
@@ -582,8 +596,8 @@ local function buildShop()
 		new("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 8), SortOrder = Enum.SortOrder.LayoutOrder }),
 	})
 	shop.SubButtons = {}
-	for index, spec in ipairs({ { "Tools", "Tools" }, { "Bags", "Bags & Tanks" } }) do
-		local button = makeButton({ Name = spec[1], Size = UDim2.fromOffset(130, 32), Color = C.Paper, TextColor = C.Ink, Text = spec[2], TextSize = 14, LayoutOrder = index, Parent = subTabs })
+	for index, spec in ipairs({ { "Tools", "🛠 Tools" }, { "Bags", "🎒 Bags" }, { "Vehicles", "🚚 Vehicles" }, { "Factory", "🏭 Factory" } }) do
+		local button = makeButton({ Name = spec[1], Size = UDim2.fromOffset(124, 32), Color = C.Paper, TextColor = C.Ink, Text = spec[2], TextSize = 14, LayoutOrder = index, Parent = subTabs })
 		button.MouseButton1Click:Connect(function()
 			shop.Tab = spec[1]
 			Effects.Play("Click", 0.8, 1.1)
@@ -666,6 +680,73 @@ local function buildShop()
 		end)
 		shop.BagCards[bag.Tier] = { Row = row, Action = action }
 	end
+
+	-- VEHICLES
+	shop.VehicleList = makeList("VehicleList")
+	for index, vehicle in ipairs(GameConfig.Vehicles) do
+		local row = card({ Name = vehicle.Id, Size = UDim2.new(1, 0, 0, 112), LayoutOrder = index, BackgroundColor3 = C.Paper, Parent = shop.VehicleList }, { stroke(C.Ochre, 2) })
+		local holder = new("Frame", { Size = UDim2.fromOffset(120, 96), Position = UDim2.fromOffset(8, 8), BackgroundColor3 = C.Cream, BorderSizePixel = 0, Parent = row }, { corner(14) })
+		makeViewport(holder, VehicleModels.Build(vehicle.Id, true), { Size = UDim2.fromScale(1, 1), Direction = Vector3.new(-1.2, 0.7, -1), Zoom = 0.95 })
+		text({ Size = UDim2.new(1, -310, 0, 26), Position = UDim2.fromOffset(140, 8), Text = vehicle.Icon .. "  " .. vehicle.Name, Font = TITLE, TextSize = 22, Parent = row })
+		local extra = vehicle.Id == "Bulldozer" and "  ·  auto-blade" or (vehicle.Id == "Excavator" and "  ·  12-stud scoops" or "  ·  fastest")
+		text({ Size = UDim2.new(1, -310, 0, 18), Position = UDim2.fromOffset(140, 36), Text = string.format("Tier %d  ·  holds %s kg  ·  %d speed%s", vehicle.Tier, Util.Commas(vehicle.Capacity), vehicle.MaxSpeed, extra), Font = BOLD, TextSize = 13, TextColor3 = C.Terracotta, Parent = row })
+		text({ Size = UDim2.new(1, -310, 0, 48), Position = UDim2.fromOffset(140, 58), Text = vehicle.Description, TextWrapped = true, TextSize = 13, TextColor3 = C.InkSoft, TextYAlignment = Enum.TextYAlignment.Top, Parent = row })
+		local action = makeButton({ Name = "Action", Size = UDim2.fromOffset(150, 46), AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -14, 0.5, 0), Text = "", TextSize = 16, Parent = row })
+		action.MouseButton1Click:Connect(function()
+			local state = ClientState.State
+			local kind
+			if state.ActiveVehicle == vehicle.Id then
+				kind = "DespawnVehicle"
+			elseif state.OwnedVehicles and state.OwnedVehicles[vehicle.Id] then
+				kind = "SpawnVehicle"
+			else
+				kind = "Vehicle"
+			end
+			local ok, message = ClientState.Purchase(kind, vehicle.Id)
+			if ok then
+				Effects.Play(kind == "Vehicle" and "Sell" or "Click", 0.9, kind == "Vehicle" and 1.3 or 1)
+				if kind == "Vehicle" then
+					confetti(40)
+				end
+				Interface.Toast(message, "Sage", vehicle.Icon)
+				if kind ~= "DespawnVehicle" then
+					Interface.Close()
+				end
+			else
+				Effects.Play("Error", 0.6, 1)
+				Interface.Toast(message, "Terracotta")
+			end
+		end)
+		shop.VehicleCards[vehicle.Id] = { Row = row, Action = action }
+	end
+
+	-- FACTORY
+	shop.FactoryList = makeList("FactoryList")
+	shop.FactoryInfo = card({ Name = "Info", Size = UDim2.new(1, 0, 0, 44), LayoutOrder = 0, BackgroundColor3 = C.Cream, Parent = shop.FactoryList }, { stroke(C.Ochre, 2) })
+	shop.FactoryInfoLabel = text({ Size = UDim2.new(1, -24, 1, 0), Position = UDim2.fromOffset(12, 0), Text = "", Font = BOLD, TextSize = 14, TextWrapped = true, Parent = shop.FactoryInfo })
+	for index, machine in ipairs(GameConfig.Factory) do
+		local row = card({ Name = machine.Id, Size = UDim2.new(1, 0, 0, 92), LayoutOrder = index, BackgroundColor3 = C.Paper, Parent = shop.FactoryList }, { stroke(C.Ochre, 2) })
+		new("Frame", { Size = UDim2.fromOffset(72, 72), Position = UDim2.fromOffset(10, 10), BackgroundColor3 = C.Cream, BorderSizePixel = 0, Parent = row }, {
+			corner(36),
+			text({ Size = UDim2.fromScale(1, 1), Text = machine.Icon, Font = TITLE, TextSize = 34, TextXAlignment = Enum.TextXAlignment.Center }),
+		})
+		text({ Size = UDim2.new(1, -270, 0, 24), Position = UDim2.fromOffset(96, 8), Text = machine.Name, Font = TITLE, TextSize = 20, Parent = row })
+		text({ Size = UDim2.new(1, -270, 0, 18), Position = UDim2.fromOffset(96, 34), Text = string.format("Output: %s  ·  %dx value", machine.Product, machine.Multiplier), Font = BOLD, TextSize = 13, TextColor3 = C.Terracotta, Parent = row })
+		text({ Size = UDim2.new(1, -270, 0, 34), Position = UDim2.fromOffset(96, 54), Text = machine.Description, TextWrapped = true, TextSize = 13, TextColor3 = C.InkSoft, TextYAlignment = Enum.TextYAlignment.Top, Parent = row })
+		local action = makeButton({ Name = "Action", Size = UDim2.fromOffset(150, 44), AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -14, 0.5, 0), Text = "", TextSize = 16, Parent = row })
+		action.MouseButton1Click:Connect(function()
+			local ok, message = ClientState.Purchase("Factory", machine.Id)
+			if ok then
+				Effects.Fanfare()
+				confetti(40)
+				Interface.Toast(message, "Sage", machine.Icon)
+			else
+				Effects.Play("Error", 0.6, 1)
+				Interface.Toast(message, "Terracotta")
+			end
+		end)
+		shop.MachineCards[machine.Id] = { Row = row, Action = action }
+	end
 end
 
 local function styleAction(button, label, color, textColor, enabled)
@@ -676,6 +757,48 @@ local function styleAction(button, label, color, textColor, enabled)
 	button.AutoButtonColor = false
 end
 
+local function refreshMachines(state)
+	local owned = state.OwnedVehicles or {}
+	for _, vehicle in ipairs(GameConfig.Vehicles) do
+		local entry = shop.VehicleCards[vehicle.Id]
+		local previous = GameConfig.Vehicles[vehicle.Index - 1]
+		local unlocked = not previous or owned[previous.Id]
+		if state.ActiveVehicle == vehicle.Id then
+			styleAction(entry.Action, "Park (despawn)", C.Sky, C.Ink, true)
+		elseif owned[vehicle.Id] then
+			styleAction(entry.Action, "Spawn at Garage", C.Sage, C.Cream, true)
+		elseif not unlocked then
+			styleAction(entry.Action, "🔒 " .. Util.FormatCash(vehicle.Price), C.Locked, C.Ink, false)
+		elseif (state.Cash or 0) >= vehicle.Price then
+			styleAction(entry.Action, "Buy " .. Util.FormatCash(vehicle.Price), C.Ochre, C.Cream, true)
+		else
+			styleAction(entry.Action, Util.FormatCash(vehicle.Price), Color3.fromRGB(226, 206, 176), C.InkSoft, true)
+		end
+	end
+	local factory = state.Factory or {}
+	for _, machine in ipairs(GameConfig.Factory) do
+		local entry = shop.MachineCards[machine.Id]
+		local previous = GameConfig.Factory[machine.Index - 1]
+		local unlocked = not previous or factory[previous.Id]
+		if factory[machine.Id] then
+			styleAction(entry.Action, "Online ✓", C.Sage, C.Cream, false)
+		elseif not unlocked then
+			styleAction(entry.Action, "🔒 " .. Util.FormatCash(machine.Price), C.Locked, C.Ink, false)
+		elseif (state.Cash or 0) >= machine.Price then
+			styleAction(entry.Action, "Build " .. Util.FormatCash(machine.Price), C.Ochre, C.Cream, true)
+		else
+			styleAction(entry.Action, Util.FormatCash(machine.Price), Color3.fromRGB(226, 206, 176), C.InkSoft, true)
+		end
+	end
+	local stage = GameConfig.FactoryStage(state)
+	if stage < 0 then
+		shop.FactoryInfoLabel.Text = "🏭 Build the Input Hopper to start processing. Dump sand at the hopper (bag: E prompt · machines: drive onto the dump bay)."
+	else
+		shop.FactoryInfoLabel.Text = string.format("🏭 Hopper buffer: %s kg  ·  Your line outputs %sx value products", Util.FormatKg(state.FactoryBufferKg or 0), tostring(GameConfig.StageMultiplier(stage)))
+	end
+end
+
+
 function Interface.RefreshShop()
 	if not shop.ToolList then
 		return
@@ -683,6 +806,9 @@ function Interface.RefreshShop()
 	local state = ClientState.State
 	shop.ToolList.Visible = shop.Tab == "Tools"
 	shop.BagList.Visible = shop.Tab == "Bags"
+	shop.VehicleList.Visible = shop.Tab == "Vehicles"
+	shop.FactoryList.Visible = shop.Tab == "Factory"
+	refreshMachines(state)
 	for name, button in pairs(shop.SubButtons) do
 		local active = name == shop.Tab
 		button.BackgroundColor3 = active and C.Ochre or C.Paper
@@ -1200,10 +1326,35 @@ local function frame(dt)
 	end
 	hud.CashLabel.Text = Util.FormatCash(displayedCash)
 
-	-- bag fill
+	-- bag fill (switches to the machine's storage while driving)
 	local stats = ClientState.GetStats()
 	local capacity = math.max(stats.Capacity, 0.001)
 	local bagKg = state.BagKg or 0
+	local vehicle = ClientState.InVehicle
+	if vehicle and vehicle.Model.Parent then
+		capacity = math.max(vehicle.Model:GetAttribute("Capacity") or vehicle.Config.Capacity, 0.001)
+		bagKg = vehicle.Model:GetAttribute("StorageKg") or 0
+		hud.BagName.Text = string.format("%s  %s storage", vehicle.Config.Icon, vehicle.Config.Name)
+		hud.ToolName.Text = vehicle.Config.Name
+		hud.ToolHint.Text = vehicle.Config.Id == "Excavator" and "WASD drive · hold click: scoop · R flip" or "WASD drive · R flip · Space exit"
+		hud.ToolStats.Text = vehicle.Config.Id == "Bulldozer" and "Drive forward to carve sand with the blade" or "Dump bays: kiln (sell) · hopper (factory)"
+		if hud.FullPillLabel then
+			hud.FullPillLabel.Text = "MACHINE FULL - drive onto a dump bay 🚚"
+		end
+	elseif wasInVehicle then
+		refreshHUD(state)
+		if hud.FullPillLabel then
+			hud.FullPillLabel.Text = "BAG FULL - melt it at the Glass Furnace 🔥"
+		end
+	end
+	if hud.FlipButton then
+		hud.FlipButton.Visible = vehicle ~= nil
+	end
+	if hud.DigButton then
+		hud.DigButton.Text = (vehicle and vehicle.Config.Id == "Excavator") and "SCOOP" or "DIG"
+		hud.DigButton.Visible = vehicle == nil or vehicle.Config.Id == "Excavator"
+	end
+	wasInVehicle = vehicle ~= nil
 	displayedBag += (bagKg - displayedBag) * math.min(1, dt * 12)
 	if math.abs(bagKg - displayedBag) < 0.01 then
 		displayedBag = bagKg
@@ -1258,6 +1409,7 @@ end
 function Interface.Init(options)
 	options = options or {}
 	onDigPress = options.OnDigPress
+	onFlip = options.OnFlip
 	local playerGui = player:WaitForChild("PlayerGui")
 	pcall(function()
 		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, false)
@@ -1284,7 +1436,22 @@ function Interface.Init(options)
 	end)
 	ClientState.LotChanged:Connect(refreshLot)
 	ClientState.Notified:Connect(onNotify)
+	local lastPayoutSound = 0
+	Remotes:WaitForChild("FactoryFx").OnClientEvent:Connect(function(ownerUserId, position, value, stage)
+		if typeof(position) ~= "Vector3" or type(value) ~= "number" then
+			return
+		end
+		Effects.FloatingText(position + Vector3.new(0, 2.5, 0), "+" .. Util.FormatCash(value), Color3.fromRGB(110, 230, 130))
+		if ownerUserId == player.UserId and os.clock() - lastPayoutSound > 0.15 then
+			lastPayoutSound = os.clock()
+			Effects.Play("Sell", 0.45, 1.3 + (tonumber(stage) or 0) * 0.12)
+		end
+	end)
 	ClientState.MenuRequested:Connect(function(name)
+		if name == "Vehicles" or name == "Factory" or name == "Tools" or name == "Bags" then
+			shop.Tab = name
+			name = "Shop"
+		end
 		Interface.Open(name or "Shop")
 	end)
 

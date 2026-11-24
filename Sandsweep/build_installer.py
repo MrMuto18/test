@@ -16,19 +16,23 @@ ENTRIES = [
     ("RS", "Sandsweep", "PartKit", "ModuleScript", "ReplicatedStorage/Sandsweep/PartKit.lua"),
     ("RS", "Sandsweep", "ToolModels", "ModuleScript", "ReplicatedStorage/Sandsweep/ToolModels.lua"),
     ("RS", "Sandsweep", "FindModels", "ModuleScript", "ReplicatedStorage/Sandsweep/FindModels.lua"),
+    ("RS", "Sandsweep", "VehicleModels", "ModuleScript", "ReplicatedStorage/Sandsweep/VehicleModels.lua"),
     ("SSS", "Sandsweep", "WorldBuilder", "ModuleScript", "ServerScriptService/Sandsweep/WorldBuilder.lua"),
     ("SSS", "Sandsweep", "LotService", "ModuleScript", "ServerScriptService/Sandsweep/LotService.lua"),
     ("SSS", "Sandsweep", "FindsService", "ModuleScript", "ServerScriptService/Sandsweep/FindsService.lua"),
     ("SSS", "Sandsweep", "DataService", "ModuleScript", "ServerScriptService/Sandsweep/DataService.lua"),
+    ("SSS", "Sandsweep", "FactoryService", "ModuleScript", "ServerScriptService/Sandsweep/FactoryService.lua"),
+    ("SSS", "Sandsweep", "VehicleService", "ModuleScript", "ServerScriptService/Sandsweep/VehicleService.lua"),
     ("SSS", "Sandsweep", "Main", "Script", "ServerScriptService/Sandsweep/Main.server.lua"),
     ("SPS", "", "SandsweepClient", "LocalScript", "StarterPlayerScripts/SandsweepClient/init.client.lua"),
     ("SPS", "SandsweepClient", "ClientState", "ModuleScript", "StarterPlayerScripts/SandsweepClient/ClientState.lua"),
     ("SPS", "SandsweepClient", "Effects", "ModuleScript", "StarterPlayerScripts/SandsweepClient/Effects.lua"),
     ("SPS", "SandsweepClient", "DigController", "ModuleScript", "StarterPlayerScripts/SandsweepClient/DigController.lua"),
     ("SPS", "SandsweepClient", "Interface", "ModuleScript", "StarterPlayerScripts/SandsweepClient/Interface.lua"),
+    ("SPS", "SandsweepClient", "VehicleController", "ModuleScript", "StarterPlayerScripts/SandsweepClient/VehicleController.lua"),
 ]
 
-REMOTE_EVENTS = ["DigRequest", "DigResult", "DigFx", "StateUpdate", "LotUpdate", "Notify", "OpenMenu"]
+REMOTE_EVENTS = ["DigRequest", "DigResult", "DigFx", "StateUpdate", "LotUpdate", "Notify", "OpenMenu", "VehicleAction", "FactoryFx"]
 REMOTE_FUNCTIONS = ["Purchase", "GetState"]
 
 HEADER = r'''-- =====================================================================

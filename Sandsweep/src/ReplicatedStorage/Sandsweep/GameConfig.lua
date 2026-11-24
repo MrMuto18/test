@@ -48,7 +48,7 @@ GameConfig.Lot = {
 	NoiseScale = 0.022,
 	BedrockThickness = 6,
 	CampY = 4, -- ground height of the base camp (south of the dig zone)
-	CampDepth = 52, -- how far south of the dig zone the camp extends
+	CampDepth = 96, -- how far south of the dig zone the camp extends (stations, garage, factory)
 	WorldRadius = 320, -- outer decorative dunes (not diggable) extend this far
 	ClearedThreshold = 0.995, -- "every grain" threshold (99.5% counts as fully cleared)
 	RemnantThreshold = 0.2, -- leftover voxel occupancy that gets swept automatically
@@ -154,14 +154,84 @@ GameConfig.Tools = {
 -- BAGS / TANKS (ordered by tier, must be bought in order)
 --------------------------------------------------------------------------
 GameConfig.Bags = {
-	{ Tier = 1, Name = "Pocket Pouch", Capacity = 15, Price = 0, Icon = "👝", Description = "Holds a few spoonfuls. Barely." },
-	{ Tier = 2, Name = "Canvas Sack", Capacity = 40, Price = 100, Icon = "🛍", Description = "A sturdy sack with a drawstring." },
-	{ Tier = 3, Name = "Burlap Bag", Capacity = 100, Price = 450, Icon = "🎒", Description = "Smells like coffee beans. Holds a lot." },
-	{ Tier = 4, Name = "Duffel Hauler", Capacity = 250, Price = 1500, Icon = "💼", Description = "Double-stitched for serious hauling." },
-	{ Tier = 5, Name = "Steel Tank", Capacity = 600, Price = 5000, Icon = "🛢", Description = "A pressurized tank for vacuum work." },
-	{ Tier = 6, Name = "Industrial Tank", Capacity = 1500, Price = 16000, Icon = "🏭", Description = "Rated for an entire dune." },
-	{ Tier = 7, Name = "Silo Pack", Capacity = 4000, Price = 45000, Icon = "🗼", Description = "Basically a grain silo on your back." },
+	{ Tier = 1, Name = "Pocket Pouch", Capacity = 25, Price = 0, Icon = "👝", Description = "Holds a few handfuls. Barely." },
+	{ Tier = 2, Name = "Canvas Sack", Capacity = 50, Price = 100, Icon = "🛍", Description = "A sturdy sack with a drawstring." },
+	{ Tier = 3, Name = "Burlap Bag", Capacity = 90, Price = 400, Icon = "🎒", Description = "Smells like coffee beans. Holds a lot." },
+	{ Tier = 4, Name = "Duffel Hauler", Capacity = 150, Price = 1200, Icon = "💼", Description = "Double-stitched for serious hauling." },
+	{ Tier = 5, Name = "Steel Tank", Capacity = 250, Price = 3500, Icon = "🛢", Description = "A pressurized tank for vacuum work." },
+	{ Tier = 6, Name = "Industrial Tank", Capacity = 375, Price = 8000, Icon = "🏭", Description = "Rated for half a dune." },
+	{ Tier = 7, Name = "Silo Pack", Capacity = 500, Price = 16000, Icon = "🗼", Description = "Basically a grain silo on your back." },
 }
+
+--------------------------------------------------------------------------
+-- HEAVY MACHINERY (bought in order, max 1 active per player, spawned at the Garage)
+--------------------------------------------------------------------------
+GameConfig.Vehicles = {
+	{
+		Id = "DumpTruck",
+		Name = "Mini Dump Truck",
+		Tier = 5,
+		Price = 15000,
+		Capacity = 2500,
+		MaxSpeed = 42,
+		Acceleration = 22,
+		TurnRate = 1.6,
+		TurnInPlace = false,
+		Icon = "🚚",
+		Description = "Fast hauling. Load your bag into the bed, then drive onto a dump bay - the bed tilts and pours.",
+	},
+	{
+		Id = "Bulldozer",
+		Name = "Bulldozer",
+		Tier = 6,
+		Price = 40000,
+		Capacity = 5000,
+		MaxSpeed = 20,
+		Acceleration = 12,
+		TurnRate = 1.2,
+		TurnInPlace = true,
+		BladeRadius = 3.2,
+		BladeInterval = 0.1,
+		Icon = "🚜",
+		Description = "Drive forward and the steel blade carves a wide path through the dunes, filling its hopper.",
+	},
+	{
+		Id = "Excavator",
+		Name = "Mega Excavator",
+		Tier = 7,
+		Price = 100000,
+		Capacity = 15000,
+		MaxSpeed = 13,
+		Acceleration = 8,
+		TurnRate = 0.9,
+		TurnInPlace = true,
+		ScoopRadius = 12,
+		ScoopCooldown = 1.6,
+		ScoopReach = 15,
+		Icon = "🏗",
+		Description = "Hold left-click to swing the hydraulic boom and scoop a 12-stud bite of desert per cycle.",
+	},
+}
+
+--------------------------------------------------------------------------
+-- SAND FACTORY (bought in order). Products pay Multiplier x the sand's value.
+--------------------------------------------------------------------------
+GameConfig.Factory = {
+	{ Id = "Hopper", Name = "Input Hopper & Conveyor", Stage = 0, Price = 5000, Multiplier = 1, Product = "Sand Chunk", Icon = "⛏", Description = "Dump sand from your bag or a vehicle. It rides the conveyor to the Auto-Seller." },
+	{ Id = "Furnace", Name = "Industrial Glass Furnace", Stage = 1, Price = 12000, Multiplier = 3, Product = "Glass Pane", Icon = "🔥", Description = "Melts sand chunks into translucent cyan glass panes. 3x value." },
+	{ Id = "Press", Name = "Concrete Brick Press", Stage = 2, Price = 35000, Multiplier = 6, Product = "Concrete Block", Icon = "🧱", Description = "A hydraulic piston stamps everything into concrete blocks. 6x value." },
+	{ Id = "Refinery", Name = "Silicon Microchip Refinery", Stage = 3, Price = 120000, Multiplier = 15, Product = "Microchip", Icon = "💾", Description = "Neon lasers refine silicon into glowing microchips. 15x value." },
+}
+
+GameConfig.FactorySettings = {
+	BeltSpeed = 7, -- studs per second
+	ChunkInterval = 0.3, -- seconds between chunk spawns (round-robin across players)
+	MaxChunksPerPlayer = 30,
+	MaxChunksTotal = 120,
+	MinChunkKg = 10, -- big buffers pack more kg into each chunk to keep part counts low
+	ChunkLifetime = 90,
+}
+
 
 --------------------------------------------------------------------------
 -- SKILL TREE (passive upgrades, each a linear branch from the root)
@@ -264,7 +334,15 @@ GameConfig.Sounds = {
 --------------------------------------------------------------------------
 -- LOOKUPS
 --------------------------------------------------------------------------
-local toolsById, skillsById, findsById = {}, {}, {}
+local toolsById, skillsById, findsById, vehiclesById, machinesById = {}, {}, {}, {}, {}
+for index, vehicle in ipairs(GameConfig.Vehicles) do
+	vehicle.Index = index
+	vehiclesById[vehicle.Id] = vehicle
+end
+for index, machine in ipairs(GameConfig.Factory) do
+	machine.Index = index
+	machinesById[machine.Id] = machine
+end
 for index, tool in ipairs(GameConfig.Tools) do
 	tool.Index = index
 	toolsById[tool.Id] = tool
@@ -280,6 +358,34 @@ end
 
 function GameConfig.GetTool(id)
 	return toolsById[id]
+end
+
+function GameConfig.GetVehicle(id)
+	return vehiclesById[id]
+end
+
+function GameConfig.GetMachine(id)
+	return machinesById[id]
+end
+
+-- Highest factory stage a player's line can reach (-1 = no hopper yet)
+function GameConfig.FactoryStage(data)
+	local stage = -1
+	for _, machine in ipairs(GameConfig.Factory) do
+		if data.Factory and data.Factory[machine.Id] then
+			stage = math.max(stage, machine.Stage)
+		end
+	end
+	return stage
+end
+
+function GameConfig.StageMultiplier(stage)
+	for _, machine in ipairs(GameConfig.Factory) do
+		if machine.Stage == stage then
+			return machine.Multiplier
+		end
+	end
+	return 1
 end
 
 function GameConfig.GetBag(tier)
@@ -369,6 +475,10 @@ GameConfig.DefaultData = {
 	BagTier = 1,
 	Skills = { DigSpeed = 0, DigRadius = 0, SandValue = 0, WalkSpeed = 0 },
 	Finds = {},
+	OwnedVehicles = {},
+	VehicleStorage = {},
+	Factory = {},
+	FactoryBufferKg = 0,
 	Stats = { TotalKg = 0, TotalEarned = 0, LotsCleared = 0, FindsCollected = 0 },
 }
 

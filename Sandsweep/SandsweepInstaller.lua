@@ -40,6 +40,8 @@ make("RemoteEvent", "StateUpdate", remotes)
 make("RemoteEvent", "LotUpdate", remotes)
 make("RemoteEvent", "Notify", remotes)
 make("RemoteEvent", "OpenMenu", remotes)
+make("RemoteEvent", "VehicleAction", remotes)
+make("RemoteEvent", "FactoryFx", remotes)
 make("RemoteFunction", "Purchase", remotes)
 make("RemoteFunction", "GetState", remotes)
 
@@ -98,7 +100,7 @@ GameConfig.Lot = {
 	NoiseScale = 0.022,
 	BedrockThickness = 6,
 	CampY = 4, -- ground height of the base camp (south of the dig zone)
-	CampDepth = 52, -- how far south of the dig zone the camp extends
+	CampDepth = 96, -- how far south of the dig zone the camp extends (stations, garage, factory)
 	WorldRadius = 320, -- outer decorative dunes (not diggable) extend this far
 	ClearedThreshold = 0.995, -- "every grain" threshold (99.5% counts as fully cleared)
 	RemnantThreshold = 0.2, -- leftover voxel occupancy that gets swept automatically
@@ -204,14 +206,84 @@ GameConfig.Tools = {
 -- BAGS / TANKS (ordered by tier, must be bought in order)
 --------------------------------------------------------------------------
 GameConfig.Bags = {
-	{ Tier = 1, Name = "Pocket Pouch", Capacity = 15, Price = 0, Icon = "👝", Description = "Holds a few spoonfuls. Barely." },
-	{ Tier = 2, Name = "Canvas Sack", Capacity = 40, Price = 100, Icon = "🛍", Description = "A sturdy sack with a drawstring." },
-	{ Tier = 3, Name = "Burlap Bag", Capacity = 100, Price = 450, Icon = "🎒", Description = "Smells like coffee beans. Holds a lot." },
-	{ Tier = 4, Name = "Duffel Hauler", Capacity = 250, Price = 1500, Icon = "💼", Description = "Double-stitched for serious hauling." },
-	{ Tier = 5, Name = "Steel Tank", Capacity = 600, Price = 5000, Icon = "🛢", Description = "A pressurized tank for vacuum work." },
-	{ Tier = 6, Name = "Industrial Tank", Capacity = 1500, Price = 16000, Icon = "🏭", Description = "Rated for an entire dune." },
-	{ Tier = 7, Name = "Silo Pack", Capacity = 4000, Price = 45000, Icon = "🗼", Description = "Basically a grain silo on your back." },
+	{ Tier = 1, Name = "Pocket Pouch", Capacity = 25, Price = 0, Icon = "👝", Description = "Holds a few handfuls. Barely." },
+	{ Tier = 2, Name = "Canvas Sack", Capacity = 50, Price = 100, Icon = "🛍", Description = "A sturdy sack with a drawstring." },
+	{ Tier = 3, Name = "Burlap Bag", Capacity = 90, Price = 400, Icon = "🎒", Description = "Smells like coffee beans. Holds a lot." },
+	{ Tier = 4, Name = "Duffel Hauler", Capacity = 150, Price = 1200, Icon = "💼", Description = "Double-stitched for serious hauling." },
+	{ Tier = 5, Name = "Steel Tank", Capacity = 250, Price = 3500, Icon = "🛢", Description = "A pressurized tank for vacuum work." },
+	{ Tier = 6, Name = "Industrial Tank", Capacity = 375, Price = 8000, Icon = "🏭", Description = "Rated for half a dune." },
+	{ Tier = 7, Name = "Silo Pack", Capacity = 500, Price = 16000, Icon = "🗼", Description = "Basically a grain silo on your back." },
 }
+
+--------------------------------------------------------------------------
+-- HEAVY MACHINERY (bought in order, max 1 active per player, spawned at the Garage)
+--------------------------------------------------------------------------
+GameConfig.Vehicles = {
+	{
+		Id = "DumpTruck",
+		Name = "Mini Dump Truck",
+		Tier = 5,
+		Price = 15000,
+		Capacity = 2500,
+		MaxSpeed = 42,
+		Acceleration = 22,
+		TurnRate = 1.6,
+		TurnInPlace = false,
+		Icon = "🚚",
+		Description = "Fast hauling. Load your bag into the bed, then drive onto a dump bay - the bed tilts and pours.",
+	},
+	{
+		Id = "Bulldozer",
+		Name = "Bulldozer",
+		Tier = 6,
+		Price = 40000,
+		Capacity = 5000,
+		MaxSpeed = 20,
+		Acceleration = 12,
+		TurnRate = 1.2,
+		TurnInPlace = true,
+		BladeRadius = 3.2,
+		BladeInterval = 0.1,
+		Icon = "🚜",
+		Description = "Drive forward and the steel blade carves a wide path through the dunes, filling its hopper.",
+	},
+	{
+		Id = "Excavator",
+		Name = "Mega Excavator",
+		Tier = 7,
+		Price = 100000,
+		Capacity = 15000,
+		MaxSpeed = 13,
+		Acceleration = 8,
+		TurnRate = 0.9,
+		TurnInPlace = true,
+		ScoopRadius = 12,
+		ScoopCooldown = 1.6,
+		ScoopReach = 15,
+		Icon = "🏗",
+		Description = "Hold left-click to swing the hydraulic boom and scoop a 12-stud bite of desert per cycle.",
+	},
+}
+
+--------------------------------------------------------------------------
+-- SAND FACTORY (bought in order). Products pay Multiplier x the sand's value.
+--------------------------------------------------------------------------
+GameConfig.Factory = {
+	{ Id = "Hopper", Name = "Input Hopper & Conveyor", Stage = 0, Price = 5000, Multiplier = 1, Product = "Sand Chunk", Icon = "⛏", Description = "Dump sand from your bag or a vehicle. It rides the conveyor to the Auto-Seller." },
+	{ Id = "Furnace", Name = "Industrial Glass Furnace", Stage = 1, Price = 12000, Multiplier = 3, Product = "Glass Pane", Icon = "🔥", Description = "Melts sand chunks into translucent cyan glass panes. 3x value." },
+	{ Id = "Press", Name = "Concrete Brick Press", Stage = 2, Price = 35000, Multiplier = 6, Product = "Concrete Block", Icon = "🧱", Description = "A hydraulic piston stamps everything into concrete blocks. 6x value." },
+	{ Id = "Refinery", Name = "Silicon Microchip Refinery", Stage = 3, Price = 120000, Multiplier = 15, Product = "Microchip", Icon = "💾", Description = "Neon lasers refine silicon into glowing microchips. 15x value." },
+}
+
+GameConfig.FactorySettings = {
+	BeltSpeed = 7, -- studs per second
+	ChunkInterval = 0.3, -- seconds between chunk spawns (round-robin across players)
+	MaxChunksPerPlayer = 30,
+	MaxChunksTotal = 120,
+	MinChunkKg = 10, -- big buffers pack more kg into each chunk to keep part counts low
+	ChunkLifetime = 90,
+}
+
 
 --------------------------------------------------------------------------
 -- SKILL TREE (passive upgrades, each a linear branch from the root)
@@ -314,7 +386,15 @@ GameConfig.Sounds = {
 --------------------------------------------------------------------------
 -- LOOKUPS
 --------------------------------------------------------------------------
-local toolsById, skillsById, findsById = {}, {}, {}
+local toolsById, skillsById, findsById, vehiclesById, machinesById = {}, {}, {}, {}, {}
+for index, vehicle in ipairs(GameConfig.Vehicles) do
+	vehicle.Index = index
+	vehiclesById[vehicle.Id] = vehicle
+end
+for index, machine in ipairs(GameConfig.Factory) do
+	machine.Index = index
+	machinesById[machine.Id] = machine
+end
 for index, tool in ipairs(GameConfig.Tools) do
 	tool.Index = index
 	toolsById[tool.Id] = tool
@@ -330,6 +410,34 @@ end
 
 function GameConfig.GetTool(id)
 	return toolsById[id]
+end
+
+function GameConfig.GetVehicle(id)
+	return vehiclesById[id]
+end
+
+function GameConfig.GetMachine(id)
+	return machinesById[id]
+end
+
+-- Highest factory stage a player's line can reach (-1 = no hopper yet)
+function GameConfig.FactoryStage(data)
+	local stage = -1
+	for _, machine in ipairs(GameConfig.Factory) do
+		if data.Factory and data.Factory[machine.Id] then
+			stage = math.max(stage, machine.Stage)
+		end
+	end
+	return stage
+end
+
+function GameConfig.StageMultiplier(stage)
+	for _, machine in ipairs(GameConfig.Factory) do
+		if machine.Stage == stage then
+			return machine.Multiplier
+		end
+	end
+	return 1
 end
 
 function GameConfig.GetBag(tier)
@@ -419,6 +527,10 @@ GameConfig.DefaultData = {
 	BagTier = 1,
 	Skills = { DigSpeed = 0, DigRadius = 0, SandValue = 0, WalkSpeed = 0 },
 	Finds = {},
+	OwnedVehicles = {},
+	VehicleStorage = {},
+	Factory = {},
+	FactoryBufferKg = 0,
 	Stats = { TotalKg = 0, TotalEarned = 0, LotsCleared = 0, FindsCollected = 0 },
 }
 
@@ -1203,6 +1315,364 @@ end
 return FindModels
 ]======]
 
+-- ModuleScript: ReplicatedStorage/Sandsweep/VehicleModels.lua
+created["VehicleModels"] = make("ModuleScript", "VehicleModels", Containers.RS)
+created["VehicleModels"].Source = [======[
+-- VehicleModels (ModuleScript) - ReplicatedStorage/Sandsweep/VehicleModels
+-- Procedural low-poly heavy machinery: Mini Dump Truck, Bulldozer, Mega Excavator.
+-- Vehicles face -Z. The invisible "Chassis" is the heavy root; four invisible
+-- low-friction ball "Skids" are the only parts touching the ground, so the
+-- vehicles glide over craters instead of snagging. Moving joints are Welds:
+--   BedHinge (truck), BoomJoint / StickJoint / BucketJoint (excavator), WheelWeld (all wheels & rollers).
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local PartKit = require(ReplicatedStorage:WaitForChild("Sandsweep"):WaitForChild("PartKit"))
+
+local VehicleModels = {}
+
+local YELLOW = Color3.fromRGB(242, 186, 48)
+local DARK = Color3.fromRGB(58, 58, 62)
+local STEEL = Color3.fromRGB(150, 154, 160)
+local TIRE = Color3.fromRGB(28, 28, 30)
+local GLASS = Color3.fromRGB(170, 210, 230)
+local SAND = Color3.fromRGB(232, 196, 128)
+
+local GROUND_Y = -2.0 -- skid bottoms in model space
+
+local function P(parent, props)
+	return PartKit.Part(parent, props)
+end
+
+local function group(model, name)
+	local folder = Instance.new("Folder")
+	folder.Name = name
+	folder.Parent = model
+	return folder
+end
+
+local function wheel(parent, position, diameter, width, hubColor)
+	local tire = PartKit.Cylinder(parent, width, diameter, CFrame.new(position), "X", { Name = "Wheel", Color = TIRE, Material = Enum.Material.SmoothPlastic })
+	local hub = PartKit.Cylinder(parent, width + 0.06, diameter * 0.45, CFrame.new(position), "X", { Name = "Hub", Color = hubColor or YELLOW })
+	tire:SetAttribute("Spin", true)
+	tire:SetAttribute("Radius", diameter / 2)
+	hub:SetAttribute("Spin", true)
+	hub:SetAttribute("Radius", diameter / 2)
+	return tire, hub
+end
+
+local function skids(model, halfX, halfZ)
+	for _, x in ipairs({ -halfX, halfX }) do
+		for _, z in ipairs({ -halfZ, halfZ }) do
+			PartKit.Ball(model, 2.4, CFrame.new(x, GROUND_Y + 1.2, z), {
+				Name = "Skid",
+				Transparency = 1,
+				CanCollide = true,
+				CastShadow = false,
+				CustomPhysicalProperties = PhysicalProperties.new(1, 0, 0, 100, 1),
+			})
+		end
+	end
+end
+
+local function cab(parent, center, width, depth, floorY, roofY, color)
+	-- open cab: floor, 4 pillars, roof, back wall, windshield, so the driver is visible
+	local halfW, halfD = width / 2, depth / 2
+	P(parent, { Name = "CabFloor", Size = Vector3.new(width, 0.4, depth), CFrame = CFrame.new(center.X, floorY, center.Z), Color = DARK })
+	for _, x in ipairs({ -halfW + 0.2, halfW - 0.2 }) do
+		for _, z in ipairs({ -halfD + 0.2, halfD - 0.2 }) do
+			P(parent, { Name = "Pillar", Size = Vector3.new(0.35, roofY - floorY, 0.35), CFrame = CFrame.new(center.X + x, (floorY + roofY) / 2, center.Z + z), Color = color })
+		end
+	end
+	P(parent, { Name = "Roof", Size = Vector3.new(width + 0.3, 0.35, depth + 0.3), CFrame = CFrame.new(center.X, roofY, center.Z), Color = color })
+	P(parent, { Name = "CabBack", Size = Vector3.new(width, (roofY - floorY) * 0.55, 0.25), CFrame = CFrame.new(center.X, floorY + (roofY - floorY) * 0.3, center.Z + halfD - 0.15), Color = color })
+	P(parent, {
+		Name = "Windshield",
+		Size = Vector3.new(width - 0.4, (roofY - floorY) * 0.55, 0.12),
+		CFrame = CFrame.new(center.X, floorY + (roofY - floorY) * 0.62, center.Z - halfD + 0.2),
+		Material = Enum.Material.Glass,
+		Transparency = 0.55,
+		Color = GLASS,
+		CastShadow = false,
+	})
+	P(parent, { Name = "RoofLight", Size = Vector3.new(0.6, 0.3, 0.6), CFrame = CFrame.new(center.X, roofY + 0.3, center.Z), Material = Enum.Material.Neon, Color = Color3.fromRGB(255, 150, 40), CastShadow = false })
+end
+
+local function seat(parent, position)
+	local driverSeat = Instance.new("VehicleSeat")
+	driverSeat.Name = "DriverSeat"
+	driverSeat.Size = Vector3.new(2, 0.5, 2)
+	driverSeat.CFrame = CFrame.new(position)
+	driverSeat.Color = DARK
+	driverSeat.Material = Enum.Material.Fabric
+	driverSeat.TopSurface = Enum.SurfaceType.Smooth
+	driverSeat.BottomSurface = Enum.SurfaceType.Smooth
+	driverSeat.MaxSpeed = 0
+	driverSeat.Torque = 0
+	driverSeat.TurnSpeed = 0
+	driverSeat.HeadsUpDisplay = false
+	driverSeat.CanCollide = false
+	driverSeat.CastShadow = false
+	driverSeat.Parent = parent
+	return driverSeat
+end
+
+local function emitter(parent, name, position, direction, rate)
+	local holder = P(parent, { Name = name .. "Part", Size = Vector3.new(0.2, 0.2, 0.2), CFrame = CFrame.lookAt(position, position + direction) * CFrame.Angles(-math.pi / 2, 0, 0), Transparency = 1, CastShadow = false })
+	local attachment = Instance.new("Attachment")
+	attachment.Parent = holder
+	local particles = Instance.new("ParticleEmitter")
+	particles.Name = name
+	particles.Texture = "rbxasset://textures/particles/smoke_main.dds"
+	particles.Color = ColorSequence.new(Color3.fromRGB(244, 218, 164), SAND)
+	particles.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.6), NumberSequenceKeypoint.new(1, 1.6) })
+	particles.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.1), NumberSequenceKeypoint.new(1, 1) })
+	particles.Lifetime = NumberRange.new(0.6, 1.1)
+	particles.Speed = NumberRange.new(6, 10)
+	particles.SpreadAngle = Vector2.new(20, 20)
+	particles.Acceleration = Vector3.new(0, -40, 0)
+	particles.Rate = rate
+	particles.EmissionDirection = Enum.NormalId.Top
+	particles.LightInfluence = 1
+	particles.Enabled = false
+	particles.Parent = attachment
+	return particles
+end
+
+local function exhaust(parent, position)
+	PartKit.Cylinder(parent, 2.4, 0.4, CFrame.new(position), "Y", { Name = "Exhaust", Material = Enum.Material.Metal, Color = DARK })
+	local cap = P(parent, { Name = "ExhaustTip", Size = Vector3.new(0.3, 0.3, 0.3), CFrame = CFrame.new(position + Vector3.new(0, 1.3, 0)), Transparency = 1, CastShadow = false })
+	local smoke = Instance.new("Smoke")
+	smoke.Color = Color3.fromRGB(90, 86, 84)
+	smoke.Opacity = 0.08
+	smoke.RiseVelocity = 3
+	smoke.Size = 1
+	smoke.Parent = cap
+end
+
+local function tracks(parent, halfX, length, height)
+	for _, side in ipairs({ -1, 1 }) do
+		P(parent, { Name = "Track", Size = Vector3.new(1.9, height, length), CFrame = CFrame.new(side * halfX, GROUND_Y + height / 2 + 0.05, 0), Color = DARK, Material = Enum.Material.Slate })
+		for i = 0, 3 do
+			local z = -length / 2 + 1.2 + i * (length - 2.4) / 3
+			wheel(parent, Vector3.new(side * (halfX + 0.05), GROUND_Y + height / 2 + 0.05, z), height * 0.62, 2.0, STEEL)
+		end
+	end
+end
+
+--------------------------------------------------------------------------
+-- BUILDERS (return chassis; fill `joints` with hinge specs)
+--------------------------------------------------------------------------
+local builders = {}
+
+builders.DumpTruck = function(model, joints)
+	local chassis = P(model, { Name = "Chassis", Size = Vector3.new(6, 0.8, 13), CFrame = CFrame.new(0, 0, 0), Transparency = 1, CastShadow = false })
+	local body = group(model, "Body")
+	P(body, { Name = "Hull", Size = Vector3.new(5.4, 1, 12.6), CFrame = CFrame.new(0, 0.1, 0), Color = DARK, CanCollide = true, CanQuery = true })
+	P(body, { Name = "Hood", Size = Vector3.new(5.8, 1.6, 2.6), CFrame = CFrame.new(0, 1.3, -5.2), Color = YELLOW, CanCollide = true, CanQuery = true })
+	P(body, { Name = "Grille", Size = Vector3.new(4, 1.0, 0.2), CFrame = CFrame.new(0, 1.2, -6.55), Color = DARK })
+	for _, x in ipairs({ -2.2, 2.2 }) do
+		P(body, { Name = "Headlight", Size = Vector3.new(0.8, 0.5, 0.15), CFrame = CFrame.new(x, 1.5, -6.55), Material = Enum.Material.Neon, Color = Color3.fromRGB(255, 244, 210), CastShadow = false })
+	end
+	P(body, { Name = "Bumper", Size = Vector3.new(6.2, 0.5, 0.5), CFrame = CFrame.new(0, 0.4, -6.6), Material = Enum.Material.Metal, Color = STEEL })
+	cab(body, Vector3.new(0, 0, -2.6), 5.8, 2.8, 1.1, 6.0, YELLOW)
+	seat(body, Vector3.new(0, 1.55, -2.5))
+	exhaust(body, Vector3.new(2.7, 3.6, -1.1))
+	for _, z in ipairs({ -4.3, 3.6 }) do
+		for _, x in ipairs({ -2.95, 2.95 }) do
+			wheel(body, Vector3.new(x, -0.4, z), 3.2, 1.2)
+		end
+	end
+
+	-- tilting bed (hinged at its rear-bottom edge)
+	local bed = group(model, "Bed")
+	local bedBase = P(bed, { Name = "BedBase", Size = Vector3.new(6, 0.4, 7.6), CFrame = CFrame.new(0, 1.0, 2.6), Color = YELLOW })
+	P(bed, { Name = "BedSide", Size = Vector3.new(0.3, 2.4, 7.6), CFrame = CFrame.new(-2.95, 2.3, 2.6), Color = YELLOW })
+	P(bed, { Name = "BedSide", Size = Vector3.new(0.3, 2.4, 7.6), CFrame = CFrame.new(2.95, 2.3, 2.6), Color = YELLOW })
+	P(bed, { Name = "BedFront", Size = Vector3.new(6, 3.0, 0.3), CFrame = CFrame.new(0, 2.5, -1.15), Color = YELLOW })
+	P(bed, { Name = "BedGate", Size = Vector3.new(6, 2.2, 0.3), CFrame = CFrame.new(0, 2.2, 6.25), Color = Color3.fromRGB(222, 168, 40) })
+	P(bed, { Name = "SandFill", Size = Vector3.new(5.5, 2.0, 7.0), CFrame = CFrame.new(0, 2.2, 2.6), Material = Enum.Material.Sand, Color = SAND, Transparency = 1 })
+	emitter(bed, "Pour", Vector3.new(0, 1.4, 6.6), Vector3.new(0, -0.6, 1), 60)
+	joints.Bed = { Folder = bed, Root = bedBase, Hinge = CFrame.new(0, 0.8, 6.4), Name = "BedHinge" }
+
+	skids(model, 2.2, 4.6)
+	return chassis
+end
+
+builders.Bulldozer = function(model, _joints)
+	local chassis = P(model, { Name = "Chassis", Size = Vector3.new(7, 0.8, 9), CFrame = CFrame.new(0, 0, 0), Transparency = 1, CastShadow = false })
+	local body = group(model, "Body")
+	tracks(body, 3.4, 9.6, 2.4)
+	P(body, { Name = "Hull", Size = Vector3.new(4.8, 2.4, 6.4), CFrame = CFrame.new(0, 1.4, 1.2), Color = YELLOW, CanCollide = true, CanQuery = true })
+	P(body, { Name = "Grill", Size = Vector3.new(3.4, 1.4, 0.2), CFrame = CFrame.new(0, 1.6, -2.05), Color = DARK })
+	P(body, { Name = "Hopper", Size = Vector3.new(4.6, 1.2, 3.4), CFrame = CFrame.new(0, 3.2, 2.8), Color = DARK })
+	P(body, { Name = "SandFill", Size = Vector3.new(4.2, 1.0, 3.0), CFrame = CFrame.new(0, 3.35, 2.8), Material = Enum.Material.Sand, Color = SAND, Transparency = 1 })
+	cab(body, Vector3.new(0, 0, -0.6), 4.4, 3.6, 2.8, 7.4, YELLOW)
+	seat(body, Vector3.new(0, 3.25, -0.4))
+	exhaust(body, Vector3.new(1.8, 4.2, 2.6))
+	emitter(body, "Pour", Vector3.new(0, 3.4, 4.6), Vector3.new(0, -0.4, 1), 50)
+
+	-- blade (static) with push arms
+	P(body, { Name = "Blade", Size = Vector3.new(10, 3.0, 0.5), CFrame = CFrame.new(0, GROUND_Y + 1.5, -6.4) * CFrame.Angles(math.rad(-8), 0, 0), Material = Enum.Material.Metal, Color = STEEL })
+	P(body, { Name = "BladeLip", Size = Vector3.new(10.2, 0.3, 0.8), CFrame = CFrame.new(0, GROUND_Y + 3.1, -6.2), Material = Enum.Material.Metal, Color = YELLOW })
+	P(body, { Name = "BladeEdge", Size = Vector3.new(10, 0.25, 0.7), CFrame = CFrame.new(0, GROUND_Y + 0.15, -6.7), Material = Enum.Material.Metal, Color = DARK })
+	for _, x in ipairs({ -3.4, 3.4 }) do
+		P(body, { Name = "PushArm", Size = Vector3.new(0.5, 0.6, 4.2), CFrame = CFrame.new(x, GROUND_Y + 1.6, -4.4) * CFrame.Angles(math.rad(-10), 0, 0), Color = YELLOW })
+	end
+	emitter(body, "BladeSpray", Vector3.new(0, GROUND_Y + 2.6, -7), Vector3.new(0, 1, -0.4), 70)
+	local bladeMarker = Instance.new("Attachment")
+	bladeMarker.Name = "BladeCut"
+	bladeMarker.Position = Vector3.new(0, GROUND_Y + 0.4, -6.9)
+	bladeMarker.Parent = chassis
+
+	skids(model, 3.0, 3.8)
+	return chassis
+end
+
+builders.Excavator = function(model, joints)
+	local chassis = P(model, { Name = "Chassis", Size = Vector3.new(8, 0.8, 9), CFrame = CFrame.new(0, 0, 0), Transparency = 1, CastShadow = false })
+	local body = group(model, "Body")
+	tracks(body, 4.0, 10.4, 2.6)
+	PartKit.Cylinder(body, 1.0, 6, CFrame.new(0, 0.9, 0.6), "Y", { Name = "TurretRing", Color = DARK })
+	P(body, { Name = "Hull", Size = Vector3.new(7, 3, 7), CFrame = CFrame.new(0, 2.8, 1.0), Color = YELLOW, CanCollide = true, CanQuery = true })
+	P(body, { Name = "Counterweight", Size = Vector3.new(7.2, 2.2, 1.8), CFrame = CFrame.new(0, 2.4, 5.2), Color = DARK })
+	P(body, { Name = "Hopper", Size = Vector3.new(5, 1.2, 3.2), CFrame = CFrame.new(0.6, 4.9, 2.4), Color = DARK })
+	P(body, { Name = "SandFill", Size = Vector3.new(4.6, 1.0, 2.8), CFrame = CFrame.new(0.6, 5.05, 2.4), Material = Enum.Material.Sand, Color = SAND, Transparency = 1 })
+	cab(body, Vector3.new(-2.0, 0, -1.4), 2.8, 3.2, 4.4, 8.6, YELLOW)
+	seat(body, Vector3.new(-2.0, 4.85, -1.2))
+	exhaust(body, Vector3.new(2.6, 5.2, 3.6))
+	emitter(body, "Pour", Vector3.new(0.6, 5.2, 4.4), Vector3.new(0, -0.4, 1), 60)
+
+	-- articulated arm (boom -> stick -> bucket), each hinged with an animated Weld
+	local p0 = Vector3.new(1.4, 4.0, -2.4)
+	local p1 = Vector3.new(1.4, 9.0, -10.5)
+	local p2 = Vector3.new(1.4, 3.0, -14.5)
+
+	local boom = group(model, "Boom")
+	local boomRoot = P(boom, { Name = "BoomBeam", Size = Vector3.new(1.3, 1.3, (p1 - p0).Magnitude), CFrame = CFrame.lookAt((p0 + p1) / 2, p1), Color = YELLOW })
+	PartKit.Cylinder(boom, 1.6, 1.1, CFrame.new(p0), "X", { Name = "BoomPin", Material = Enum.Material.Metal, Color = DARK })
+	PartKit.Cylinder(boom, 6, 0.4, CFrame.lookAt((p0 + p1) / 2 + Vector3.new(0, -0.9, 0), p1 + Vector3.new(0, -0.9, 0)), "Z", { Name = "Piston", Material = Enum.Material.Metal, Color = STEEL })
+	joints.Boom = { Folder = boom, Root = boomRoot, Hinge = CFrame.new(p0), Name = "BoomJoint", Parent = "Chassis" }
+
+	local stick = group(model, "Stick")
+	local stickRoot = P(stick, { Name = "StickBeam", Size = Vector3.new(1.0, 1.0, (p2 - p1).Magnitude), CFrame = CFrame.lookAt((p1 + p2) / 2, p2), Color = YELLOW })
+	PartKit.Cylinder(stick, 1.4, 0.9, CFrame.new(p1), "X", { Name = "StickPin", Material = Enum.Material.Metal, Color = DARK })
+	joints.Stick = { Folder = stick, Root = stickRoot, Hinge = CFrame.new(p1), Name = "StickJoint", Parent = "Boom" }
+
+	local bucket = group(model, "Bucket")
+	local bucketRoot = P(bucket, { Name = "BucketBack", Size = Vector3.new(3.2, 2.2, 0.4), CFrame = CFrame.new(p2 + Vector3.new(0, -0.9, -0.4)), Material = Enum.Material.Metal, Color = DARK })
+	P(bucket, { Name = "BucketFloor", Size = Vector3.new(3.2, 0.4, 2.2), CFrame = CFrame.new(p2 + Vector3.new(0, -2.0, -1.4)), Material = Enum.Material.Metal, Color = DARK })
+	P(bucket, { Name = "BucketSide", Size = Vector3.new(0.3, 2.0, 2.2), CFrame = CFrame.new(p2 + Vector3.new(-1.55, -1.1, -1.4)), Material = Enum.Material.Metal, Color = DARK })
+	P(bucket, { Name = "BucketSide", Size = Vector3.new(0.3, 2.0, 2.2), CFrame = CFrame.new(p2 + Vector3.new(1.55, -1.1, -1.4)), Material = Enum.Material.Metal, Color = DARK })
+	P(bucket, { Name = "BucketSand", Size = Vector3.new(2.8, 1.2, 1.8), CFrame = CFrame.new(p2 + Vector3.new(0, -1.3, -1.4)), Material = Enum.Material.Sand, Color = SAND, Transparency = 1 })
+	for i = 0, 4 do
+		P(bucket, {
+			ClassName = "WedgePart",
+			Name = "Tooth",
+			Size = Vector3.new(0.35, 0.3, 0.7),
+			CFrame = CFrame.new(p2 + Vector3.new(-1.3 + i * 0.65, -2.05, -2.8)) * CFrame.Angles(0, math.rad(180), 0),
+			Material = Enum.Material.Metal,
+			Color = STEEL,
+		})
+	end
+	joints.Bucket = { Folder = bucket, Root = bucketRoot, Hinge = CFrame.new(p2), Name = "BucketJoint", Parent = "Stick" }
+
+	skids(model, 3.6, 4.0)
+	return chassis
+end
+
+--------------------------------------------------------------------------
+-- ASSEMBLY
+--------------------------------------------------------------------------
+local function weldTo(part, root)
+	local weld = Instance.new("WeldConstraint")
+	weld.Part0 = root
+	weld.Part1 = part
+	weld.Parent = part
+end
+
+local function hingeWeld(name, part0, part1, hinge)
+	local weld = Instance.new("Weld")
+	weld.Name = name
+	weld.Part0 = part0
+	weld.Part1 = part1
+	weld.C0 = part0.CFrame:ToObjectSpace(hinge)
+	weld.C1 = part1.CFrame:ToObjectSpace(hinge)
+	weld.Parent = part1
+	return weld
+end
+
+-- Build a vehicle. display=true returns an anchored, inert copy for UI viewports.
+function VehicleModels.Build(vehicleId, display)
+	local builder = builders[vehicleId]
+	assert(builder, "Unknown vehicle: " .. tostring(vehicleId))
+	local model = Instance.new("Model")
+	model.Name = vehicleId
+	local joints = {}
+	local chassis = builder(model, joints)
+	model.PrimaryPart = chassis
+	chassis.PivotOffset = CFrame.identity
+
+	local jointed = {}
+	for _, spec in pairs(joints) do
+		jointed[spec.Folder] = spec
+	end
+
+	for _, descendant in ipairs(model:GetDescendants()) do
+		if descendant:IsA("BasePart") then
+			descendant.Anchored = display == true
+			if descendant ~= chassis then
+				descendant.Massless = true
+			end
+		end
+	end
+	chassis.CustomPhysicalProperties = PhysicalProperties.new(30, 0.3, 0, 1, 1)
+
+	if not display then
+		local roots = { Chassis = chassis }
+		-- order: boom before stick before bucket
+		local ordered = {}
+		for _, key in ipairs({ "Bed", "Boom", "Stick", "Bucket" }) do
+			if joints[key] then
+				table.insert(ordered, { Key = key, Spec = joints[key] })
+			end
+		end
+		for _, entry in ipairs(ordered) do
+			local spec = entry.Spec
+			for _, part in ipairs(spec.Folder:GetDescendants()) do
+				if part:IsA("BasePart") and part ~= spec.Root then
+					weldTo(part, spec.Root)
+				end
+			end
+			local parentPart = roots[spec.Parent or "Chassis"] or chassis
+			hingeWeld(spec.Name, parentPart, spec.Root, spec.Hinge)
+			roots[entry.Key] = spec.Root
+		end
+		for _, part in ipairs(model:GetDescendants()) do
+			if part:IsA("BasePart") and part ~= chassis then
+				local inJointGroup = false
+				for folder in pairs(jointed) do
+					if part:IsDescendantOf(folder) then
+						inJointGroup = true
+						break
+					end
+				end
+				if not inJointGroup then
+					if part:GetAttribute("Spin") then
+						hingeWeld("WheelWeld", chassis, part, part.CFrame)
+					else
+						weldTo(part, chassis)
+					end
+				end
+			end
+		end
+	end
+	model:SetAttribute("VehicleId", vehicleId)
+	return model
+end
+
+return VehicleModels
+]======]
+
 -- ModuleScript: ServerScriptService/Sandsweep/WorldBuilder.lua
 created["WorldBuilder"] = make("ModuleScript", "WorldBuilder", Containers.SSS)
 created["WorldBuilder"].Source = [======[
@@ -1233,7 +1703,10 @@ local HALF_Z = Lot.SizeZ / 2
 local WORLD_R = Lot.WorldRadius
 local CAMP_Y = Lot.CampY
 local CAMP_Z = Lot.CenterZ + HALF_Z + Lot.CampDepth / 2
-local CAMP_HALF_X = 56
+local CAMP_HALF_X = 84
+local ROW1_Z = Lot.CenterZ + HALF_Z + 26 -- kiln, booth, garage, spawn
+local FACTORY_Z = Lot.CenterZ + HALF_Z + 70 -- conveyor factory row
+WorldBuilder.FactoryOrigin = CFrame.new(Lot.CenterX, CAMP_Y, FACTORY_Z)
 local RES = 4
 
 local function smoothstep(t)
@@ -1643,13 +2116,13 @@ local function buildDecor(parent)
 
 	-- camp lamps
 	for _, spot in ipairs({ Vector3.new(-12, 0, 10), Vector3.new(12, 0, 10), Vector3.new(-44, 0, -16), Vector3.new(44, 0, -16), Vector3.new(-9, 0, -18), Vector3.new(9, 0, -18) }) do
-		buildLamp(decor, Vector3.new(Lot.CenterX + spot.X, CAMP_Y, CAMP_Z + spot.Z))
+		buildLamp(decor, Vector3.new(Lot.CenterX + spot.X, CAMP_Y, ROW1_Z + spot.Z))
 	end
 
 	-- boardwalks across the camp
 	local planks = Color3.fromRGB(170, 120, 76)
-	solid(decor, { Name = "Boardwalk", Size = Vector3.new(34, 0.3, 6), CFrame = CFrame.new(Lot.CenterX, CAMP_Y + 0.15, CAMP_Z), Material = Enum.Material.WoodPlanks, Color = planks })
-	solid(decor, { Name = "Boardwalk", Size = Vector3.new(6, 0.3, 34), CFrame = CFrame.new(Lot.CenterX, CAMP_Y + 0.15, CAMP_Z - 3), Material = Enum.Material.WoodPlanks, Color = planks })
+	solid(decor, { Name = "Boardwalk", Size = Vector3.new(34, 0.3, 6), CFrame = CFrame.new(Lot.CenterX, CAMP_Y + 0.15, ROW1_Z), Material = Enum.Material.WoodPlanks, Color = planks })
+	solid(decor, { Name = "Boardwalk", Size = Vector3.new(6, 0.3, 34), CFrame = CFrame.new(Lot.CenterX, CAMP_Y + 0.15, ROW1_Z - 3), Material = Enum.Material.WoodPlanks, Color = planks })
 
 	-- gateway arch facing the desert
 	local archZ = Lot.CenterZ + HALF_Z + 6
@@ -1670,7 +2143,7 @@ local function buildDecor(parent)
 	})
 	addSurfaceText(archSign, Enum.NormalId.Front, {
 		{ Text = "BASE CAMP  ⛺", Height = 0.55 },
-		{ Text = "Glass Furnace • Upgrade Booth", Height = 0.28, Font = Enum.Font.GothamBold, Color = Palette.InkSoft },
+		{ Text = "Kiln • Upgrade Booth • Garage • Factory", Height = 0.28, Font = Enum.Font.GothamBold, Color = Palette.InkSoft },
 	})
 	addSurfaceText(archSign, Enum.NormalId.Back, {
 		{ Text = string.upper(Lot.Name), Height = 0.55 },
@@ -1679,7 +2152,7 @@ local function buildDecor(parent)
 
 	-- sand sack pile near the weigh station
 	for i = 0, 4 do
-		PartKit.Ellipsoid(decor, Vector3.new(2.2, 1.6, 1.6), CFrame.new(Lot.CenterX - 44 + (i % 3) * 1.8, CAMP_Y + 0.8 + math.floor(i / 3) * 1.3, CAMP_Z + 4 + (i % 2) * 0.6) * CFrame.Angles(0, i, 0), {
+		PartKit.Ellipsoid(decor, Vector3.new(2.2, 1.6, 1.6), CFrame.new(Lot.CenterX - 36 + (i % 3) * 1.8, CAMP_Y + 0.8 + math.floor(i / 3) * 1.3, ROW1_Z + 16 + (i % 2) * 0.6) * CFrame.Angles(0, i, 0), {
 			Name = "Sack",
 			Material = Enum.Material.Fabric,
 			Color = Color3.fromRGB(196, 160, 108),
@@ -1735,7 +2208,7 @@ end
 
 local function buildGlassFurnace(parent)
 	local station = folder("GlassFurnace", parent)
-	local origin = CFrame.new(Lot.CenterX - 26, CAMP_Y, CAMP_Z)
+	local origin = CFrame.new(Lot.CenterX - 26, CAMP_Y, ROW1_Z)
 	local brick = Color3.fromRGB(186, 94, 62)
 	local brickDark = Color3.fromRGB(138, 70, 50)
 	local ember = Color3.fromRGB(255, 140, 60)
@@ -1927,7 +2400,7 @@ end
 --------------------------------------------------------------------------
 local function buildUpgradeBooth(parent)
 	local booth = folder("UpgradeBooth", parent)
-	local origin = CFrame.new(Lot.CenterX + 26, CAMP_Y, CAMP_Z)
+	local origin = CFrame.new(Lot.CenterX + 26, CAMP_Y, ROW1_Z)
 	local wood = Color3.fromRGB(176, 122, 76)
 
 	solid(booth, { Name = "Floor", Size = Vector3.new(14, 0.4, 11), CFrame = origin * CFrame.new(Vector3.new(0, 0.2, 0.5)), Material = Enum.Material.WoodPlanks, Color = wood })
@@ -1995,11 +2468,79 @@ local function buildUpgradeBooth(parent)
 end
 
 --------------------------------------------------------------------------
+-- TRUCK DUMP BAY (next to the kiln) + GARAGE
+--------------------------------------------------------------------------
+local function bayPad(parent, name, center, size, title, subtitle, signSide)
+	local pad = solid(parent, {
+		Name = name,
+		Size = Vector3.new(size.X, 0.3, size.Z),
+		CFrame = CFrame.new(center + Vector3.new(0, 0.15, 0)),
+		Material = Enum.Material.Concrete,
+		Color = Color3.fromRGB(120, 112, 104),
+	})
+	local stripe = Color3.fromRGB(242, 186, 48)
+	for _, spec in ipairs({
+		{ Vector3.new(size.X, 0.32, 0.5), Vector3.new(0, 0.16, -size.Z / 2) },
+		{ Vector3.new(size.X, 0.32, 0.5), Vector3.new(0, 0.16, size.Z / 2) },
+		{ Vector3.new(0.5, 0.32, size.Z), Vector3.new(-size.X / 2, 0.16, 0) },
+		{ Vector3.new(0.5, 0.32, size.Z), Vector3.new(size.X / 2, 0.16, 0) },
+	}) do
+		solid(parent, { Name = "Stripe", Size = spec[1], CFrame = CFrame.new(center + spec[2]), Material = Enum.Material.Neon, Color = stripe, CastShadow = false, CanCollide = false })
+	end
+	local signPos = center + Vector3.new(signSide * (size.X / 2 + 1.5), 0, 0)
+	PartKit.Cylinder(parent, 7, 0.5, CFrame.new(signPos + Vector3.new(0, 3.5, 0)), "Y", { Name = "SignPost", Material = Enum.Material.Wood, Color = Palette.WoodDark, CanCollide = true, CanQuery = true })
+	local sign = PartKit.Part(parent, { Name = "BaySign", Size = Vector3.new(8, 2.2, 0.3), CFrame = CFrame.new(signPos + Vector3.new(0, 6.6, 0)), Color = Palette.Cream })
+	addSurfaceText(sign, Enum.NormalId.Front, {
+		{ Text = title, Height = 0.5 },
+		{ Text = subtitle, Height = 0.3, Font = Enum.Font.GothamBold, Color = Palette.InkSoft },
+	})
+	return pad
+end
+
+local function buildBaysAndGarage(parent)
+	local yard = folder("Yard", parent)
+	WorldBuilder.Refs.KilnBay = bayPad(yard, "KilnTruckBay", Vector3.new(Lot.CenterX - 52, CAMP_Y, ROW1_Z), Vector3.new(16, 0, 18), "🚚 KILN DUMP BAY", "Drive in to tip & sell (1x)", 1)
+
+	local garage = folder("Garage", parent)
+	local center = Vector3.new(Lot.CenterX + 58, CAMP_Y, ROW1_Z)
+	bayPad(garage, "GaragePad", center, Vector3.new(26, 0, 24), "🔧 GARAGE", "Spawn your machines here", -1)
+	-- shed at the back of the pad
+	solid(garage, { Name = "ShedWall", Size = Vector3.new(26, 9, 0.6), CFrame = CFrame.new(center + Vector3.new(0, 4.5, 13)), Material = Enum.Material.CorrodedMetal, Color = Color3.fromRGB(150, 120, 100) })
+	for _, x in ipairs({ -12.6, 12.6 }) do
+		solid(garage, { Name = "ShedPost", Size = Vector3.new(0.8, 9, 0.8), CFrame = CFrame.new(center + Vector3.new(x, 4.5, 6)), Material = Enum.Material.Metal, Color = Color3.fromRGB(60, 60, 64) })
+	end
+	for i = 0, 6 do
+		PartKit.Part(garage, {
+			Name = "ShedRoof",
+			Size = Vector3.new(3.8, 0.35, 15),
+			CFrame = CFrame.new(center + Vector3.new(-11.4 + i * 3.8, 9.3, 6.5)) * CFrame.Angles(math.rad(-6), 0, 0),
+			Color = (i % 2 == 0) and Color3.fromRGB(242, 186, 48) or Color3.fromRGB(64, 64, 68),
+		})
+	end
+	local kiosk = solid(garage, { Name = "Kiosk", Size = Vector3.new(2.4, 4, 2.4), CFrame = CFrame.new(center + Vector3.new(-15.5, 2, -8)), Material = Enum.Material.Metal, Color = Color3.fromRGB(242, 186, 48) })
+	local prompt = Instance.new("ProximityPrompt")
+	prompt.Name = "GaragePrompt"
+	prompt.ActionText = "Open Garage"
+	prompt.ObjectText = "Vehicles"
+	prompt.HoldDuration = 0
+	prompt.MaxActivationDistance = 12
+	prompt.RequiresLineOfSight = false
+	prompt.Parent = kiosk
+	WorldBuilder.Refs.GaragePrompt = prompt
+	WorldBuilder.Refs.GarageSpawns = {
+		CFrame.new(center + Vector3.new(-6, 3.2, -1)),
+		CFrame.new(center + Vector3.new(6, 3.2, -1)),
+		CFrame.new(center + Vector3.new(0, 3.2, -22)),
+		CFrame.new(center + Vector3.new(-14, 3.2, -24)),
+	}
+end
+
+--------------------------------------------------------------------------
 -- LOT PROGRESS BOARD + SPAWN
 --------------------------------------------------------------------------
 local function buildLotBoard(parent)
 	local boardFolder = folder("LotBoard", parent)
-	local origin = Vector3.new(Lot.CenterX - 14, CAMP_Y, CAMP_Z - 10)
+	local origin = Vector3.new(Lot.CenterX - 14, CAMP_Y, ROW1_Z - 10)
 	for _, x in ipairs({ -3.6, 3.6 }) do
 		solid(boardFolder, { Name = "Leg", Size = Vector3.new(0.5, 6, 0.5), CFrame = CFrame.new(origin + Vector3.new(x, 3, 0)), Material = Enum.Material.Wood, Color = Palette.WoodDark })
 	end
@@ -2021,7 +2562,7 @@ local function buildSpawn(parent)
 	local spawn = Instance.new("SpawnLocation")
 	spawn.Name = "SandsweepSpawn"
 	spawn.Size = Vector3.new(8, 0.4, 8)
-	spawn.CFrame = CFrame.new(Lot.CenterX, CAMP_Y + 0.2, CAMP_Z + 12)
+	spawn.CFrame = CFrame.new(Lot.CenterX, CAMP_Y + 0.2, ROW1_Z + 12)
 	spawn.Anchored = true
 	spawn.Neutral = true
 	spawn.Duration = 0
@@ -2063,6 +2604,7 @@ function WorldBuilder.Build()
 	buildDecor(map)
 	buildGlassFurnace(stations)
 	buildUpgradeBooth(stations)
+	buildBaysAndGarage(stations)
 	buildLotBoard(stations)
 	buildSpawn(root)
 	return WorldBuilder.Refs
@@ -2801,6 +3343,28 @@ local function sanitize(data)
 	for _, skill in ipairs(GameConfig.Skills) do
 		data.Skills[skill.Id] = math.clamp(math.floor(tonumber(data.Skills[skill.Id]) or 0), 0, skill.MaxLevel)
 	end
+	local vehicles, storage = {}, {}
+	for vehicleId, value in pairs(data.OwnedVehicles) do
+		if value and GameConfig.GetVehicle(vehicleId) then
+			vehicles[vehicleId] = true
+		end
+	end
+	for vehicleId, kg in pairs(data.VehicleStorage) do
+		local vehicle = GameConfig.GetVehicle(vehicleId)
+		if vehicle and tonumber(kg) then
+			storage[vehicleId] = math.clamp(tonumber(kg), 0, vehicle.Capacity)
+		end
+	end
+	data.OwnedVehicles = vehicles
+	data.VehicleStorage = storage
+	local factory = {}
+	for machineId, value in pairs(data.Factory) do
+		if value and GameConfig.GetMachine(machineId) then
+			factory[machineId] = true
+		end
+	end
+	data.Factory = factory
+	data.FactoryBufferKg = math.max(0, tonumber(data.FactoryBufferKg) or 0)
 	local finds = {}
 	for findId, value in pairs(data.Finds) do
 		if value and GameConfig.GetFind(findId) then
@@ -2846,6 +3410,10 @@ local function serialize(data)
 		BagTier = data.BagTier,
 		Skills = Util.DeepCopy(data.Skills),
 		Finds = Util.DeepCopy(data.Finds),
+		OwnedVehicles = Util.DeepCopy(data.OwnedVehicles),
+		VehicleStorage = Util.DeepCopy(data.VehicleStorage),
+		Factory = Util.DeepCopy(data.Factory),
+		FactoryBufferKg = math.floor((data.FactoryBufferKg or 0) * 1000) / 1000,
 		Stats = {
 			TotalKg = math.floor((data.Stats.TotalKg or 0) * 100) / 100,
 			TotalEarned = math.floor(data.Stats.TotalEarned or 0),
@@ -2884,6 +3452,1136 @@ end
 return DataService
 ]======]
 
+-- ModuleScript: ServerScriptService/Sandsweep/FactoryService.lua
+created["FactoryService"] = make("ModuleScript", "FactoryService", Containers.SSS)
+created["FactoryService"].Source = [======[
+-- FactoryService (ModuleScript) - ServerScriptService/Sandsweep/FactoryService
+-- Sand processing line: Input Hopper -> conveyor belts (anchored parts with
+-- AssemblyLinearVelocity) -> Glass Furnace -> Brick Press -> Microchip
+-- Refinery -> Auto-Seller. Each chunk belongs to a player; a machine only
+-- upgrades chunks whose owner bought it. Payouts are server-side only.
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+
+local Shared = ReplicatedStorage:WaitForChild("Sandsweep")
+local GameConfig = require(Shared:WaitForChild("GameConfig"))
+local PartKit = require(Shared:WaitForChild("PartKit"))
+
+local FactoryService = {}
+FactoryService.Hooks = {
+	GetData = nil, -- function(player) -> data table or nil
+	OnPayout = nil, -- function(player, kg, stage, worldPosition)
+	OnHopperDump = nil, -- function(player) (bag -> hopper via prompt)
+}
+FactoryService.Refs = {}
+
+local Settings = GameConfig.FactorySettings
+local Palette = GameConfig.Palette
+
+local BELT_TOP = 2.6
+local BELT_START, BELT_END = -46, 62
+local HOPPER_X = -52
+local SPAWN_X = -45
+local SELL_X = 54
+local MACHINES = {
+	{ Id = "Furnace", X = -26 },
+	{ Id = "Press", X = 2 },
+	{ Id = "Refinery", X = 30 },
+}
+
+local origin = CFrame.identity
+local chunkFolder
+local chunkCounts = {} -- [userId] = active chunk count
+local totalChunks = 0
+local spawnCursor = 0
+
+local STAGE_STYLE = {
+	[0] = { Size = Vector3.new(1.4, 1.1, 1.4), Material = Enum.Material.Sand, Color = Color3.fromRGB(232, 196, 128), Transparency = 0, Name = "SandChunk" },
+	[1] = { Size = Vector3.new(1.8, 0.35, 1.4), Material = Enum.Material.Glass, Color = Color3.fromRGB(120, 222, 236), Transparency = 0.35, Name = "GlassPane" },
+	[2] = { Size = Vector3.new(1.6, 1.0, 1.2), Material = Enum.Material.Concrete, Color = Color3.fromRGB(176, 174, 168), Transparency = 0, Name = "ConcreteBlock" },
+	[3] = { Size = Vector3.new(1.5, 0.35, 1.5), Material = Enum.Material.Neon, Color = Color3.fromRGB(96, 232, 128), Transparency = 0, Name = "Microchip" },
+}
+
+local function L(x, y, z)
+	return origin * CFrame.new(x, y, z)
+end
+
+local function solid(parent, props)
+	props.CanCollide = props.CanCollide ~= false
+	props.CanQuery = props.CanQuery ~= false
+	props.CanTouch = props.CanTouch ~= false
+	return PartKit.Part(parent, props)
+end
+
+local function sign(parent, cframe, width, title, subtitle, accent)
+	local board = PartKit.Part(parent, { Name = "Sign", Size = Vector3.new(width, 1.9, 0.3), CFrame = cframe, Color = Palette.Cream })
+	local gui = Instance.new("SurfaceGui")
+	gui.Face = Enum.NormalId.Front
+	gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+	gui.PixelsPerStud = 40
+	gui.LightInfluence = 0.3
+	gui.Parent = board
+	local frame = Instance.new("Frame")
+	frame.Size = UDim2.fromScale(1, 1)
+	frame.BackgroundColor3 = Palette.Cream
+	frame.BorderSizePixel = 0
+	frame.Parent = gui
+	local stroke = Instance.new("UIStroke")
+	stroke.Thickness = 8
+	stroke.Color = accent or Palette.Ochre
+	stroke.Parent = frame
+	local titleLabel = Instance.new("TextLabel")
+	titleLabel.BackgroundTransparency = 1
+	titleLabel.Size = UDim2.fromScale(0.94, 0.55)
+	titleLabel.Position = UDim2.fromScale(0.03, 0.05)
+	titleLabel.Font = Enum.Font.FredokaOne
+	titleLabel.TextScaled = true
+	titleLabel.TextColor3 = Palette.Ink
+	titleLabel.Text = title
+	titleLabel.Parent = frame
+	local subLabel = Instance.new("TextLabel")
+	subLabel.BackgroundTransparency = 1
+	subLabel.Size = UDim2.fromScale(0.94, 0.3)
+	subLabel.Position = UDim2.fromScale(0.03, 0.63)
+	subLabel.Font = Enum.Font.GothamBold
+	subLabel.TextScaled = true
+	subLabel.TextColor3 = Palette.InkSoft
+	subLabel.Text = subtitle
+	subLabel.Parent = frame
+	return board
+end
+
+--------------------------------------------------------------------------
+-- BUILD
+--------------------------------------------------------------------------
+local function buildBelt(parent)
+	local belt = Instance.new("Folder")
+	belt.Name = "Conveyor"
+	belt.Parent = parent
+	local segment = 12
+	local velocity = origin:VectorToWorldSpace(Vector3.new(Settings.BeltSpeed, 0, 0))
+	local x = BELT_START
+	while x < BELT_END - 0.01 do
+		local length = math.min(segment, BELT_END - x)
+		local center = x + length / 2
+		local part = solid(belt, {
+			Name = "Belt",
+			Size = Vector3.new(length, 0.6, 3.6),
+			CFrame = L(center, BELT_TOP - 0.3, 0),
+			Material = Enum.Material.Slate,
+			Color = Color3.fromRGB(46, 46, 50),
+			CustomPhysicalProperties = PhysicalProperties.new(1, 1.2, 0, 10, 1),
+		})
+		part.AssemblyLinearVelocity = velocity
+		for _, z in ipairs({ -1.95, 1.95 }) do
+			solid(belt, { Name = "Rail", Size = Vector3.new(length, 0.9, 0.3), CFrame = L(center, BELT_TOP + 0.45, z), Material = Enum.Material.Metal, Color = Color3.fromRGB(242, 186, 48) })
+		end
+		for chevron = 0, math.floor(length / 3) - 1 do
+			PartKit.Part(belt, {
+				Name = "Chevron",
+				Size = Vector3.new(0.25, 0.02, 3.0),
+				CFrame = L(x + 1.5 + chevron * 3, BELT_TOP + 0.01, 0),
+				Material = Enum.Material.Neon,
+				Color = Color3.fromRGB(90, 88, 84),
+				CastShadow = false,
+			})
+		end
+		for _, legX in ipairs({ x + 1, x + length - 1 }) do
+			for _, z in ipairs({ -1.5, 1.5 }) do
+				PartKit.Part(belt, { Name = "Leg", Size = Vector3.new(0.5, BELT_TOP - 0.6, 0.5), CFrame = L(legX, (BELT_TOP - 0.6) / 2, z), Material = Enum.Material.Metal, Color = Color3.fromRGB(70, 70, 76) })
+			end
+		end
+		x += length
+	end
+	solid(belt, { Name = "EndStop", Size = Vector3.new(0.4, 2.4, 3.6), CFrame = L(BELT_END + 0.2, BELT_TOP + 1.2, 0), Material = Enum.Material.Metal, Color = Color3.fromRGB(70, 70, 76) })
+end
+
+local function buildHopper(parent)
+	local hopper = Instance.new("Folder")
+	hopper.Name = "Hopper"
+	hopper.Parent = parent
+	local yellow = Color3.fromRGB(242, 186, 48)
+	for _, x in ipairs({ -3, 3 }) do
+		for _, z in ipairs({ -3, 3 }) do
+			solid(hopper, { Name = "Leg", Size = Vector3.new(0.6, 6.4, 0.6), CFrame = L(HOPPER_X + x, 3.2, z), Material = Enum.Material.Metal, Color = Color3.fromRGB(70, 70, 76) })
+		end
+	end
+	for index = 0, 3 do
+		local yaw = math.rad(index * 90)
+		PartKit.Part(hopper, {
+			Name = "FunnelWall",
+			Size = Vector3.new(7.4, 5, 0.35),
+			CFrame = L(HOPPER_X, 8.6, 0) * CFrame.Angles(0, yaw, 0) * CFrame.new(0, 0, -2.7) * CFrame.Angles(math.rad(-28), 0, 0),
+			Material = Enum.Material.Metal,
+			Color = yellow,
+		})
+	end
+	PartKit.Part(hopper, { Name = "Outlet", Size = Vector3.new(3, 1.6, 3), CFrame = L(HOPPER_X, 5.8, 0), Material = Enum.Material.Metal, Color = Color3.fromRGB(70, 70, 76) })
+	PartKit.Part(hopper, {
+		Name = "Chute",
+		Size = Vector3.new(7.2, 0.3, 3),
+		CFrame = L((HOPPER_X + SPAWN_X) / 2 + 0.5, 4.3, 0) * CFrame.Angles(0, 0, math.rad(-14)),
+		Material = Enum.Material.Metal,
+		Color = Color3.fromRGB(150, 154, 160),
+	})
+	local sand = PartKit.Part(hopper, {
+		Name = "HopperSand",
+		Size = Vector3.new(5.6, 1.6, 5.6),
+		CFrame = L(HOPPER_X, 8.4, 0),
+		Material = Enum.Material.Sand,
+		Color = Color3.fromRGB(232, 196, 128),
+		Transparency = 1,
+	})
+	local control = solid(hopper, { Name = "ControlBox", Size = Vector3.new(1.6, 3.2, 1.2), CFrame = L(HOPPER_X + 4.2, 1.6, -4.4), Material = Enum.Material.Metal, Color = yellow })
+	PartKit.Part(hopper, { Name = "Button", Size = Vector3.new(0.6, 0.6, 0.2), CFrame = L(HOPPER_X + 4.2, 2.6, -5.05), Material = Enum.Material.Neon, Color = Color3.fromRGB(90, 230, 120), CastShadow = false })
+	local prompt = Instance.new("ProximityPrompt")
+	prompt.Name = "HopperPrompt"
+	prompt.ActionText = "Dump Bag"
+	prompt.ObjectText = "Factory Hopper"
+	prompt.HoldDuration = 0.3
+	prompt.MaxActivationDistance = 12
+	prompt.RequiresLineOfSight = false
+	prompt.Parent = control
+	prompt.Triggered:Connect(function(player)
+		if FactoryService.Hooks.OnHopperDump then
+			FactoryService.Hooks.OnHopperDump(player)
+		end
+	end)
+	sign(hopper, L(HOPPER_X, 12.6, -2.9), 8, "⛏ INPUT HOPPER", "Dump your bag here (E)", Color3.fromRGB(242, 186, 48))
+
+	-- truck dump bay in front of the hopper
+	local bayCenter = Vector3.new(HOPPER_X, 0, -17)
+	local pad = solid(hopper, { Name = "HopperTruckBay", Size = Vector3.new(16, 0.3, 14), CFrame = L(bayCenter.X, 0.15, bayCenter.Z), Material = Enum.Material.Concrete, Color = Color3.fromRGB(120, 112, 104) })
+	for _, spec in ipairs({
+		{ Vector3.new(16, 0.32, 0.5), Vector3.new(0, 0, -7) },
+		{ Vector3.new(16, 0.32, 0.5), Vector3.new(0, 0, 7) },
+		{ Vector3.new(0.5, 0.32, 14), Vector3.new(-8, 0, 0) },
+		{ Vector3.new(0.5, 0.32, 14), Vector3.new(8, 0, 0) },
+	}) do
+		PartKit.Part(hopper, { Name = "Stripe", Size = spec[1], CFrame = L(bayCenter.X + spec[2].X, 0.16, bayCenter.Z + spec[2].Z), Material = Enum.Material.Neon, Color = yellow, CastShadow = false })
+	end
+	PartKit.Cylinder(hopper, 7, 0.5, L(bayCenter.X - 9.5, 3.5, bayCenter.Z), "Y", { Name = "SignPost", Material = Enum.Material.Wood, Color = Palette.WoodDark, CanCollide = true, CanQuery = true })
+	sign(hopper, L(bayCenter.X - 9.5, 6.6, bayCenter.Z), 8, "🚚 HOPPER DUMP BAY", "Drive in to dump into the factory", yellow)
+
+	FactoryService.Refs.HopperPrompt = prompt
+	FactoryService.Refs.HopperBay = pad
+	FactoryService.Refs.HopperSand = sand
+end
+
+local function housingWalls(parent, x, material, color, height)
+	for _, z in ipairs({ -2.7, 2.7 }) do
+		solid(parent, { Name = "Wall", Size = Vector3.new(8, height, 1.2), CFrame = L(x, BELT_TOP + height / 2 - 0.6, z), Material = material, Color = color })
+	end
+	solid(parent, { Name = "Roof", Size = Vector3.new(8.4, 1.2, 6.6), CFrame = L(x, BELT_TOP + height - 0.6 + 0.6, 0), Material = material, Color = color })
+end
+
+local function buildFurnace(parent)
+	local machine = Instance.new("Folder")
+	machine.Name = "GlassFurnace"
+	machine.Parent = parent
+	local x = MACHINES[1].X
+	housingWalls(machine, x, Enum.Material.Brick, Color3.fromRGB(176, 88, 60), 5.4)
+	for _, z in ipairs({ -3.35, 3.35 }) do
+		PartKit.Part(machine, { Name = "HeatWindow", Size = Vector3.new(5.6, 1.2, 0.1), CFrame = L(x, BELT_TOP + 2.2, z), Material = Enum.Material.Neon, Color = Color3.fromRGB(255, 140, 50), CastShadow = false })
+	end
+	local glow = PartKit.Part(machine, { Name = "InnerGlow", Size = Vector3.new(6.6, 0.2, 3.4), CFrame = L(x, BELT_TOP + 4.5, 0), Material = Enum.Material.Neon, Color = Color3.fromRGB(255, 150, 60), CastShadow = false })
+	local light = Instance.new("PointLight")
+	light.Color = Color3.fromRGB(255, 150, 70)
+	light.Brightness = 3
+	light.Range = 16
+	light.Parent = glow
+	local firePart = PartKit.Part(machine, { Name = "FirePart", Size = Vector3.new(1, 1, 1), CFrame = L(x, BELT_TOP + 7.2, -1.6), Transparency = 1, CastShadow = false })
+	local fire = Instance.new("Fire")
+	fire.Size = 4
+	fire.Heat = 6
+	fire.Color = Color3.fromRGB(255, 150, 50)
+	fire.SecondaryColor = Color3.fromRGB(255, 70, 20)
+	fire.Parent = firePart
+	PartKit.Cylinder(machine, 5, 1.6, L(x + 2.4, BELT_TOP + 9.2, 1.6), "Y", { Name = "Chimney", Material = Enum.Material.Brick, Color = Color3.fromRGB(140, 70, 50) })
+	local smokePart = PartKit.Part(machine, { Name = "SmokePart", Size = Vector3.new(1, 1, 1), CFrame = L(x + 2.4, BELT_TOP + 12, 1.6), Transparency = 1, CastShadow = false })
+	local smoke = Instance.new("Smoke")
+	smoke.Color = Color3.fromRGB(120, 112, 106)
+	smoke.Opacity = 0.12
+	smoke.RiseVelocity = 5
+	smoke.Size = 2.5
+	smoke.Parent = smokePart
+	sign(machine, L(x, BELT_TOP + 7.6, -3.4), 8, "🔥 GLASS FURNACE", "Sand → glass panes · 3x", Color3.fromRGB(255, 140, 50))
+end
+
+local function buildPress(parent)
+	local machine = Instance.new("Folder")
+	machine.Name = "BrickPress"
+	machine.Parent = parent
+	local x = MACHINES[2].X
+	local grey = Color3.fromRGB(110, 110, 116)
+	for _, dx in ipairs({ -3.4, 3.4 }) do
+		for _, z in ipairs({ -2.7, 2.7 }) do
+			solid(machine, { Name = "Post", Size = Vector3.new(0.9, 9.6, 0.9), CFrame = L(x + dx, 4.8, z), Material = Enum.Material.Metal, Color = grey })
+		end
+	end
+	solid(machine, { Name = "TopBeam", Size = Vector3.new(8, 1.6, 6.4), CFrame = L(x, 10.2, 0), Material = Enum.Material.Metal, Color = Color3.fromRGB(242, 186, 48) })
+	for i = 0, 5 do
+		PartKit.Part(machine, {
+			Name = "Hazard",
+			Size = Vector3.new(0.5, 1.62, 0.05),
+			CFrame = L(x - 3.2 + i * 1.3, 10.2, -3.22) * CFrame.Angles(0, 0, math.rad(30)),
+			Color = Color3.fromRGB(30, 30, 32),
+		})
+	end
+	solid(machine, { Name = "Guard", Size = Vector3.new(7, 2.2, 0.6), CFrame = L(x, BELT_TOP + 1.1, -2.6), Material = Enum.Material.Concrete, Color = grey })
+	solid(machine, { Name = "Guard", Size = Vector3.new(7, 2.2, 0.6), CFrame = L(x, BELT_TOP + 1.1, 2.6), Material = Enum.Material.Concrete, Color = grey })
+	local cylinder = PartKit.Cylinder(machine, 2.6, 2.4, L(x, 8.1, 0), "Y", { Name = "Cylinder", Material = Enum.Material.Metal, Color = Color3.fromRGB(70, 70, 76) })
+	local rod = PartKit.Cylinder(machine, 3.0, 0.8, L(x, 6.0, 0), "Y", { Name = "Rod", Material = Enum.Material.Metal, Color = Color3.fromRGB(200, 204, 210) })
+	local ram = PartKit.Part(machine, { Name = "Ram", Size = Vector3.new(3.2, 0.6, 3.2), CFrame = L(x, 4.5, 0), Material = Enum.Material.Metal, Color = Color3.fromRGB(150, 154, 160) })
+	sign(machine, L(x, 12.2, -3.3), 8, "🧱 BRICK PRESS", "Stamps concrete blocks · 6x", grey)
+
+	-- stamping loop
+	local rodBase, ramBase = rod.CFrame, ram.CFrame
+	local offset = Instance.new("NumberValue")
+	offset.Name = "Stroke"
+	offset.Parent = machine
+	offset.Changed:Connect(function(value)
+		rod.CFrame = rodBase * CFrame.new(-value, 0, 0) -- rod is a Y cylinder: its local X axis points up
+		ram.CFrame = ramBase * CFrame.new(0, -value, 0)
+	end)
+	task.spawn(function()
+		while machine.Parent do
+			local down = TweenService:Create(offset, TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.In), { Value = 0.95 })
+			down:Play()
+			down.Completed:Wait()
+			task.wait(0.12)
+			local up = TweenService:Create(offset, TweenInfo.new(0.5, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), { Value = 0 })
+			up:Play()
+			up.Completed:Wait()
+			task.wait(0.55)
+		end
+	end)
+	FactoryService.Refs.PressCylinder = cylinder
+end
+
+local function buildRefinery(parent)
+	local machine = Instance.new("Folder")
+	machine.Name = "MicrochipRefinery"
+	machine.Parent = parent
+	local x = MACHINES[3].X
+	local dark = Color3.fromRGB(40, 44, 56)
+	for _, z in ipairs({ -2.7, 2.7 }) do
+		solid(machine, { Name = "GlassWall", Size = Vector3.new(8, 5.4, 0.6), CFrame = L(x, BELT_TOP + 2.1, z), Material = Enum.Material.Glass, Transparency = 0.45, Color = Color3.fromRGB(130, 190, 230) })
+		for _, dx in ipairs({ -4, 4 }) do
+			solid(machine, { Name = "Frame", Size = Vector3.new(0.6, 5.6, 0.8), CFrame = L(x + dx, BELT_TOP + 2.2, z), Material = Enum.Material.Metal, Color = dark })
+		end
+	end
+	local roof = solid(machine, { Name = "Roof", Size = Vector3.new(8.6, 1.2, 6.8), CFrame = L(x, BELT_TOP + 5.4, 0), Material = Enum.Material.Metal, Color = dark })
+	for _, z in ipairs({ -3.42, 3.42 }) do
+		PartKit.Part(machine, { Name = "NeonStrip", Size = Vector3.new(8, 0.25, 0.1), CFrame = L(x, BELT_TOP + 5.4, z), Material = Enum.Material.Neon, Color = Color3.fromRGB(80, 180, 255), CastShadow = false })
+	end
+	local laserFloor = PartKit.Part(machine, { Name = "LaserFloor", Size = Vector3.new(6, 0.1, 3), CFrame = L(x, BELT_TOP + 0.05, 0), Transparency = 1, CastShadow = false })
+	for _, dx in ipairs({ -2.4, 0, 2.4 }) do
+		local top = Instance.new("Attachment")
+		top.Parent = roof
+		top.WorldPosition = L(x + dx, BELT_TOP + 4.75, 0).Position
+		local bottom = Instance.new("Attachment")
+		bottom.Parent = laserFloor
+		bottom.WorldPosition = L(x + dx, BELT_TOP + 0.05, 0).Position
+		local beam = Instance.new("Beam")
+		beam.Attachment0 = top
+		beam.Attachment1 = bottom
+		beam.Color = ColorSequence.new(Color3.fromRGB(110, 210, 255))
+		beam.LightEmission = 1
+		beam.LightInfluence = 0
+		beam.Width0 = 0.18
+		beam.Width1 = 0.12
+		beam.FaceCamera = true
+		beam.Transparency = NumberSequence.new(0.1)
+		beam.Parent = roof
+	end
+	local light = Instance.new("PointLight")
+	light.Color = Color3.fromRGB(90, 180, 255)
+	light.Brightness = 3
+	light.Range = 18
+	light.Parent = roof
+	PartKit.Part(machine, { Name = "Antenna", Size = Vector3.new(0.3, 3, 0.3), CFrame = L(x + 3, BELT_TOP + 7.5, 2), Material = Enum.Material.Metal, Color = dark })
+	PartKit.Ball(machine, 0.6, L(x + 3, BELT_TOP + 9.1, 2), { Name = "AntennaTip", Material = Enum.Material.Neon, Color = Color3.fromRGB(80, 180, 255), CastShadow = false })
+	sign(machine, L(x, BELT_TOP + 7.4, -3.5), 9, "💾 MICROCHIP REFINERY", "Silicon → microchips · 15x", Color3.fromRGB(80, 180, 255))
+end
+
+local function buildSeller(parent)
+	local seller = Instance.new("Folder")
+	seller.Name = "AutoSeller"
+	seller.Parent = parent
+	local green = Color3.fromRGB(90, 220, 120)
+	for _, z in ipairs({ -3, 3 }) do
+		solid(seller, { Name = "GatePost", Size = Vector3.new(0.9, 8, 0.9), CFrame = L(SELL_X + 2, 4, z), Material = Enum.Material.Metal, Color = Color3.fromRGB(60, 60, 64) })
+	end
+	solid(seller, { Name = "GateTop", Size = Vector3.new(1.4, 1, 7), CFrame = L(SELL_X + 2, 8.3, 0), Material = Enum.Material.Neon, Color = green })
+	PartKit.Part(seller, { Name = "Scanner", Size = Vector3.new(0.1, 5, 3.6), CFrame = L(SELL_X + 2, BELT_TOP + 2.5, 0), Material = Enum.Material.Neon, Color = green, Transparency = 0.75, CastShadow = false })
+	solid(seller, { Name = "Bin", Size = Vector3.new(7, 2.4, 6), CFrame = L(BELT_END - 2.5, 1.2, 0), Material = Enum.Material.Metal, Color = Color3.fromRGB(70, 70, 76) })
+	sign(seller, L(SELL_X + 2, 10.2, -3.6), 8, "💰 AUTO-SELLER", "Finished goods pay out here", green)
+end
+
+function FactoryService.Build(parent, originCFrame)
+	origin = originCFrame
+	local factory = Instance.new("Folder")
+	factory.Name = "Factory"
+	factory.Parent = parent
+	solid(factory, { Name = "Slab", Size = Vector3.new(130, 0.4, 30), CFrame = L(4, 0.2, -2), Material = Enum.Material.Concrete, Color = Color3.fromRGB(160, 154, 146) })
+	buildBelt(factory)
+	buildHopper(factory)
+	buildFurnace(factory)
+	buildPress(factory)
+	buildRefinery(factory)
+	buildSeller(factory)
+	chunkFolder = Instance.new("Folder")
+	chunkFolder.Name = "Chunks"
+	chunkFolder.Parent = factory
+	FactoryService.Refs.Chunks = chunkFolder
+	return FactoryService.Refs
+end
+
+--------------------------------------------------------------------------
+-- CHUNKS
+--------------------------------------------------------------------------
+local function styleChunk(part, stage)
+	local style = STAGE_STYLE[stage] or STAGE_STYLE[0]
+	part.Size = style.Size
+	part.Material = style.Material
+	part.Color = style.Color
+	part.Transparency = style.Transparency
+	part.Name = style.Name
+end
+
+local function spawnChunk(player, kg)
+	local part = Instance.new("Part")
+	styleChunk(part, 0)
+	part.CFrame = L(SPAWN_X, BELT_TOP + 1.2, (math.random() - 0.5) * 1.2) * CFrame.Angles(0, math.random() * math.pi, 0)
+	part.Anchored = false
+	part.CanCollide = true
+	part.CanQuery = false
+	part.CanTouch = false
+	part.TopSurface = Enum.SurfaceType.Smooth
+	part.BottomSurface = Enum.SurfaceType.Smooth
+	part.CustomPhysicalProperties = PhysicalProperties.new(1, 0.9, 0, 5, 1)
+	part:SetAttribute("Owner", player.UserId)
+	part:SetAttribute("Kg", kg)
+	part:SetAttribute("Stage", 0)
+	part:SetAttribute("Born", os.clock())
+	part.Parent = chunkFolder
+	pcall(function()
+		part:SetNetworkOwner(nil)
+	end)
+	chunkCounts[player.UserId] = (chunkCounts[player.UserId] or 0) + 1
+	totalChunks += 1
+end
+
+local function removeChunk(part, pay)
+	local owner = part:GetAttribute("Owner")
+	chunkCounts[owner] = math.max(0, (chunkCounts[owner] or 1) - 1)
+	totalChunks = math.max(0, totalChunks - 1)
+	if pay then
+		local player = Players:GetPlayerByUserId(owner)
+		if player and FactoryService.Hooks.OnPayout then
+			FactoryService.Hooks.OnPayout(player, part:GetAttribute("Kg") or 0, part:GetAttribute("Stage") or 0, part.Position)
+		end
+	end
+	part:Destroy()
+end
+
+local function ownsMachine(player, machineId)
+	local data = player and FactoryService.Hooks.GetData and FactoryService.Hooks.GetData(player)
+	return data ~= nil and data.Factory ~= nil and data.Factory[machineId] == true
+end
+
+local function machineStage(machineId)
+	local machine = GameConfig.GetMachine(machineId)
+	return machine and machine.Stage or 0
+end
+
+local function processChunks()
+	local now = os.clock()
+	for _, part in ipairs(chunkFolder:GetChildren()) do
+		if part:IsA("BasePart") then
+			local localPos = origin:PointToObjectSpace(part.Position)
+			local stage = part:GetAttribute("Stage") or 0
+			local owner = Players:GetPlayerByUserId(part:GetAttribute("Owner") or 0)
+			if not owner then
+				removeChunk(part, false)
+			elseif
+				localPos.X >= SELL_X -- reached the Auto-Seller
+				-- or fell off / got stuck: pay what it is worth now so nothing is ever lost
+				or localPos.Y < BELT_TOP - 2.5
+				or math.abs(localPos.Z) > 4
+				or localPos.X < BELT_START - 6
+				or now - (part:GetAttribute("Born") or now) > Settings.ChunkLifetime
+			then
+				removeChunk(part, true)
+			else
+				for _, machine in ipairs(MACHINES) do
+					local targetStage = machineStage(machine.Id)
+					if stage < targetStage and math.abs(localPos.X - machine.X) < 3.2 and ownsMachine(owner, machine.Id) then
+						stage = targetStage
+						part:SetAttribute("Stage", stage)
+						styleChunk(part, stage)
+						part.AssemblyLinearVelocity += Vector3.new(0, 4, 0)
+					end
+				end
+			end
+		end
+	end
+end
+
+local function spawnNext()
+	if totalChunks >= Settings.MaxChunksTotal then
+		return
+	end
+	local players = Players:GetPlayers()
+	local count = #players
+	if count == 0 then
+		return
+	end
+	for step = 1, count do
+		local player = players[((spawnCursor + step - 1) % count) + 1]
+		local data = FactoryService.Hooks.GetData and FactoryService.Hooks.GetData(player)
+		if data and data.Factory and data.Factory.Hopper and (data.FactoryBufferKg or 0) > 0.01 and (chunkCounts[player.UserId] or 0) < Settings.MaxChunksPerPlayer then
+			local buffer = data.FactoryBufferKg
+			local kg = math.min(buffer, math.max(Settings.MinChunkKg, buffer / 10))
+			data.FactoryBufferKg = buffer - kg
+			if data.FactoryBufferKg < 0.01 then
+				data.FactoryBufferKg = 0
+			end
+			spawnChunk(player, kg)
+			spawnCursor = (spawnCursor + step) % count
+			return
+		end
+	end
+end
+
+function FactoryService.Start()
+	local spawnTimer, processTimer, visualTimer = 0, 0, 0
+	RunService.Heartbeat:Connect(function(dt)
+		if not chunkFolder then
+			return
+		end
+		spawnTimer += dt
+		processTimer += dt
+		visualTimer += dt
+		if spawnTimer >= Settings.ChunkInterval then
+			spawnTimer = 0
+			spawnNext()
+		end
+		if processTimer >= 0.1 then
+			processTimer = 0
+			processChunks()
+		end
+		if visualTimer >= 1 then
+			visualTimer = 0
+			local anyBuffer = false
+			for _, player in ipairs(Players:GetPlayers()) do
+				local data = FactoryService.Hooks.GetData and FactoryService.Hooks.GetData(player)
+				if data and (data.FactoryBufferKg or 0) > 0.01 then
+					anyBuffer = true
+					break
+				end
+			end
+			if FactoryService.Refs.HopperSand then
+				FactoryService.Refs.HopperSand.Transparency = anyBuffer and 0 or 1
+			end
+		end
+	end)
+end
+
+function FactoryService.IsOnPad(pad, position, margin)
+	if not pad then
+		return false
+	end
+	margin = margin or 1
+	local localPos = pad.CFrame:PointToObjectSpace(position)
+	return math.abs(localPos.X) <= pad.Size.X / 2 + margin and math.abs(localPos.Z) <= pad.Size.Z / 2 + margin and localPos.Y >= -2 and localPos.Y <= 12
+end
+
+return FactoryService
+]======]
+
+-- ModuleScript: ServerScriptService/Sandsweep/VehicleService.lua
+created["VehicleService"] = make("ModuleScript", "VehicleService", Containers.SSS)
+created["VehicleService"].Source = [======[
+-- VehicleService (ModuleScript) - ServerScriptService/Sandsweep/VehicleService
+-- Heavy machinery: spawning (1 per player), driver-only seats, network
+-- ownership, flip/unstuck, server-side storage, bulldozer blade carving,
+-- excavator scoops and the hydraulic dump bays (kiln = sell, hopper = factory).
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local Workspace = game:GetService("Workspace")
+
+local Shared = ReplicatedStorage:WaitForChild("Sandsweep")
+local GameConfig = require(Shared:WaitForChild("GameConfig"))
+local VehicleModels = require(Shared:WaitForChild("VehicleModels"))
+
+local LotService = require(script.Parent:WaitForChild("LotService"))
+local FindsService = require(script.Parent:WaitForChild("FindsService"))
+
+local VehicleService = {}
+VehicleService.Hooks = {
+	GetData = nil, -- function(player) -> data
+	Notify = nil, -- function(player, payload)
+	PushState = nil, -- function(player)
+	SellKg = nil, -- function(player, kg, position)
+	DepositHopper = nil, -- function(player, kg) -> ok, message
+	LoadBag = nil, -- function(player, entry)
+	DigFx = nil, -- function(player, position, kind, kg)
+}
+
+local Economy = GameConfig.Economy
+local active = {} -- [player] = entry
+local refs = {}
+local folder
+
+local terrainParams = RaycastParams.new()
+terrainParams.FilterType = Enum.RaycastFilterType.Include
+terrainParams.FilterDescendantsInstances = { Workspace.Terrain }
+
+local function yawOnly(cframe)
+	local look = cframe.LookVector
+	local flat = Vector3.new(look.X, 0, look.Z)
+	if flat.Magnitude < 0.01 then
+		flat = Vector3.new(0, 0, -1)
+	end
+	return CFrame.lookAt(Vector3.zero, flat.Unit)
+end
+
+local function notify(player, payload)
+	if VehicleService.Hooks.Notify then
+		VehicleService.Hooks.Notify(player, payload)
+	end
+end
+
+local function setFill(entry)
+	local fraction = math.clamp(entry.Storage / entry.Config.Capacity, 0, 1)
+	entry.Model:SetAttribute("StorageKg", math.floor(entry.Storage * 10) / 10)
+	local fill = entry.Model:FindFirstChild("SandFill", true)
+	if fill then
+		fill.Transparency = fraction > 0.01 and 0 or 1
+	end
+end
+
+function VehicleService.AddStorage(entry, kg)
+	local room = entry.Config.Capacity - entry.Storage
+	local added = math.clamp(kg, 0, room)
+	entry.Storage += added
+	setFill(entry)
+	return added
+end
+
+function VehicleService.Room(entry)
+	return entry.Config.Capacity - entry.Storage
+end
+
+function VehicleService.GetActive(player)
+	return active[player]
+end
+
+local function saveStorage(entry)
+	local data = VehicleService.Hooks.GetData and VehicleService.Hooks.GetData(entry.Owner)
+	if data then
+		data.VehicleStorage[entry.Config.Id] = math.floor(entry.Storage * 1000) / 1000
+	end
+end
+
+local function restoreCamera(player)
+	player.CameraMode = Enum.CameraMode.LockFirstPerson
+	player.CameraMinZoomDistance = 0.5
+	player.CameraMaxZoomDistance = 12
+end
+
+function VehicleService.Despawn(player)
+	local entry = active[player]
+	if not entry then
+		return false
+	end
+	active[player] = nil
+	saveStorage(entry)
+	if entry.Driver then
+		restoreCamera(entry.Driver)
+	end
+	entry.Model:Destroy()
+	player:SetAttribute("ActiveVehicle", nil)
+	return true
+end
+
+local function pickSpawn()
+	local spawns = refs.GarageSpawns or { CFrame.new(0, 10, 120) }
+	for _, cframe in ipairs(spawns) do
+		local free = true
+		for _, entry in pairs(active) do
+			if (entry.Chassis.Position - cframe.Position).Magnitude < 11 then
+				free = false
+				break
+			end
+		end
+		if free then
+			return cframe
+		end
+	end
+	return spawns[#spawns] + Vector3.new(math.random(-6, 6), 4, math.random(-6, 6))
+end
+
+local function onOccupantChanged(entry)
+	local seat = entry.Seat
+	local humanoid = seat.Occupant
+	if humanoid then
+		local player = Players:GetPlayerFromCharacter(humanoid.Parent)
+		if player ~= entry.Owner then
+			local weld = seat:FindFirstChild("SeatWeld")
+			if weld then
+				weld:Destroy()
+			end
+			humanoid.Sit = false
+			humanoid.Jump = true
+			if player then
+				notify(player, { Kind = "Toast", Text = "That's " .. entry.Owner.DisplayName .. "'s machine.", Color = "Terracotta" })
+			end
+			return
+		end
+		entry.Driver = player
+		entry.DrivePrompt.Enabled = false
+		pcall(function()
+			entry.Chassis:SetNetworkOwner(player)
+		end)
+		player.CameraMode = Enum.CameraMode.Classic
+		player.CameraMaxZoomDistance = 60
+		player.CameraMinZoomDistance = 16
+	else
+		local driver = entry.Driver
+		entry.Driver = nil
+		entry.DrivePrompt.Enabled = true
+		entry.Drive.PlaneVelocity = Vector2.zero
+		entry.Align.CFrame = yawOnly(entry.Chassis.CFrame)
+		pcall(function()
+			entry.Chassis:SetNetworkOwner(nil)
+		end)
+		if driver then
+			restoreCamera(driver)
+		end
+	end
+end
+
+function VehicleService.Spawn(player, vehicleId)
+	local config = GameConfig.GetVehicle(vehicleId)
+	if not config then
+		return false, "Unknown vehicle"
+	end
+	VehicleService.Despawn(player)
+
+	local model = VehicleModels.Build(vehicleId, false)
+	model.Name = player.Name .. "_" .. vehicleId
+	model:SetAttribute("OwnerUserId", player.UserId)
+	model:SetAttribute("Capacity", config.Capacity)
+	model:SetAttribute("StorageKg", 0)
+	local chassis = model.PrimaryPart
+	local seat = model:FindFirstChild("DriverSeat", true)
+
+	local root = Instance.new("Attachment")
+	root.Name = "Root"
+	root.Parent = chassis
+	local drive = Instance.new("LinearVelocity")
+	drive.Name = "Drive"
+	drive.Attachment0 = root
+	drive.RelativeTo = Enum.ActuatorRelativeTo.World
+	drive.VelocityConstraintMode = Enum.VelocityConstraintMode.Plane
+	drive.PrimaryTangentAxis = Vector3.xAxis
+	drive.SecondaryTangentAxis = Vector3.zAxis
+	drive.PlaneVelocity = Vector2.zero
+	drive.MaxForce = 1e6
+	drive.Parent = chassis
+	local align = Instance.new("AlignOrientation")
+	align.Name = "Align"
+	align.Mode = Enum.OrientationAlignmentMode.OneAttachment
+	align.Attachment0 = root
+	align.MaxTorque = 1e9
+	align.Responsiveness = 25
+	align.Parent = chassis
+
+	local spawnCFrame = pickSpawn()
+	model:PivotTo(spawnCFrame)
+	align.CFrame = yawOnly(spawnCFrame)
+	model.Parent = folder
+	drive.MaxForce = chassis.AssemblyMass * 140
+	pcall(function()
+		chassis:SetNetworkOwner(nil)
+	end)
+
+	local drivePrompt = Instance.new("ProximityPrompt")
+	drivePrompt.Name = "DrivePrompt"
+	drivePrompt.ActionText = "Drive"
+	drivePrompt.ObjectText = config.Name
+	drivePrompt.HoldDuration = 0
+	drivePrompt.MaxActivationDistance = 14
+	drivePrompt.RequiresLineOfSight = false
+	drivePrompt.Parent = seat
+	local loadPrompt = Instance.new("ProximityPrompt")
+	loadPrompt.Name = "LoadPrompt"
+	loadPrompt.ActionText = "Load Bag"
+	loadPrompt.ObjectText = config.Name
+	loadPrompt.KeyboardKeyCode = Enum.KeyCode.F
+	loadPrompt.HoldDuration = 0.25
+	loadPrompt.MaxActivationDistance = 14
+	loadPrompt.RequiresLineOfSight = false
+	loadPrompt.UIOffset = Vector2.new(0, 60)
+	loadPrompt.Parent = model:FindFirstChild("Hull", true) or chassis
+
+	local data = VehicleService.Hooks.GetData and VehicleService.Hooks.GetData(player)
+	local entry = {
+		Owner = player,
+		Config = config,
+		Model = model,
+		Chassis = chassis,
+		Seat = seat,
+		Drive = drive,
+		Align = align,
+		DrivePrompt = drivePrompt,
+		Storage = math.clamp(data and data.VehicleStorage[vehicleId] or 0, 0, config.Capacity),
+		Driver = nil,
+		Unloading = false,
+		CooldownUntil = 0,
+		LastScoop = 0,
+		LastFlip = 0,
+		LastFx = 0,
+		LastFullNotice = 0,
+		Joints = {},
+	}
+	for _, name in ipairs({ "BedHinge", "BoomJoint", "StickJoint", "BucketJoint" }) do
+		local weld = model:FindFirstChild(name, true)
+		if weld then
+			entry.Joints[name] = { Weld = weld, Base = weld.C0 }
+		end
+	end
+	setFill(entry)
+	active[player] = entry
+	player:SetAttribute("ActiveVehicle", vehicleId)
+
+	seat:GetPropertyChangedSignal("Occupant"):Connect(function()
+		onOccupantChanged(entry)
+	end)
+	drivePrompt.Triggered:Connect(function(who)
+		if who ~= player then
+			notify(who, { Kind = "Toast", Text = "Only " .. player.DisplayName .. " can drive this.", Color = "Terracotta" })
+			return
+		end
+		local character = who.Character
+		local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+		if humanoid and humanoid.Health > 0 and not seat.Occupant then
+			seat:Sit(humanoid)
+		end
+	end)
+	loadPrompt.Triggered:Connect(function(who)
+		if who == player and VehicleService.Hooks.LoadBag then
+			VehicleService.Hooks.LoadBag(who, entry)
+		end
+	end)
+	return true, "Your " .. config.Name .. " is waiting at the Garage!"
+end
+
+function VehicleService.Flip(player)
+	local entry = active[player]
+	if not entry then
+		return
+	end
+	local now = os.clock()
+	if now - entry.LastFlip < 2 then
+		return
+	end
+	entry.LastFlip = now
+	local yaw = yawOnly(entry.Chassis.CFrame)
+	entry.Model:PivotTo(CFrame.new(entry.Chassis.Position + Vector3.new(0, 6, 0)) * yaw)
+	entry.Align.CFrame = yaw
+	entry.Chassis.AssemblyLinearVelocity = Vector3.zero
+	entry.Chassis.AssemblyAngularVelocity = Vector3.zero
+end
+
+-- Move every vehicle standing inside the dig zone back to the garage (lot regeneration).
+function VehicleService.EvacuateLot()
+	for _, entry in pairs(active) do
+		if LotService.IsInside(entry.Chassis.Position, 4) then
+			local seat = entry.Seat
+			if seat.Occupant then
+				local weld = seat:FindFirstChild("SeatWeld")
+				if weld then
+					weld:Destroy()
+				end
+			end
+			local target = pickSpawn()
+			entry.Model:PivotTo(target)
+			entry.Align.CFrame = yawOnly(target)
+		end
+	end
+end
+
+--------------------------------------------------------------------------
+-- DIGGING MACHINES
+--------------------------------------------------------------------------
+local function digInto(entry, center, radius)
+	local room = VehicleService.Room(entry)
+	if room <= 0.5 then
+		return 0
+	end
+	local maxVolume = room / Economy.SandDensity
+	local typical = (4 / 3) * math.pi * radius ^ 3 * 0.5
+	if typical > maxVolume then
+		radius = math.max(1.5, radius * (maxVolume / typical) ^ (1 / 3))
+	end
+	local removed = LotService.Dig(center, radius)
+	local kg = VehicleService.AddStorage(entry, removed * Economy.SandDensity)
+	if kg > 0 then
+		local data = VehicleService.Hooks.GetData and VehicleService.Hooks.GetData(entry.Owner)
+		if data then
+			data.Stats.TotalKg += kg
+		end
+		FindsService.MarkNear(center, radius + 6)
+	end
+	return kg
+end
+
+local function notifyFull(entry)
+	local now = os.clock()
+	if now - entry.LastFullNotice > 4 then
+		entry.LastFullNotice = now
+		notify(entry.Owner, { Kind = "Toast", Text = entry.Config.Name .. " is full! Drive onto a dump bay.", Color = "Terracotta", Icon = "🚚" })
+	end
+end
+
+local function carveBlade(entry)
+	local spray = entry.Model:FindFirstChild("BladeSpray", true)
+	local cutting = false
+	if entry.Driver and VehicleService.Room(entry) > 0.5 then
+		local chassis = entry.Chassis
+		local forwardSpeed = chassis.AssemblyLinearVelocity:Dot(chassis.CFrame.LookVector)
+		local cut = chassis:FindFirstChild("BladeCut")
+		if forwardSpeed > 1.5 and cut and LotService.IsInside(cut.WorldPosition, 3) then
+			local right = chassis.CFrame.RightVector
+			local total = 0
+			for _, offset in ipairs({ -3.4, 0, 3.4 }) do
+				total += digInto(entry, cut.WorldPosition + right * offset, entry.Config.BladeRadius)
+			end
+			cutting = total > 0
+			local now = os.clock()
+			if cutting and now - entry.LastFx > 0.3 and VehicleService.Hooks.DigFx then
+				entry.LastFx = now
+				VehicleService.Hooks.DigFx(entry.Owner, cut.WorldPosition, "Bulldozer", total)
+			end
+		end
+	elseif entry.Driver then
+		notifyFull(entry)
+	end
+	if spray then
+		spray.Enabled = cutting
+	end
+end
+
+local function setJoint(entry, name, angle)
+	local joint = entry.Joints[name]
+	if joint then
+		joint.Weld.C0 = joint.Base * CFrame.Angles(angle, 0, 0)
+	end
+end
+
+function VehicleService.Scoop(player)
+	local entry = active[player]
+	if not entry or entry.Config.Id ~= "Excavator" or entry.Driver ~= player then
+		return
+	end
+	local now = os.clock()
+	if now - entry.LastScoop < entry.Config.ScoopCooldown or entry.Scooping then
+		return
+	end
+	if VehicleService.Room(entry) <= 0.5 then
+		notifyFull(entry)
+		return
+	end
+	entry.LastScoop = now
+	entry.Scooping = true
+	local bucketSand = entry.Model:FindFirstChild("BucketSand", true)
+	local progress = Instance.new("NumberValue")
+	progress.Name = "ScoopProgress"
+	progress.Parent = entry.Model
+	local dug = false
+	progress.Changed:Connect(function(t)
+		local swing = math.sin(math.pi * t)
+		setJoint(entry, "BoomJoint", -0.45 * swing)
+		setJoint(entry, "StickJoint", 0.55 * swing)
+		local curl
+		if t < 0.45 then
+			curl = -0.6 * (t / 0.45)
+		elseif t < 0.75 then
+			curl = -0.6 + 1.7 * ((t - 0.45) / 0.3)
+		else
+			curl = 1.1 * (1 - (t - 0.75) / 0.25)
+		end
+		setJoint(entry, "BucketJoint", curl)
+		if t >= 0.45 and not dug then
+			dug = true
+			local chassis = entry.Chassis
+			local reachPoint = (chassis.CFrame * CFrame.new(1.4, 0, -entry.Config.ScoopReach)).Position
+			local hit = Workspace:Raycast(reachPoint + Vector3.new(0, 40, 0), Vector3.new(0, -80, 0), terrainParams)
+			if hit and hit.Material == Enum.Material.Sand and LotService.IsInside(hit.Position, 2) then
+				local center = hit.Position - Vector3.new(0, 2, 0)
+				local kg = digInto(entry, center, entry.Config.ScoopRadius)
+				if kg > 0 then
+					if bucketSand then
+						bucketSand.Transparency = 0
+					end
+					if VehicleService.Hooks.DigFx then
+						VehicleService.Hooks.DigFx(entry.Owner, hit.Position, "Excavator", kg)
+					end
+				end
+			elseif hit and not LotService.IsInside(hit.Position, 2) then
+				notify(player, { Kind = "Toast", Text = "Scoop inside the dig zone (past the flags).", Color = "Sky" })
+			end
+		end
+		if t >= 0.95 and bucketSand then
+			bucketSand.Transparency = 1
+		end
+	end)
+	local tween = TweenService:Create(progress, TweenInfo.new(1.4, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), { Value = 1 })
+	tween.Completed:Connect(function()
+		progress:Destroy()
+		setJoint(entry, "BoomJoint", 0)
+		setJoint(entry, "StickJoint", 0)
+		setJoint(entry, "BucketJoint", 0)
+		entry.Scooping = false
+	end)
+	tween:Play()
+end
+
+--------------------------------------------------------------------------
+-- DUMP BAYS (hydraulic tilt + pour)
+--------------------------------------------------------------------------
+local function onPad(pad, position)
+	if not pad then
+		return false
+	end
+	local localPos = pad.CFrame:PointToObjectSpace(position)
+	return math.abs(localPos.X) <= pad.Size.X / 2 + 1 and math.abs(localPos.Z) <= pad.Size.Z / 2 + 1 and localPos.Y > -2 and localPos.Y < 12
+end
+
+local function tiltBed(entry, angle, duration)
+	local joint = entry.Joints.BedHinge
+	if not joint then
+		return
+	end
+	local value = Instance.new("NumberValue")
+	value.Value = entry.BedAngle or 0
+	value.Parent = entry.Model
+	value.Changed:Connect(function(a)
+		entry.BedAngle = a
+		joint.Weld.C0 = joint.Base * CFrame.Angles(a, 0, 0)
+	end)
+	local tween = TweenService:Create(value, TweenInfo.new(duration, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), { Value = angle })
+	tween:Play()
+	tween.Completed:Wait()
+	value:Destroy()
+end
+
+local function unload(entry, mode)
+	entry.Unloading = true
+	task.spawn(function()
+		local pour = entry.Model:FindFirstChild("Pour", true)
+		tiltBed(entry, 0.95, 0.7)
+		if pour then
+			pour.Enabled = true
+		end
+		task.wait(1.3)
+		local kg = entry.Storage
+		entry.Storage = 0
+		setFill(entry)
+		if kg > 0 and entry.Owner.Parent then
+			if mode == "Sell" and VehicleService.Hooks.SellKg then
+				VehicleService.Hooks.SellKg(entry.Owner, kg, entry.Chassis.Position)
+			elseif mode == "Hopper" and VehicleService.Hooks.DepositHopper then
+				VehicleService.Hooks.DepositHopper(entry.Owner, kg)
+			end
+		end
+		task.wait(0.5)
+		if pour then
+			pour.Enabled = false
+		end
+		tiltBed(entry, 0, 0.8)
+		entry.Unloading = false
+		entry.CooldownUntil = os.clock() + 2
+	end)
+end
+
+local function checkBays(entry)
+	if entry.Unloading or entry.Storage <= 0.5 or os.clock() < entry.CooldownUntil then
+		return
+	end
+	local position = entry.Chassis.Position
+	if onPad(refs.KilnBay, position) then
+		unload(entry, "Sell")
+	elseif onPad(refs.HopperBay, position) then
+		local data = VehicleService.Hooks.GetData and VehicleService.Hooks.GetData(entry.Owner)
+		if data and data.Factory.Hopper then
+			unload(entry, "Hopper")
+		else
+			entry.CooldownUntil = os.clock() + 4
+			notify(entry.Owner, { Kind = "Toast", Text = "Buy the Input Hopper in Shop → Factory first.", Color = "Terracotta" })
+		end
+	end
+end
+
+--------------------------------------------------------------------------
+-- INIT
+--------------------------------------------------------------------------
+function VehicleService.Init(worldRefs)
+	refs = worldRefs
+	folder = Instance.new("Folder")
+	folder.Name = "Vehicles"
+	folder.Parent = Workspace:WaitForChild("SandsweepWorld")
+
+	Players.PlayerRemoving:Connect(function(player)
+		VehicleService.Despawn(player)
+	end)
+
+	local bladeTimer, bayTimer = 0, 0
+	RunService.Heartbeat:Connect(function(dt)
+		bladeTimer += dt
+		bayTimer += dt
+		local bladeTick = bladeTimer >= 0.1
+		local bayTick = bayTimer >= 0.25
+		if bladeTick then
+			bladeTimer = 0
+		end
+		if bayTick then
+			bayTimer = 0
+		end
+		for player, entry in pairs(active) do
+			if not entry.Model.Parent then
+				active[player] = nil
+			else
+				if bladeTick and entry.Config.Id == "Bulldozer" and not LotService.Generating then
+					carveBlade(entry)
+				end
+				if bayTick then
+					checkBays(entry)
+					if entry.Chassis.Position.Y < LotService.Min.Y - 20 then
+						local target = pickSpawn()
+						entry.Model:PivotTo(target)
+						entry.Align.CFrame = yawOnly(target)
+						entry.Chassis.AssemblyLinearVelocity = Vector3.zero
+					end
+				end
+			end
+		end
+	end)
+end
+
+return VehicleService
+]======]
+
 -- Script: ServerScriptService/Sandsweep/Main.server.lua
 created["Main"] = make("Script", "Main", Containers.SSS)
 created["Main"].Source = [======[
@@ -2906,6 +4604,8 @@ local WorldBuilder = require(Modules:WaitForChild("WorldBuilder"))
 local LotService = require(Modules:WaitForChild("LotService"))
 local FindsService = require(Modules:WaitForChild("FindsService"))
 local DataService = require(Modules:WaitForChild("DataService"))
+local FactoryService = require(Modules:WaitForChild("FactoryService"))
+local VehicleService = require(Modules:WaitForChild("VehicleService"))
 
 local Economy = GameConfig.Economy
 local LotConfig = GameConfig.Lot
@@ -2938,6 +4638,8 @@ local Remotes = {
 	LotUpdate = ensureRemote("RemoteEvent", "LotUpdate"),
 	Notify = ensureRemote("RemoteEvent", "Notify"),
 	OpenMenu = ensureRemote("RemoteEvent", "OpenMenu"),
+	VehicleAction = ensureRemote("RemoteEvent", "VehicleAction"),
+	FactoryFx = ensureRemote("RemoteEvent", "FactoryFx"),
 	Purchase = ensureRemote("RemoteFunction", "Purchase"),
 	GetState = ensureRemote("RemoteFunction", "GetState"),
 }
@@ -2949,6 +4651,12 @@ DataService.Init()
 WorldBuilder.Build()
 LotService.Generate(math.random(1, 100000))
 FindsService.Spawn(math.random(1, 100000))
+FactoryService.Build(WorldBuilder.Refs.Root:FindFirstChild("Stations"), WorldBuilder.FactoryOrigin)
+VehicleService.Init({
+	GarageSpawns = WorldBuilder.Refs.GarageSpawns,
+	KilnBay = WorldBuilder.Refs.KilnBay,
+	HopperBay = FactoryService.Refs.HopperBay,
+})
 WorldBuilder.UpdateLotBoard(0, FindsService.CountRemaining(), false)
 
 local Sessions = {} -- [player] = session
@@ -2976,6 +4684,10 @@ local function buildSnapshot(session)
 		OwnedTools = data.OwnedTools,
 		Skills = data.Skills,
 		Finds = data.Finds,
+		OwnedVehicles = data.OwnedVehicles,
+		ActiveVehicle = session.Player:GetAttribute("ActiveVehicle"),
+		Factory = data.Factory,
+		FactoryBufferKg = data.FactoryBufferKg,
 		Stats = data.Stats,
 		Derived = stats,
 		DataMode = DataService.Mode,
@@ -3141,6 +4853,7 @@ local function onPlayerAdded(player)
 end
 
 local function onPlayerRemoving(player)
+	VehicleService.Despawn(player) -- stores the machine's load back into the save first
 	local session = Sessions[player]
 	if session and session.Loaded then
 		DataService.Save(player, session.Data, session.CanSave)
@@ -3158,6 +4871,7 @@ game:BindToClose(function()
 	local pending = 0
 	for player, session in pairs(Sessions) do
 		if session.Loaded then
+			VehicleService.Despawn(player)
 			pending += 1
 			task.spawn(function()
 				DataService.Save(player, session.Data, session.CanSave)
@@ -3245,13 +4959,27 @@ local function onDigRequest(player, hitPosition, direction)
 		end
 	end
 
-	local remainingKg = stats.Capacity - data.BagKg
-	if remainingKg <= 0.01 then
-		if now - session.LastBagFullNotice > 2 then
-			session.LastBagFullNotice = now
-			notify(player, { Kind = "BagFull" })
-		end
+	-- no hand digging from a driver's seat
+	local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+	if humanoid and humanoid.SeatPart then
 		return
+	end
+
+	local remainingKg = stats.Capacity - data.BagKg
+	local vehicleSink = nil
+	if remainingKg <= 0.01 then
+		-- bag full: overflow straight into your parked machine if it's close by
+		local entry = VehicleService.GetActive(player)
+		if entry and (entry.Chassis.Position - root.Position).Magnitude <= 32 and VehicleService.Room(entry) > 0.5 then
+			vehicleSink = entry
+			remainingKg = VehicleService.Room(entry)
+		else
+			if now - session.LastBagFullNotice > 2 then
+				session.LastBagFullNotice = now
+				notify(player, { Kind = "BagFull" })
+			end
+			return
+		end
 	end
 	session.LastDig = now
 
@@ -3273,7 +5001,11 @@ local function onDigRequest(player, hitPosition, direction)
 		return
 	end
 
-	data.BagKg = math.min(stats.Capacity, data.BagKg + kg)
+	if vehicleSink then
+		kg = VehicleService.AddStorage(vehicleSink, kg)
+	else
+		data.BagKg = math.min(stats.Capacity, data.BagKg + kg)
+	end
 	data.Stats.TotalKg += kg
 	session.ContributedKg += kg
 
@@ -3287,6 +5019,23 @@ Remotes.DigRequest.OnServerEvent:Connect(onDigRequest)
 --------------------------------------------------------------------------
 -- SELLING (Glass Furnace)
 --------------------------------------------------------------------------
+-- Sell kg of sand for cash (kiln pad, kiln truck bay). Returns cash earned.
+local function sellKg(player, kg, _position)
+	local session = Sessions[player]
+	if not session or not session.Loaded or kg <= 0 then
+		return 0
+	end
+	local data = session.Data
+	local stats = GameConfig.ComputeStats(data)
+	local value = math.max(1, math.floor(kg * stats.SellPrice * stats.ValueMultiplier + 0.5))
+	data.Cash += value
+	data.Stats.TotalEarned += value
+	WorldBuilder.AnimateSale(kg, value, player.DisplayName)
+	notify(player, { Kind = "Sell", Kg = kg, Cash = value, Multiplier = stats.ValueMultiplier })
+	pushState(player)
+	return value
+end
+
 local function trySell(player, session)
 	local data = session.Data
 	if data.BagKg <= 0.001 then
@@ -3431,6 +5180,57 @@ local function handlePurchase(player, kind, id)
 		end
 		pushState(player)
 		return true, string.format("%s upgraded to level %d!", skill.Name, level + 1)
+	elseif kind == "Vehicle" or kind == "SpawnVehicle" then
+		if type(id) ~= "string" then
+			return false, "Invalid vehicle"
+		end
+		local vehicle = GameConfig.GetVehicle(id)
+		if not vehicle then
+			return false, "Unknown vehicle"
+		end
+		if not data.OwnedVehicles[id] then
+			if kind == "SpawnVehicle" then
+				return false, "You don't own that yet"
+			end
+			local previous = GameConfig.Vehicles[vehicle.Index - 1]
+			if previous and not data.OwnedVehicles[previous.Id] then
+				return false, "Buy the " .. previous.Name .. " first"
+			end
+			if data.Cash < vehicle.Price then
+				return false, "Not enough cash"
+			end
+			data.Cash -= vehicle.Price
+			data.OwnedVehicles[id] = true
+		end
+		local ok, message = VehicleService.Spawn(player, id)
+		pushState(player)
+		return ok, message
+	elseif kind == "DespawnVehicle" then
+		VehicleService.Despawn(player)
+		pushState(player)
+		return true, "Machine parked back in the garage"
+	elseif kind == "Factory" then
+		if type(id) ~= "string" then
+			return false, "Invalid machine"
+		end
+		local machine = GameConfig.GetMachine(id)
+		if not machine then
+			return false, "Unknown machine"
+		end
+		if data.Factory[id] then
+			return false, "Already built"
+		end
+		local previous = GameConfig.Factory[machine.Index - 1]
+		if previous and not data.Factory[previous.Id] then
+			return false, "Build the " .. previous.Name .. " first"
+		end
+		if data.Cash < machine.Price then
+			return false, "Not enough cash"
+		end
+		data.Cash -= machine.Price
+		data.Factory[id] = true
+		pushState(player)
+		return true, machine.Name .. " is online!"
 	end
 	return false, "Unknown purchase"
 end
@@ -3450,6 +5250,100 @@ Remotes.GetState.OnServerInvoke = function(player)
 		return { Loaded = false }
 	end
 	return buildSnapshot(session)
+end
+
+--------------------------------------------------------------------------
+-- VEHICLES & FACTORY WIRING
+--------------------------------------------------------------------------
+VehicleService.Hooks.GetData = function(player)
+	local session = Sessions[player]
+	return session and session.Loaded and session.Data or nil
+end
+VehicleService.Hooks.Notify = notify
+VehicleService.Hooks.PushState = pushState
+VehicleService.Hooks.SellKg = sellKg
+VehicleService.Hooks.DepositHopper = function(player, kg)
+	local session = Sessions[player]
+	if not session or not session.Loaded then
+		return false
+	end
+	session.Data.FactoryBufferKg += kg
+	notify(player, { Kind = "Toast", Text = string.format("Dumped %s kg into the factory hopper.", Util.FormatKg(kg)), Color = "Ochre", Icon = "⛏" })
+	pushState(player)
+	return true
+end
+VehicleService.Hooks.LoadBag = function(player, entry)
+	local session = Sessions[player]
+	if not session or not session.Loaded then
+		return
+	end
+	local data = session.Data
+	if data.BagKg <= 0.01 then
+		notify(player, { Kind = "Toast", Text = "Your bag is empty.", Color = "Sky" })
+		return
+	end
+	local moved = VehicleService.AddStorage(entry, data.BagKg)
+	if moved <= 0 then
+		notify(player, { Kind = "Toast", Text = entry.Config.Name .. " is full!", Color = "Terracotta" })
+		return
+	end
+	data.BagKg -= moved
+	notify(player, { Kind = "Toast", Text = string.format("Loaded %s kg into your %s.", Util.FormatKg(moved), entry.Config.Name), Color = "Sage", Icon = entry.Config.Icon })
+	pushState(player)
+end
+VehicleService.Hooks.DigFx = function(player, position, kind, kg)
+	Remotes.DigFx:FireAllClients(player, position, kind, kg)
+end
+
+FactoryService.Hooks.GetData = VehicleService.Hooks.GetData
+FactoryService.Hooks.OnPayout = function(player, kg, stage, position)
+	local session = Sessions[player]
+	if not session or not session.Loaded then
+		return
+	end
+	local data = session.Data
+	local stats = GameConfig.ComputeStats(data)
+	local value = math.max(1, math.floor(kg * stats.SellPrice * stats.ValueMultiplier * GameConfig.StageMultiplier(stage) + 0.5))
+	data.Cash += value
+	data.Stats.TotalEarned += value
+	Remotes.FactoryFx:FireAllClients(player.UserId, position, value, stage)
+	pushState(player)
+end
+FactoryService.Hooks.OnHopperDump = function(player)
+	local session = Sessions[player]
+	if not session or not session.Loaded then
+		return
+	end
+	local data = session.Data
+	if not data.Factory.Hopper then
+		notify(player, { Kind = "Toast", Text = "Build the Input Hopper first (Shop → Factory).", Color = "Terracotta" })
+		Remotes.OpenMenu:FireClient(player, "Factory")
+		return
+	end
+	if data.BagKg <= 0.01 then
+		notify(player, { Kind = "Toast", Text = "Your bag is empty.", Color = "Sky" })
+		return
+	end
+	local kg = data.BagKg
+	data.BagKg = 0
+	data.FactoryBufferKg += kg
+	notify(player, { Kind = "Toast", Text = string.format("Dumped %s kg into the hopper.", Util.FormatKg(kg)), Color = "Ochre", Icon = "⛏" })
+	pushState(player)
+end
+FactoryService.Start()
+
+Remotes.VehicleAction.OnServerEvent:Connect(function(player, action)
+	if action == "Flip" then
+		VehicleService.Flip(player)
+	elseif action == "Scoop" then
+		VehicleService.Scoop(player)
+	end
+end)
+
+if WorldBuilder.Refs.GaragePrompt then
+	WorldBuilder.Refs.GaragePrompt.Triggered:Connect(function(player)
+		Remotes.OpenMenu:FireClient(player, "Vehicles")
+	end)
 end
 
 if WorldBuilder.Refs.ShopPrompt then
@@ -3539,6 +5433,7 @@ local function regenerateLot()
 	end
 	broadcastLot()
 	task.wait(LotConfig.RegenDelay)
+	VehicleService.EvacuateLot()
 
 	-- lift anyone standing in the pit before the sand returns
 	for _, player in ipairs(Players:GetPlayers()) do
@@ -3593,19 +5488,22 @@ print(string.format("[Sandsweep] Server ready - %s generated (%.0f cubic studs o
 created["SandsweepClient"] = make("LocalScript", "SandsweepClient", Containers.SPS)
 created["SandsweepClient"].Source = [======[
 -- SandsweepClient (LocalScript) - StarterPlayer/StarterPlayerScripts/SandsweepClient
--- Client entry point. Child ModuleScripts: ClientState, Effects, DigController, Interface.
+-- Client entry point. Child ModuleScripts: ClientState, Effects, DigController, Interface, VehicleController.
 
 local ClientState = require(script:WaitForChild("ClientState"))
 local Effects = require(script:WaitForChild("Effects"))
 local DigController = require(script:WaitForChild("DigController"))
 local Interface = require(script:WaitForChild("Interface"))
+local VehicleController = require(script:WaitForChild("VehicleController"))
 
 ClientState.Init()
 Effects.Init()
 Interface.Init({
 	OnDigPress = DigController.Press,
+	OnFlip = VehicleController.Flip,
 })
 DigController.Init()
+VehicleController.Init()
 ]======]
 
 -- ModuleScript: StarterPlayerScripts/SandsweepClient/ClientState.lua
@@ -3632,6 +5530,9 @@ ClientState.State = {
 	OwnedTools = { Hands = true },
 	Skills = { DigSpeed = 0, DigRadius = 0, SandValue = 0, WalkSpeed = 0 },
 	Finds = {},
+	OwnedVehicles = {},
+	Factory = {},
+	FactoryBufferKg = 0,
 	Stats = {},
 	Derived = GameConfig.ComputeStats(GameConfig.DefaultData),
 	DataMode = "Pending",
@@ -3639,6 +5540,7 @@ ClientState.State = {
 ClientState.Lot = { Name = GameConfig.Lot.Name, Percent = 0, Generating = false, FindsRemaining = #GameConfig.Finds }
 ClientState.UIOpen = false
 ClientState.DigHeld = false -- set by the mobile DIG button
+ClientState.InVehicle = nil -- { Model, Config, ... } while seated in a machine
 ClientState.Crosshair = "idle" -- "idle" | "valid" | "full" | "far" | "outside"
 
 -- Pure-Lua signal (no table copying, safe to pass any value)
@@ -3779,11 +5681,14 @@ local ambientPart
 local soundFolder
 local templates = {}
 local vacuumSound
+local engineSound
 local trauma = 0
 local shakeTime = 0
 
 local BURST = {
 	Hands = { Grains = 8, Dust = 2, Speed = 7 },
+	Bulldozer = { Grains = 26, Dust = 6, Speed = 15 },
+	Excavator = { Grains = 70, Dust = 18, Speed = 24 },
 	Spoon = { Grains = 10, Dust = 2, Speed = 9 },
 	Shovel = { Grains = 24, Dust = 5, Speed = 13 },
 	HandVac = { Grains = 5, Dust = 2, Speed = 6 },
@@ -3973,6 +5878,33 @@ function Effects.Init()
 	vacuumDistortion.Name = "Grit"
 	vacuumDistortion.Parent = vacuumSound
 	vacuumSound.Parent = soundFolder
+
+	-- diesel rumble for machines: the same wind loop, pitched way down and distorted
+	engineSound = Instance.new("Sound")
+	engineSound.Name = "EngineLoop"
+	engineSound.SoundId = S.VacuumLoop
+	engineSound.Looped = true
+	engineSound.Volume = 0
+	eq(8, -2, -16).Parent = engineSound
+	distortion(0.55).Parent = engineSound
+	engineSound.Parent = soundFolder
+end
+
+function Effects.UpdateEngine(running, speedFraction, dt)
+	if not engineSound then
+		return
+	end
+	local targetVolume = running and (0.35 + speedFraction * 0.25) or 0
+	local targetPitch = running and (0.32 + speedFraction * 0.38) or 0.25
+	engineSound.Volume += (targetVolume - engineSound.Volume) * math.min(1, dt * 4)
+	engineSound.PlaybackSpeed += (targetPitch - engineSound.PlaybackSpeed) * math.min(1, dt * 3)
+	if engineSound.Volume > 0.01 then
+		if not engineSound.IsPlaying then
+			engineSound:Play()
+		end
+	elseif engineSound.IsPlaying then
+		engineSound:Stop()
+	end
 end
 
 --------------------------------------------------------------------------
@@ -4437,7 +6369,7 @@ local function updateViewmodel(dt, camera)
 	local character = player.Character
 	local root = character and character:FindFirstChild("HumanoidRootPart")
 	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
-	if not root or not humanoid or humanoid.Health <= 0 then
+	if not root or not humanoid or humanoid.Health <= 0 or ClientState.InVehicle then
 		vm.Model.Parent = nil
 		return
 	end
@@ -4614,7 +6546,7 @@ local function step(dt)
 	end
 
 	local now = os.clock()
-	local blocked = ClientState.UIOpen or not state.Loaded
+	local blocked = ClientState.UIOpen or not state.Loaded or ClientState.InVehicle ~= nil
 	local holding = (mouseHeld or ClientState.DigHeld) and not blocked
 	if pressQueued and now - pressTime > 0.3 then
 		pressQueued = false
@@ -4741,8 +6673,12 @@ function DigController.Init()
 	end)
 
 	Remotes:WaitForChild("DigFx").OnClientEvent:Connect(function(digger, position, toolId)
-		if digger ~= player and typeof(position) == "Vector3" then
-			Effects.DigBurst(position, toolId, false, 0.45)
+		if typeof(position) ~= "Vector3" then
+			return
+		end
+		local isMachine = GameConfig.GetTool(toolId) == nil
+		if digger ~= player or isMachine then
+			Effects.DigBurst(position, toolId, digger == player and not isMachine, isMachine and 1 or 0.45)
 		end
 	end)
 
@@ -4777,6 +6713,8 @@ local Shared = ReplicatedStorage:WaitForChild("Sandsweep")
 local GameConfig = require(Shared:WaitForChild("GameConfig"))
 local ToolModels = require(Shared:WaitForChild("ToolModels"))
 local FindModels = require(Shared:WaitForChild("FindModels"))
+local VehicleModels = require(Shared:WaitForChild("VehicleModels"))
+local Remotes = Shared:WaitForChild("Remotes")
 local Util = require(Shared:WaitForChild("Util"))
 
 local ClientState = require(script.Parent:WaitForChild("ClientState"))
@@ -4792,7 +6730,9 @@ local BOLD = Enum.Font.GothamBold
 
 local hud = {}
 local menu = {}
-local shop = { Tab = "Tools", ToolCards = {}, BagCards = {} }
+local shop = { Tab = "Tools", ToolCards = {}, BagCards = {}, VehicleCards = {}, MachineCards = {} }
+local onFlip = nil
+local wasInVehicle = false
 local skills = { Nodes = {}, Lines = {}, Selected = nil }
 local journal = { Cards = {}, Selected = nil }
 local currentTab = nil
@@ -5104,7 +7044,7 @@ local function buildHUD(playerGui)
 	hud.BagCard = bagCard
 	hud.BagStroke = bagCard:FindFirstChildOfClass("UIStroke")
 	local fullPill = card({ Name = "FullPill", Size = UDim2.fromOffset(330, 32), AnchorPoint = Vector2.new(0.5, 1), Position = UDim2.new(0.5, 0, 0, -8), BackgroundColor3 = C.Terracotta, Radius = 16, Visible = false, Parent = bagCard })
-	text({ Size = UDim2.fromScale(1, 1), Text = "BAG FULL - melt it at the Glass Furnace 🔥", Font = BOLD, TextSize = 14, TextColor3 = C.Cream, TextXAlignment = Enum.TextXAlignment.Center, Parent = fullPill })
+	hud.FullPillLabel = text({ Size = UDim2.fromScale(1, 1), Text = "BAG FULL - melt it at the Glass Furnace 🔥", Font = BOLD, TextSize = 14, TextColor3 = C.Cream, TextXAlignment = Enum.TextXAlignment.Center, Parent = fullPill })
 	hud.FullPill = fullPill
 
 	-- TOOL
@@ -5212,6 +7152,16 @@ local function buildHUD(playerGui)
 				ClientState.DigHeld = false
 			end
 		end)
+		hud.DigButton = digButton
+		local flipButton = makeButton({ Name = "FlipButton", Size = UDim2.fromOffset(72, 72), AnchorPoint = Vector2.new(1, 1), Position = UDim2.new(1, -172, 1, -200), Color = C.Sky, TextColor = C.Ink, Text = "FLIP", Font = TITLE, TextSize = 20, Radius = 36, Parent = gui })
+		flipButton.Visible = false
+		stroke(C.Cream, 3).Parent = flipButton
+		flipButton.MouseButton1Click:Connect(function()
+			if onFlip then
+				onFlip()
+			end
+		end)
+		hud.FlipButton = flipButton
 	end
 end
 
@@ -5345,8 +7295,8 @@ local function buildShop()
 		new("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 8), SortOrder = Enum.SortOrder.LayoutOrder }),
 	})
 	shop.SubButtons = {}
-	for index, spec in ipairs({ { "Tools", "Tools" }, { "Bags", "Bags & Tanks" } }) do
-		local button = makeButton({ Name = spec[1], Size = UDim2.fromOffset(130, 32), Color = C.Paper, TextColor = C.Ink, Text = spec[2], TextSize = 14, LayoutOrder = index, Parent = subTabs })
+	for index, spec in ipairs({ { "Tools", "🛠 Tools" }, { "Bags", "🎒 Bags" }, { "Vehicles", "🚚 Vehicles" }, { "Factory", "🏭 Factory" } }) do
+		local button = makeButton({ Name = spec[1], Size = UDim2.fromOffset(124, 32), Color = C.Paper, TextColor = C.Ink, Text = spec[2], TextSize = 14, LayoutOrder = index, Parent = subTabs })
 		button.MouseButton1Click:Connect(function()
 			shop.Tab = spec[1]
 			Effects.Play("Click", 0.8, 1.1)
@@ -5429,6 +7379,73 @@ local function buildShop()
 		end)
 		shop.BagCards[bag.Tier] = { Row = row, Action = action }
 	end
+
+	-- VEHICLES
+	shop.VehicleList = makeList("VehicleList")
+	for index, vehicle in ipairs(GameConfig.Vehicles) do
+		local row = card({ Name = vehicle.Id, Size = UDim2.new(1, 0, 0, 112), LayoutOrder = index, BackgroundColor3 = C.Paper, Parent = shop.VehicleList }, { stroke(C.Ochre, 2) })
+		local holder = new("Frame", { Size = UDim2.fromOffset(120, 96), Position = UDim2.fromOffset(8, 8), BackgroundColor3 = C.Cream, BorderSizePixel = 0, Parent = row }, { corner(14) })
+		makeViewport(holder, VehicleModels.Build(vehicle.Id, true), { Size = UDim2.fromScale(1, 1), Direction = Vector3.new(-1.2, 0.7, -1), Zoom = 0.95 })
+		text({ Size = UDim2.new(1, -310, 0, 26), Position = UDim2.fromOffset(140, 8), Text = vehicle.Icon .. "  " .. vehicle.Name, Font = TITLE, TextSize = 22, Parent = row })
+		local extra = vehicle.Id == "Bulldozer" and "  ·  auto-blade" or (vehicle.Id == "Excavator" and "  ·  12-stud scoops" or "  ·  fastest")
+		text({ Size = UDim2.new(1, -310, 0, 18), Position = UDim2.fromOffset(140, 36), Text = string.format("Tier %d  ·  holds %s kg  ·  %d speed%s", vehicle.Tier, Util.Commas(vehicle.Capacity), vehicle.MaxSpeed, extra), Font = BOLD, TextSize = 13, TextColor3 = C.Terracotta, Parent = row })
+		text({ Size = UDim2.new(1, -310, 0, 48), Position = UDim2.fromOffset(140, 58), Text = vehicle.Description, TextWrapped = true, TextSize = 13, TextColor3 = C.InkSoft, TextYAlignment = Enum.TextYAlignment.Top, Parent = row })
+		local action = makeButton({ Name = "Action", Size = UDim2.fromOffset(150, 46), AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -14, 0.5, 0), Text = "", TextSize = 16, Parent = row })
+		action.MouseButton1Click:Connect(function()
+			local state = ClientState.State
+			local kind
+			if state.ActiveVehicle == vehicle.Id then
+				kind = "DespawnVehicle"
+			elseif state.OwnedVehicles and state.OwnedVehicles[vehicle.Id] then
+				kind = "SpawnVehicle"
+			else
+				kind = "Vehicle"
+			end
+			local ok, message = ClientState.Purchase(kind, vehicle.Id)
+			if ok then
+				Effects.Play(kind == "Vehicle" and "Sell" or "Click", 0.9, kind == "Vehicle" and 1.3 or 1)
+				if kind == "Vehicle" then
+					confetti(40)
+				end
+				Interface.Toast(message, "Sage", vehicle.Icon)
+				if kind ~= "DespawnVehicle" then
+					Interface.Close()
+				end
+			else
+				Effects.Play("Error", 0.6, 1)
+				Interface.Toast(message, "Terracotta")
+			end
+		end)
+		shop.VehicleCards[vehicle.Id] = { Row = row, Action = action }
+	end
+
+	-- FACTORY
+	shop.FactoryList = makeList("FactoryList")
+	shop.FactoryInfo = card({ Name = "Info", Size = UDim2.new(1, 0, 0, 44), LayoutOrder = 0, BackgroundColor3 = C.Cream, Parent = shop.FactoryList }, { stroke(C.Ochre, 2) })
+	shop.FactoryInfoLabel = text({ Size = UDim2.new(1, -24, 1, 0), Position = UDim2.fromOffset(12, 0), Text = "", Font = BOLD, TextSize = 14, TextWrapped = true, Parent = shop.FactoryInfo })
+	for index, machine in ipairs(GameConfig.Factory) do
+		local row = card({ Name = machine.Id, Size = UDim2.new(1, 0, 0, 92), LayoutOrder = index, BackgroundColor3 = C.Paper, Parent = shop.FactoryList }, { stroke(C.Ochre, 2) })
+		new("Frame", { Size = UDim2.fromOffset(72, 72), Position = UDim2.fromOffset(10, 10), BackgroundColor3 = C.Cream, BorderSizePixel = 0, Parent = row }, {
+			corner(36),
+			text({ Size = UDim2.fromScale(1, 1), Text = machine.Icon, Font = TITLE, TextSize = 34, TextXAlignment = Enum.TextXAlignment.Center }),
+		})
+		text({ Size = UDim2.new(1, -270, 0, 24), Position = UDim2.fromOffset(96, 8), Text = machine.Name, Font = TITLE, TextSize = 20, Parent = row })
+		text({ Size = UDim2.new(1, -270, 0, 18), Position = UDim2.fromOffset(96, 34), Text = string.format("Output: %s  ·  %dx value", machine.Product, machine.Multiplier), Font = BOLD, TextSize = 13, TextColor3 = C.Terracotta, Parent = row })
+		text({ Size = UDim2.new(1, -270, 0, 34), Position = UDim2.fromOffset(96, 54), Text = machine.Description, TextWrapped = true, TextSize = 13, TextColor3 = C.InkSoft, TextYAlignment = Enum.TextYAlignment.Top, Parent = row })
+		local action = makeButton({ Name = "Action", Size = UDim2.fromOffset(150, 44), AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -14, 0.5, 0), Text = "", TextSize = 16, Parent = row })
+		action.MouseButton1Click:Connect(function()
+			local ok, message = ClientState.Purchase("Factory", machine.Id)
+			if ok then
+				Effects.Fanfare()
+				confetti(40)
+				Interface.Toast(message, "Sage", machine.Icon)
+			else
+				Effects.Play("Error", 0.6, 1)
+				Interface.Toast(message, "Terracotta")
+			end
+		end)
+		shop.MachineCards[machine.Id] = { Row = row, Action = action }
+	end
 end
 
 local function styleAction(button, label, color, textColor, enabled)
@@ -5439,6 +7456,48 @@ local function styleAction(button, label, color, textColor, enabled)
 	button.AutoButtonColor = false
 end
 
+local function refreshMachines(state)
+	local owned = state.OwnedVehicles or {}
+	for _, vehicle in ipairs(GameConfig.Vehicles) do
+		local entry = shop.VehicleCards[vehicle.Id]
+		local previous = GameConfig.Vehicles[vehicle.Index - 1]
+		local unlocked = not previous or owned[previous.Id]
+		if state.ActiveVehicle == vehicle.Id then
+			styleAction(entry.Action, "Park (despawn)", C.Sky, C.Ink, true)
+		elseif owned[vehicle.Id] then
+			styleAction(entry.Action, "Spawn at Garage", C.Sage, C.Cream, true)
+		elseif not unlocked then
+			styleAction(entry.Action, "🔒 " .. Util.FormatCash(vehicle.Price), C.Locked, C.Ink, false)
+		elseif (state.Cash or 0) >= vehicle.Price then
+			styleAction(entry.Action, "Buy " .. Util.FormatCash(vehicle.Price), C.Ochre, C.Cream, true)
+		else
+			styleAction(entry.Action, Util.FormatCash(vehicle.Price), Color3.fromRGB(226, 206, 176), C.InkSoft, true)
+		end
+	end
+	local factory = state.Factory or {}
+	for _, machine in ipairs(GameConfig.Factory) do
+		local entry = shop.MachineCards[machine.Id]
+		local previous = GameConfig.Factory[machine.Index - 1]
+		local unlocked = not previous or factory[previous.Id]
+		if factory[machine.Id] then
+			styleAction(entry.Action, "Online ✓", C.Sage, C.Cream, false)
+		elseif not unlocked then
+			styleAction(entry.Action, "🔒 " .. Util.FormatCash(machine.Price), C.Locked, C.Ink, false)
+		elseif (state.Cash or 0) >= machine.Price then
+			styleAction(entry.Action, "Build " .. Util.FormatCash(machine.Price), C.Ochre, C.Cream, true)
+		else
+			styleAction(entry.Action, Util.FormatCash(machine.Price), Color3.fromRGB(226, 206, 176), C.InkSoft, true)
+		end
+	end
+	local stage = GameConfig.FactoryStage(state)
+	if stage < 0 then
+		shop.FactoryInfoLabel.Text = "🏭 Build the Input Hopper to start processing. Dump sand at the hopper (bag: E prompt · machines: drive onto the dump bay)."
+	else
+		shop.FactoryInfoLabel.Text = string.format("🏭 Hopper buffer: %s kg  ·  Your line outputs %sx value products", Util.FormatKg(state.FactoryBufferKg or 0), tostring(GameConfig.StageMultiplier(stage)))
+	end
+end
+
+
 function Interface.RefreshShop()
 	if not shop.ToolList then
 		return
@@ -5446,6 +7505,9 @@ function Interface.RefreshShop()
 	local state = ClientState.State
 	shop.ToolList.Visible = shop.Tab == "Tools"
 	shop.BagList.Visible = shop.Tab == "Bags"
+	shop.VehicleList.Visible = shop.Tab == "Vehicles"
+	shop.FactoryList.Visible = shop.Tab == "Factory"
+	refreshMachines(state)
 	for name, button in pairs(shop.SubButtons) do
 		local active = name == shop.Tab
 		button.BackgroundColor3 = active and C.Ochre or C.Paper
@@ -5963,10 +8025,35 @@ local function frame(dt)
 	end
 	hud.CashLabel.Text = Util.FormatCash(displayedCash)
 
-	-- bag fill
+	-- bag fill (switches to the machine's storage while driving)
 	local stats = ClientState.GetStats()
 	local capacity = math.max(stats.Capacity, 0.001)
 	local bagKg = state.BagKg or 0
+	local vehicle = ClientState.InVehicle
+	if vehicle and vehicle.Model.Parent then
+		capacity = math.max(vehicle.Model:GetAttribute("Capacity") or vehicle.Config.Capacity, 0.001)
+		bagKg = vehicle.Model:GetAttribute("StorageKg") or 0
+		hud.BagName.Text = string.format("%s  %s storage", vehicle.Config.Icon, vehicle.Config.Name)
+		hud.ToolName.Text = vehicle.Config.Name
+		hud.ToolHint.Text = vehicle.Config.Id == "Excavator" and "WASD drive · hold click: scoop · R flip" or "WASD drive · R flip · Space exit"
+		hud.ToolStats.Text = vehicle.Config.Id == "Bulldozer" and "Drive forward to carve sand with the blade" or "Dump bays: kiln (sell) · hopper (factory)"
+		if hud.FullPillLabel then
+			hud.FullPillLabel.Text = "MACHINE FULL - drive onto a dump bay 🚚"
+		end
+	elseif wasInVehicle then
+		refreshHUD(state)
+		if hud.FullPillLabel then
+			hud.FullPillLabel.Text = "BAG FULL - melt it at the Glass Furnace 🔥"
+		end
+	end
+	if hud.FlipButton then
+		hud.FlipButton.Visible = vehicle ~= nil
+	end
+	if hud.DigButton then
+		hud.DigButton.Text = (vehicle and vehicle.Config.Id == "Excavator") and "SCOOP" or "DIG"
+		hud.DigButton.Visible = vehicle == nil or vehicle.Config.Id == "Excavator"
+	end
+	wasInVehicle = vehicle ~= nil
 	displayedBag += (bagKg - displayedBag) * math.min(1, dt * 12)
 	if math.abs(bagKg - displayedBag) < 0.01 then
 		displayedBag = bagKg
@@ -6021,6 +8108,7 @@ end
 function Interface.Init(options)
 	options = options or {}
 	onDigPress = options.OnDigPress
+	onFlip = options.OnFlip
 	local playerGui = player:WaitForChild("PlayerGui")
 	pcall(function()
 		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, false)
@@ -6047,7 +8135,22 @@ function Interface.Init(options)
 	end)
 	ClientState.LotChanged:Connect(refreshLot)
 	ClientState.Notified:Connect(onNotify)
+	local lastPayoutSound = 0
+	Remotes:WaitForChild("FactoryFx").OnClientEvent:Connect(function(ownerUserId, position, value, stage)
+		if typeof(position) ~= "Vector3" or type(value) ~= "number" then
+			return
+		end
+		Effects.FloatingText(position + Vector3.new(0, 2.5, 0), "+" .. Util.FormatCash(value), Color3.fromRGB(110, 230, 130))
+		if ownerUserId == player.UserId and os.clock() - lastPayoutSound > 0.15 then
+			lastPayoutSound = os.clock()
+			Effects.Play("Sell", 0.45, 1.3 + (tonumber(stage) or 0) * 0.12)
+		end
+	end)
 	ClientState.MenuRequested:Connect(function(name)
+		if name == "Vehicles" or name == "Factory" or name == "Tools" or name == "Bags" then
+			shop.Tab = name
+			name = "Shop"
+		end
 		Interface.Open(name or "Shop")
 	end)
 
@@ -6074,6 +8177,222 @@ function Interface.Init(options)
 end
 
 return Interface
+]======]
+
+-- ModuleScript: StarterPlayerScripts/SandsweepClient/VehicleController.lua
+created["VehicleController"] = make("ModuleScript", "VehicleController", created["SandsweepClient"])
+created["VehicleController"].Source = [======[
+-- VehicleController (ModuleScript) - StarterPlayerScripts/SandsweepClient/VehicleController
+-- Drives the local player's machine. The server gives the driver network
+-- ownership; this script turns VehicleSeat throttle/steer into a planar
+-- LinearVelocity + a ground-hugging AlignOrientation (so machines never
+-- flip in craters). Also: [R] unstuck, excavator scoop input, wheel/roller
+-- spin for every machine, and the engine rumble.
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local Workspace = game:GetService("Workspace")
+
+local Shared = ReplicatedStorage:WaitForChild("Sandsweep")
+local GameConfig = require(Shared:WaitForChild("GameConfig"))
+local Remotes = Shared:WaitForChild("Remotes")
+
+local ClientState = require(script.Parent:WaitForChild("ClientState"))
+local Effects = require(script.Parent:WaitForChild("Effects"))
+
+local VehicleController = {}
+
+local player = Players.LocalPlayer
+local current = nil
+local scoopHeld = false
+local lastScoop = 0
+local lastFlip = 0
+local wheelBases = setmetatable({}, { __mode = "k" })
+local wheelAngles = setmetatable({}, { __mode = "k" })
+local wheelLists = setmetatable({}, { __mode = "k" })
+
+local groundParams = RaycastParams.new()
+groundParams.FilterType = Enum.RaycastFilterType.Exclude
+
+local function vehicleFromSeat(seatPart)
+	if not seatPart or not seatPart:IsA("VehicleSeat") then
+		return nil
+	end
+	local model = seatPart:FindFirstAncestorOfClass("Model")
+	while model and not model:GetAttribute("VehicleId") do
+		model = model:FindFirstAncestorOfClass("Model")
+	end
+	return model
+end
+
+local function moveToward(value, target, step)
+	if value < target then
+		return math.min(value + step, target)
+	end
+	return math.max(value - step, target)
+end
+
+local function begin(model, seat)
+	local chassis = model.PrimaryPart
+	local config = GameConfig.GetVehicle(model:GetAttribute("VehicleId"))
+	if not chassis or not config then
+		return nil
+	end
+	local look = chassis.CFrame.LookVector
+	return {
+		Model = model,
+		Seat = seat,
+		Chassis = chassis,
+		Config = config,
+		Yaw = math.atan2(-look.X, -look.Z),
+		Speed = chassis.AssemblyLinearVelocity:Dot(look),
+		Up = Vector3.yAxis,
+		Owned = model:GetAttribute("OwnerUserId") == player.UserId,
+	}
+end
+
+local function drive(dt)
+	local chassis = current.Chassis
+	local driveConstraint = chassis:FindFirstChild("Drive")
+	local align = chassis:FindFirstChild("Align")
+	if not driveConstraint or not align then
+		return
+	end
+	local config = current.Config
+	local throttle = current.Seat.ThrottleFloat
+	local steer = current.Seat.SteerFloat
+	local target = throttle * config.MaxSpeed
+	if throttle < 0 then
+		target *= 0.6
+	end
+	local braking = math.abs(target) < math.abs(current.Speed) or (target ~= 0 and math.sign(target) ~= math.sign(current.Speed))
+	current.Speed = moveToward(current.Speed, target, config.Acceleration * (braking and 2.2 or 1) * dt)
+
+	local turnFactor = config.TurnInPlace and 1 or math.clamp(math.abs(current.Speed) / 6, 0, 1)
+	local direction = current.Speed < -0.5 and -1 or 1
+	current.Yaw -= steer * config.TurnRate * dt * turnFactor * direction
+	local forward = Vector3.new(-math.sin(current.Yaw), 0, -math.cos(current.Yaw))
+
+	groundParams.FilterDescendantsInstances = { current.Model, player.Character }
+	local hit = Workspace:Raycast(chassis.Position, Vector3.new(0, -9, 0), groundParams)
+	local up = hit and hit.Normal or Vector3.yAxis
+	if up.Y < 0.55 then
+		up = Vector3.yAxis
+	end
+	current.Up = current.Up:Lerp(up, math.min(1, dt * 6)).Unit
+	local flatForward = (forward - current.Up * forward:Dot(current.Up)).Unit
+	local right = flatForward:Cross(current.Up)
+	align.CFrame = CFrame.fromMatrix(Vector3.zero, right, current.Up)
+
+	local velocity = forward * current.Speed
+	driveConstraint.PlaneVelocity = Vector2.new(velocity.X, velocity.Z)
+end
+
+local function animateWheels(dt)
+	local world = Workspace:FindFirstChild("SandsweepWorld")
+	local vehicles = world and world:FindFirstChild("Vehicles")
+	if not vehicles then
+		return
+	end
+	for _, model in ipairs(vehicles:GetChildren()) do
+		local chassis = model.PrimaryPart
+		if chassis then
+			local list = wheelLists[model]
+			if not list then
+				list = {}
+				for _, descendant in ipairs(model:GetDescendants()) do
+					if descendant:IsA("Weld") and descendant.Name == "WheelWeld" then
+						table.insert(list, descendant)
+					end
+				end
+				wheelLists[model] = list
+			end
+			local speed = chassis.AssemblyLinearVelocity:Dot(chassis.CFrame.LookVector)
+			if math.abs(speed) > 0.05 then
+				for _, weld in ipairs(list) do
+					if not wheelBases[weld] then
+						wheelBases[weld] = weld.C0
+					end
+					local radius = (weld.Part1 and weld.Part1:GetAttribute("Radius")) or 1
+					wheelAngles[weld] = ((wheelAngles[weld] or 0) - speed / radius * dt) % (math.pi * 2)
+					weld.C0 = wheelBases[weld] * CFrame.Angles(wheelAngles[weld], 0, 0)
+				end
+			end
+		end
+	end
+end
+
+function VehicleController.Flip()
+	if current and current.Owned and os.clock() - lastFlip > 2 then
+		lastFlip = os.clock()
+		Remotes:WaitForChild("VehicleAction"):FireServer("Flip")
+		Effects.Play("Swing", 0.8, 0.6)
+	end
+end
+
+function VehicleController.IsDriving()
+	return current ~= nil
+end
+
+local function step(dt)
+	local character = player.Character
+	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+	local seat = humanoid and humanoid.SeatPart
+	local model = vehicleFromSeat(seat)
+	if model then
+		if not current or current.Model ~= model then
+			current = begin(model, seat)
+		end
+	elseif current then
+		current = nil
+	end
+	ClientState.InVehicle = current
+
+	local speedFraction = 0
+	if current then
+		if current.Owned then
+			drive(dt)
+		end
+		speedFraction = math.clamp(math.abs(current.Speed) / current.Config.MaxSpeed, 0, 1)
+		if current.Config.Id == "Excavator" and current.Owned and (scoopHeld or ClientState.DigHeld) and not ClientState.UIOpen then
+			local now = os.clock()
+			if now - lastScoop >= current.Config.ScoopCooldown then
+				lastScoop = now
+				Remotes:WaitForChild("VehicleAction"):FireServer("Scoop")
+				Effects.Play("Swing", 1, 0.35)
+				task.delay(0.6, function()
+					Effects.Play("Dig", 1, 0.45)
+					Effects.Shake(0.25)
+				end)
+			end
+		end
+	end
+	Effects.UpdateEngine(current ~= nil, speedFraction, dt)
+	animateWheels(dt)
+end
+
+function VehicleController.Init()
+	UserInputService.InputBegan:Connect(function(input, gameProcessed)
+		if gameProcessed then
+			return
+		end
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.KeyCode == Enum.KeyCode.ButtonR2 then
+			scoopHeld = true
+		elseif input.KeyCode == Enum.KeyCode.R or input.KeyCode == Enum.KeyCode.ButtonY then
+			VehicleController.Flip()
+		end
+	end)
+	UserInputService.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.KeyCode == Enum.KeyCode.ButtonR2 then
+			scoopHeld = false
+		end
+	end)
+	RunService.Heartbeat:Connect(step)
+end
+
+return VehicleController
 ]======]
 
 -- Studio-only settings (Lighting.Technology can only be set from Studio)

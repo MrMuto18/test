@@ -17,6 +17,8 @@ local WorldBuilder = require(Modules:WaitForChild("WorldBuilder"))
 local LotService = require(Modules:WaitForChild("LotService"))
 local FindsService = require(Modules:WaitForChild("FindsService"))
 local DataService = require(Modules:WaitForChild("DataService"))
+local FactoryService = require(Modules:WaitForChild("FactoryService"))
+local VehicleService = require(Modules:WaitForChild("VehicleService"))
 
 local Economy = GameConfig.Economy
 local LotConfig = GameConfig.Lot
@@ -49,6 +51,8 @@ local Remotes = {
 	LotUpdate = ensureRemote("RemoteEvent", "LotUpdate"),
 	Notify = ensureRemote("RemoteEvent", "Notify"),
 	OpenMenu = ensureRemote("RemoteEvent", "OpenMenu"),
+	VehicleAction = ensureRemote("RemoteEvent", "VehicleAction"),
+	FactoryFx = ensureRemote("RemoteEvent", "FactoryFx"),
 	Purchase = ensureRemote("RemoteFunction", "Purchase"),
 	GetState = ensureRemote("RemoteFunction", "GetState"),
 }
@@ -60,6 +64,12 @@ DataService.Init()
 WorldBuilder.Build()
 LotService.Generate(math.random(1, 100000))
 FindsService.Spawn(math.random(1, 100000))
+FactoryService.Build(WorldBuilder.Refs.Root:FindFirstChild("Stations"), WorldBuilder.FactoryOrigin)
+VehicleService.Init({
+	GarageSpawns = WorldBuilder.Refs.GarageSpawns,
+	KilnBay = WorldBuilder.Refs.KilnBay,
+	HopperBay = FactoryService.Refs.HopperBay,
+})
 WorldBuilder.UpdateLotBoard(0, FindsService.CountRemaining(), false)
 
 local Sessions = {} -- [player] = session
@@ -87,6 +97,10 @@ local function buildSnapshot(session)
 		OwnedTools = data.OwnedTools,
 		Skills = data.Skills,
 		Finds = data.Finds,
+		OwnedVehicles = data.OwnedVehicles,
+		ActiveVehicle = session.Player:GetAttribute("ActiveVehicle"),
+		Factory = data.Factory,
+		FactoryBufferKg = data.FactoryBufferKg,
 		Stats = data.Stats,
 		Derived = stats,
 		DataMode = DataService.Mode,
@@ -252,6 +266,7 @@ local function onPlayerAdded(player)
 end
 
 local function onPlayerRemoving(player)
+	VehicleService.Despawn(player) -- stores the machine's load back into the save first
 	local session = Sessions[player]
 	if session and session.Loaded then
 		DataService.Save(player, session.Data, session.CanSave)
@@ -269,6 +284,7 @@ game:BindToClose(function()
 	local pending = 0
 	for player, session in pairs(Sessions) do
 		if session.Loaded then
+			VehicleService.Despawn(player)
 			pending += 1
 			task.spawn(function()
 				DataService.Save(player, session.Data, session.CanSave)
@@ -356,13 +372,27 @@ local function onDigRequest(player, hitPosition, direction)
 		end
 	end
 
-	local remainingKg = stats.Capacity - data.BagKg
-	if remainingKg <= 0.01 then
-		if now - session.LastBagFullNotice > 2 then
-			session.LastBagFullNotice = now
-			notify(player, { Kind = "BagFull" })
-		end
+	-- no hand digging from a driver's seat
+	local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+	if humanoid and humanoid.SeatPart then
 		return
+	end
+
+	local remainingKg = stats.Capacity - data.BagKg
+	local vehicleSink = nil
+	if remainingKg <= 0.01 then
+		-- bag full: overflow straight into your parked machine if it's close by
+		local entry = VehicleService.GetActive(player)
+		if entry and (entry.Chassis.Position - root.Position).Magnitude <= 32 and VehicleService.Room(entry) > 0.5 then
+			vehicleSink = entry
+			remainingKg = VehicleService.Room(entry)
+		else
+			if now - session.LastBagFullNotice > 2 then
+				session.LastBagFullNotice = now
+				notify(player, { Kind = "BagFull" })
+			end
+			return
+		end
 	end
 	session.LastDig = now
 
@@ -384,7 +414,11 @@ local function onDigRequest(player, hitPosition, direction)
 		return
 	end
 
-	data.BagKg = math.min(stats.Capacity, data.BagKg + kg)
+	if vehicleSink then
+		kg = VehicleService.AddStorage(vehicleSink, kg)
+	else
+		data.BagKg = math.min(stats.Capacity, data.BagKg + kg)
+	end
 	data.Stats.TotalKg += kg
 	session.ContributedKg += kg
 
@@ -398,6 +432,23 @@ Remotes.DigRequest.OnServerEvent:Connect(onDigRequest)
 --------------------------------------------------------------------------
 -- SELLING (Glass Furnace)
 --------------------------------------------------------------------------
+-- Sell kg of sand for cash (kiln pad, kiln truck bay). Returns cash earned.
+local function sellKg(player, kg, _position)
+	local session = Sessions[player]
+	if not session or not session.Loaded or kg <= 0 then
+		return 0
+	end
+	local data = session.Data
+	local stats = GameConfig.ComputeStats(data)
+	local value = math.max(1, math.floor(kg * stats.SellPrice * stats.ValueMultiplier + 0.5))
+	data.Cash += value
+	data.Stats.TotalEarned += value
+	WorldBuilder.AnimateSale(kg, value, player.DisplayName)
+	notify(player, { Kind = "Sell", Kg = kg, Cash = value, Multiplier = stats.ValueMultiplier })
+	pushState(player)
+	return value
+end
+
 local function trySell(player, session)
 	local data = session.Data
 	if data.BagKg <= 0.001 then
@@ -542,6 +593,57 @@ local function handlePurchase(player, kind, id)
 		end
 		pushState(player)
 		return true, string.format("%s upgraded to level %d!", skill.Name, level + 1)
+	elseif kind == "Vehicle" or kind == "SpawnVehicle" then
+		if type(id) ~= "string" then
+			return false, "Invalid vehicle"
+		end
+		local vehicle = GameConfig.GetVehicle(id)
+		if not vehicle then
+			return false, "Unknown vehicle"
+		end
+		if not data.OwnedVehicles[id] then
+			if kind == "SpawnVehicle" then
+				return false, "You don't own that yet"
+			end
+			local previous = GameConfig.Vehicles[vehicle.Index - 1]
+			if previous and not data.OwnedVehicles[previous.Id] then
+				return false, "Buy the " .. previous.Name .. " first"
+			end
+			if data.Cash < vehicle.Price then
+				return false, "Not enough cash"
+			end
+			data.Cash -= vehicle.Price
+			data.OwnedVehicles[id] = true
+		end
+		local ok, message = VehicleService.Spawn(player, id)
+		pushState(player)
+		return ok, message
+	elseif kind == "DespawnVehicle" then
+		VehicleService.Despawn(player)
+		pushState(player)
+		return true, "Machine parked back in the garage"
+	elseif kind == "Factory" then
+		if type(id) ~= "string" then
+			return false, "Invalid machine"
+		end
+		local machine = GameConfig.GetMachine(id)
+		if not machine then
+			return false, "Unknown machine"
+		end
+		if data.Factory[id] then
+			return false, "Already built"
+		end
+		local previous = GameConfig.Factory[machine.Index - 1]
+		if previous and not data.Factory[previous.Id] then
+			return false, "Build the " .. previous.Name .. " first"
+		end
+		if data.Cash < machine.Price then
+			return false, "Not enough cash"
+		end
+		data.Cash -= machine.Price
+		data.Factory[id] = true
+		pushState(player)
+		return true, machine.Name .. " is online!"
 	end
 	return false, "Unknown purchase"
 end
@@ -561,6 +663,100 @@ Remotes.GetState.OnServerInvoke = function(player)
 		return { Loaded = false }
 	end
 	return buildSnapshot(session)
+end
+
+--------------------------------------------------------------------------
+-- VEHICLES & FACTORY WIRING
+--------------------------------------------------------------------------
+VehicleService.Hooks.GetData = function(player)
+	local session = Sessions[player]
+	return session and session.Loaded and session.Data or nil
+end
+VehicleService.Hooks.Notify = notify
+VehicleService.Hooks.PushState = pushState
+VehicleService.Hooks.SellKg = sellKg
+VehicleService.Hooks.DepositHopper = function(player, kg)
+	local session = Sessions[player]
+	if not session or not session.Loaded then
+		return false
+	end
+	session.Data.FactoryBufferKg += kg
+	notify(player, { Kind = "Toast", Text = string.format("Dumped %s kg into the factory hopper.", Util.FormatKg(kg)), Color = "Ochre", Icon = "⛏" })
+	pushState(player)
+	return true
+end
+VehicleService.Hooks.LoadBag = function(player, entry)
+	local session = Sessions[player]
+	if not session or not session.Loaded then
+		return
+	end
+	local data = session.Data
+	if data.BagKg <= 0.01 then
+		notify(player, { Kind = "Toast", Text = "Your bag is empty.", Color = "Sky" })
+		return
+	end
+	local moved = VehicleService.AddStorage(entry, data.BagKg)
+	if moved <= 0 then
+		notify(player, { Kind = "Toast", Text = entry.Config.Name .. " is full!", Color = "Terracotta" })
+		return
+	end
+	data.BagKg -= moved
+	notify(player, { Kind = "Toast", Text = string.format("Loaded %s kg into your %s.", Util.FormatKg(moved), entry.Config.Name), Color = "Sage", Icon = entry.Config.Icon })
+	pushState(player)
+end
+VehicleService.Hooks.DigFx = function(player, position, kind, kg)
+	Remotes.DigFx:FireAllClients(player, position, kind, kg)
+end
+
+FactoryService.Hooks.GetData = VehicleService.Hooks.GetData
+FactoryService.Hooks.OnPayout = function(player, kg, stage, position)
+	local session = Sessions[player]
+	if not session or not session.Loaded then
+		return
+	end
+	local data = session.Data
+	local stats = GameConfig.ComputeStats(data)
+	local value = math.max(1, math.floor(kg * stats.SellPrice * stats.ValueMultiplier * GameConfig.StageMultiplier(stage) + 0.5))
+	data.Cash += value
+	data.Stats.TotalEarned += value
+	Remotes.FactoryFx:FireAllClients(player.UserId, position, value, stage)
+	pushState(player)
+end
+FactoryService.Hooks.OnHopperDump = function(player)
+	local session = Sessions[player]
+	if not session or not session.Loaded then
+		return
+	end
+	local data = session.Data
+	if not data.Factory.Hopper then
+		notify(player, { Kind = "Toast", Text = "Build the Input Hopper first (Shop → Factory).", Color = "Terracotta" })
+		Remotes.OpenMenu:FireClient(player, "Factory")
+		return
+	end
+	if data.BagKg <= 0.01 then
+		notify(player, { Kind = "Toast", Text = "Your bag is empty.", Color = "Sky" })
+		return
+	end
+	local kg = data.BagKg
+	data.BagKg = 0
+	data.FactoryBufferKg += kg
+	notify(player, { Kind = "Toast", Text = string.format("Dumped %s kg into the hopper.", Util.FormatKg(kg)), Color = "Ochre", Icon = "⛏" })
+	pushState(player)
+end
+FactoryService.Start()
+
+Remotes.VehicleAction.OnServerEvent:Connect(function(player, action)
+	if action == "Flip" then
+		VehicleService.Flip(player)
+	elseif action == "Scoop" then
+		VehicleService.Scoop(player)
+	end
+end)
+
+if WorldBuilder.Refs.GaragePrompt then
+	WorldBuilder.Refs.GaragePrompt.Triggered:Connect(function(player)
+		Remotes.OpenMenu:FireClient(player, "Vehicles")
+	end)
 end
 
 if WorldBuilder.Refs.ShopPrompt then
@@ -650,6 +846,7 @@ local function regenerateLot()
 	end
 	broadcastLot()
 	task.wait(LotConfig.RegenDelay)
+	VehicleService.EvacuateLot()
 
 	-- lift anyone standing in the pit before the sand returns
 	for _, player in ipairs(Players:GetPlayers()) do

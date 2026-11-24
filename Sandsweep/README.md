@@ -34,14 +34,17 @@ ReplicatedStorage
     │   ├── StateUpdate            RemoteEvent     server → client  (full state snapshot)
     │   ├── LotUpdate              RemoteEvent     server → all     (% cleared, regen state)
     │   ├── Notify                 RemoteEvent     server → client  (toasts, sells, finds…)
-    │   ├── OpenMenu               RemoteEvent     server → client  (booth prompt)
+    │   ├── OpenMenu               RemoteEvent     server → client  (booth / garage prompts)
+    │   ├── VehicleAction          RemoteEvent     client → server  ("Flip" | "Scoop")
+    │   ├── FactoryFx              RemoteEvent     server → all     (owner, pos, cash, stage)
     │   ├── Purchase               RemoteFunction  client → server  (kind, id) → ok, msg
     │   └── GetState               RemoteFunction  client → server  → snapshot
     ├── GameConfig                 ModuleScript    all tuning: tools, bags, skills, 14 finds, prices
     ├── Util                       ModuleScript    formatting, deep copy, vector validation
     ├── PartKit                    ModuleScript    procedural part/cylinder/ellipsoid helpers
     ├── ToolModels                 ModuleScript    Spoon, Shovel, Hand Vacuum, Turbine Vacuum models
-    └── FindModels                 ModuleScript    the 14 relic models
+    ├── FindModels                 ModuleScript    the 14 relic models
+    └── VehicleModels              ModuleScript    Dump Truck, Bulldozer, Mega Excavator (jointed beds/booms)
 
 ServerScriptService
 └── Sandsweep                      Folder
@@ -49,7 +52,9 @@ ServerScriptService
     ├── WorldBuilder               ModuleScript    lighting, terrain dunes, bedrock, walls, fence, stations
     ├── LotService                 ModuleScript    Smooth Terrain lot: generate, FillBall + voxel weighing, % cleared
     ├── FindsService               ModuleScript    bury, uncover detection, ProximityPrompt collection
-    └── DataService                ModuleScript    DataStore load/save with pcall, retries, memory fallback
+    ├── DataService                ModuleScript    DataStore load/save with pcall, retries, memory fallback
+    ├── FactoryService             ModuleScript    hopper, conveyor belts, Furnace/Press/Refinery, Auto-Seller
+    └── VehicleService             ModuleScript    garage spawning, driver ownership, blade/scoop digging, dump bays
 
 StarterPlayer
 └── StarterPlayerScripts
@@ -57,10 +62,38 @@ StarterPlayer
         ├── ClientState            ModuleScript    mirror of server state + signals
         ├── Effects                ModuleScript    particles, suction beam, sounds, shake, floating text
         ├── DigController          ModuleScript    input, camera raycast, viewmodel animation
-        └── Interface              ModuleScript    HUD, Shop, Skill Tree, Finds Journal, toasts
+        ├── Interface              ModuleScript    HUD, Shop (Tools/Bags/Vehicles/Factory), Skill Tree, Journal
+        └── VehicleController      ModuleScript    driving, ground-hugging, [R] flip, excavator input, wheel spin
 ```
 
 At runtime the server also creates `Workspace/SandsweepWorld/` (Map, Stations, Finds, spawn), and each client creates `Workspace/SandsweepFX_Local`.
+
+## Heavy machinery
+
+Buy machines in **Shop → Vehicles**, in order. They spawn at the **Garage** pad (one active per player). Only the owner can drive. Walk up and press **E** to drive, or **F** to load your bag into the machine. If your bag is full and your machine is parked within ~30 studs, new sand flows straight into it.
+
+| Machine | Price | Storage | What it does |
+|---|---|---|---|
+| Mini Dump Truck | $15,000 | 2,500 kg | Fast hauler. On a dump bay the bed tilts hydraulically and pours. |
+| Bulldozer | $40,000 | 5,000 kg | Driving forward, the blade carves three 3.2-stud balls every 0.1 s. |
+| Mega Excavator | $100,000 | 15,000 kg | Hold click: the boom, stick and bucket swing and scoop a 12-stud radius. |
+
+Driving is arcade-style and physics-safe. The server gives the driver network ownership. The client turns throttle and steer into a planar `LinearVelocity`, plus an `AlignOrientation` that follows the ground normal, so machines can't flip in craters. Only four invisible low-friction balls touch the ground. **R** (or FLIP on mobile) lifts and rights a stuck machine. While seated, the bag bar switches to the machine's storage.
+
+**Dump bays:** the **Kiln Dump Bay** sells the load at 1x. The **Hopper Dump Bay** feeds the factory.
+
+## Sand factory
+
+Build it in **Shop → Factory**, in order:
+
+| Machine | Price | Product | Value |
+|---|---|---|---|
+| Input Hopper & Conveyor | $5,000 | Sand chunk | 1x |
+| Industrial Glass Furnace | $12,000 | Glass pane | 3x |
+| Concrete Brick Press | $35,000 | Concrete block | 6x |
+| Silicon Microchip Refinery | $120,000 | Microchip | 15x |
+
+Dump sand into the hopper: from your bag with the **E** prompt, or from a machine via the dump bay. The buffer spawns `SandChunk` parts onto belts that move with `AssemblyLinearVelocity`. There are at most 30 chunks per player and 120 in total; a big buffer packs more kg into each chunk. Each machine only upgrades chunks whose owner built it. The Auto-Seller pays kg × price × skill value × product multiplier and shows a green `+$` popup. A chunk that falls off or gets stuck still pays out at its current stage.
 
 ## Controls
 
@@ -69,7 +102,9 @@ At runtime the server also creates `Workspace/SandsweepWorld/` (Map, Stations, F
 | Left click / R2 / **DIG** button (touch) | Dig. Hands and spoon: click. Shovel: click or hold. Vacuums: hold. |
 | `1`–`5` | Swap to an owned tool |
 | `B` / `K` / `J` | Shop / Skill Tree / Finds Journal |
-| `E` | Collect an uncovered relic · open the Upgrade Booth |
+| `E` | Collect a relic · open the Upgrade Booth / Garage · drive your machine · dump bag into the hopper |
+| `F` | Load your bag into your machine |
+| `W A S D` / `R` / `Space` | Drive · flip/unstuck · get out |
 | Step on the furnace hot plate | Sell your whole bag |
 
 ## How the core systems work

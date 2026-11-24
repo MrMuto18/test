@@ -19,6 +19,9 @@ ClientState.State = {
 	OwnedTools = { Hands = true },
 	Skills = { DigSpeed = 0, DigRadius = 0, SandValue = 0, WalkSpeed = 0 },
 	Finds = {},
+	OwnedVehicles = {},
+	Factory = {},
+	FactoryBufferKg = 0,
 	Stats = {},
 	Derived = GameConfig.ComputeStats(GameConfig.DefaultData),
 	DataMode = "Pending",
@@ -26,6 +29,7 @@ ClientState.State = {
 ClientState.Lot = { Name = GameConfig.Lot.Name, Percent = 0, Generating = false, FindsRemaining = #GameConfig.Finds }
 ClientState.UIOpen = false
 ClientState.DigHeld = false -- set by the mobile DIG button
+ClientState.InVehicle = nil -- { Model, Config, ... } while seated in a machine
 ClientState.Crosshair = "idle" -- "idle" | "valid" | "full" | "far" | "outside"
 
 -- Pure-Lua signal (no table copying, safe to pass any value)

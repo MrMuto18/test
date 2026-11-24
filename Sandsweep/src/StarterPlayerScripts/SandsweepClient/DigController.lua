@@ -263,7 +263,7 @@ local function updateViewmodel(dt, camera)
 	local character = player.Character
 	local root = character and character:FindFirstChild("HumanoidRootPart")
 	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
-	if not root or not humanoid or humanoid.Health <= 0 then
+	if not root or not humanoid or humanoid.Health <= 0 or ClientState.InVehicle then
 		vm.Model.Parent = nil
 		return
 	end
@@ -440,7 +440,7 @@ local function step(dt)
 	end
 
 	local now = os.clock()
-	local blocked = ClientState.UIOpen or not state.Loaded
+	local blocked = ClientState.UIOpen or not state.Loaded or ClientState.InVehicle ~= nil
 	local holding = (mouseHeld or ClientState.DigHeld) and not blocked
 	if pressQueued and now - pressTime > 0.3 then
 		pressQueued = false
@@ -567,8 +567,12 @@ function DigController.Init()
 	end)
 
 	Remotes:WaitForChild("DigFx").OnClientEvent:Connect(function(digger, position, toolId)
-		if digger ~= player and typeof(position) == "Vector3" then
-			Effects.DigBurst(position, toolId, false, 0.45)
+		if typeof(position) ~= "Vector3" then
+			return
+		end
+		local isMachine = GameConfig.GetTool(toolId) == nil
+		if digger ~= player or isMachine then
+			Effects.DigBurst(position, toolId, digger == player and not isMachine, isMachine and 1 or 0.45)
 		end
 	end)
 

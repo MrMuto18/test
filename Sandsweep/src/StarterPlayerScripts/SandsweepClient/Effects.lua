@@ -26,11 +26,14 @@ local ambientPart
 local soundFolder
 local templates = {}
 local vacuumSound
+local engineSound
 local trauma = 0
 local shakeTime = 0
 
 local BURST = {
 	Hands = { Grains = 8, Dust = 2, Speed = 7 },
+	Bulldozer = { Grains = 26, Dust = 6, Speed = 15 },
+	Excavator = { Grains = 70, Dust = 18, Speed = 24 },
 	Spoon = { Grains = 10, Dust = 2, Speed = 9 },
 	Shovel = { Grains = 24, Dust = 5, Speed = 13 },
 	HandVac = { Grains = 5, Dust = 2, Speed = 6 },
@@ -220,6 +223,33 @@ function Effects.Init()
 	vacuumDistortion.Name = "Grit"
 	vacuumDistortion.Parent = vacuumSound
 	vacuumSound.Parent = soundFolder
+
+	-- diesel rumble for machines: the same wind loop, pitched way down and distorted
+	engineSound = Instance.new("Sound")
+	engineSound.Name = "EngineLoop"
+	engineSound.SoundId = S.VacuumLoop
+	engineSound.Looped = true
+	engineSound.Volume = 0
+	eq(8, -2, -16).Parent = engineSound
+	distortion(0.55).Parent = engineSound
+	engineSound.Parent = soundFolder
+end
+
+function Effects.UpdateEngine(running, speedFraction, dt)
+	if not engineSound then
+		return
+	end
+	local targetVolume = running and (0.35 + speedFraction * 0.25) or 0
+	local targetPitch = running and (0.32 + speedFraction * 0.38) or 0.25
+	engineSound.Volume += (targetVolume - engineSound.Volume) * math.min(1, dt * 4)
+	engineSound.PlaybackSpeed += (targetPitch - engineSound.PlaybackSpeed) * math.min(1, dt * 3)
+	if engineSound.Volume > 0.01 then
+		if not engineSound.IsPlaying then
+			engineSound:Play()
+		end
+	elseif engineSound.IsPlaying then
+		engineSound:Stop()
+	end
 end
 
 --------------------------------------------------------------------------

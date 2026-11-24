@@ -25,7 +25,10 @@ local HALF_Z = Lot.SizeZ / 2
 local WORLD_R = Lot.WorldRadius
 local CAMP_Y = Lot.CampY
 local CAMP_Z = Lot.CenterZ + HALF_Z + Lot.CampDepth / 2
-local CAMP_HALF_X = 56
+local CAMP_HALF_X = 84
+local ROW1_Z = Lot.CenterZ + HALF_Z + 26 -- kiln, booth, garage, spawn
+local FACTORY_Z = Lot.CenterZ + HALF_Z + 70 -- conveyor factory row
+WorldBuilder.FactoryOrigin = CFrame.new(Lot.CenterX, CAMP_Y, FACTORY_Z)
 local RES = 4
 
 local function smoothstep(t)
@@ -435,13 +438,13 @@ local function buildDecor(parent)
 
 	-- camp lamps
 	for _, spot in ipairs({ Vector3.new(-12, 0, 10), Vector3.new(12, 0, 10), Vector3.new(-44, 0, -16), Vector3.new(44, 0, -16), Vector3.new(-9, 0, -18), Vector3.new(9, 0, -18) }) do
-		buildLamp(decor, Vector3.new(Lot.CenterX + spot.X, CAMP_Y, CAMP_Z + spot.Z))
+		buildLamp(decor, Vector3.new(Lot.CenterX + spot.X, CAMP_Y, ROW1_Z + spot.Z))
 	end
 
 	-- boardwalks across the camp
 	local planks = Color3.fromRGB(170, 120, 76)
-	solid(decor, { Name = "Boardwalk", Size = Vector3.new(34, 0.3, 6), CFrame = CFrame.new(Lot.CenterX, CAMP_Y + 0.15, CAMP_Z), Material = Enum.Material.WoodPlanks, Color = planks })
-	solid(decor, { Name = "Boardwalk", Size = Vector3.new(6, 0.3, 34), CFrame = CFrame.new(Lot.CenterX, CAMP_Y + 0.15, CAMP_Z - 3), Material = Enum.Material.WoodPlanks, Color = planks })
+	solid(decor, { Name = "Boardwalk", Size = Vector3.new(34, 0.3, 6), CFrame = CFrame.new(Lot.CenterX, CAMP_Y + 0.15, ROW1_Z), Material = Enum.Material.WoodPlanks, Color = planks })
+	solid(decor, { Name = "Boardwalk", Size = Vector3.new(6, 0.3, 34), CFrame = CFrame.new(Lot.CenterX, CAMP_Y + 0.15, ROW1_Z - 3), Material = Enum.Material.WoodPlanks, Color = planks })
 
 	-- gateway arch facing the desert
 	local archZ = Lot.CenterZ + HALF_Z + 6
@@ -462,7 +465,7 @@ local function buildDecor(parent)
 	})
 	addSurfaceText(archSign, Enum.NormalId.Front, {
 		{ Text = "BASE CAMP  ⛺", Height = 0.55 },
-		{ Text = "Glass Furnace • Upgrade Booth", Height = 0.28, Font = Enum.Font.GothamBold, Color = Palette.InkSoft },
+		{ Text = "Kiln • Upgrade Booth • Garage • Factory", Height = 0.28, Font = Enum.Font.GothamBold, Color = Palette.InkSoft },
 	})
 	addSurfaceText(archSign, Enum.NormalId.Back, {
 		{ Text = string.upper(Lot.Name), Height = 0.55 },
@@ -471,7 +474,7 @@ local function buildDecor(parent)
 
 	-- sand sack pile near the weigh station
 	for i = 0, 4 do
-		PartKit.Ellipsoid(decor, Vector3.new(2.2, 1.6, 1.6), CFrame.new(Lot.CenterX - 44 + (i % 3) * 1.8, CAMP_Y + 0.8 + math.floor(i / 3) * 1.3, CAMP_Z + 4 + (i % 2) * 0.6) * CFrame.Angles(0, i, 0), {
+		PartKit.Ellipsoid(decor, Vector3.new(2.2, 1.6, 1.6), CFrame.new(Lot.CenterX - 36 + (i % 3) * 1.8, CAMP_Y + 0.8 + math.floor(i / 3) * 1.3, ROW1_Z + 16 + (i % 2) * 0.6) * CFrame.Angles(0, i, 0), {
 			Name = "Sack",
 			Material = Enum.Material.Fabric,
 			Color = Color3.fromRGB(196, 160, 108),
@@ -527,7 +530,7 @@ end
 
 local function buildGlassFurnace(parent)
 	local station = folder("GlassFurnace", parent)
-	local origin = CFrame.new(Lot.CenterX - 26, CAMP_Y, CAMP_Z)
+	local origin = CFrame.new(Lot.CenterX - 26, CAMP_Y, ROW1_Z)
 	local brick = Color3.fromRGB(186, 94, 62)
 	local brickDark = Color3.fromRGB(138, 70, 50)
 	local ember = Color3.fromRGB(255, 140, 60)
@@ -719,7 +722,7 @@ end
 --------------------------------------------------------------------------
 local function buildUpgradeBooth(parent)
 	local booth = folder("UpgradeBooth", parent)
-	local origin = CFrame.new(Lot.CenterX + 26, CAMP_Y, CAMP_Z)
+	local origin = CFrame.new(Lot.CenterX + 26, CAMP_Y, ROW1_Z)
 	local wood = Color3.fromRGB(176, 122, 76)
 
 	solid(booth, { Name = "Floor", Size = Vector3.new(14, 0.4, 11), CFrame = origin * CFrame.new(Vector3.new(0, 0.2, 0.5)), Material = Enum.Material.WoodPlanks, Color = wood })
@@ -787,11 +790,79 @@ local function buildUpgradeBooth(parent)
 end
 
 --------------------------------------------------------------------------
+-- TRUCK DUMP BAY (next to the kiln) + GARAGE
+--------------------------------------------------------------------------
+local function bayPad(parent, name, center, size, title, subtitle, signSide)
+	local pad = solid(parent, {
+		Name = name,
+		Size = Vector3.new(size.X, 0.3, size.Z),
+		CFrame = CFrame.new(center + Vector3.new(0, 0.15, 0)),
+		Material = Enum.Material.Concrete,
+		Color = Color3.fromRGB(120, 112, 104),
+	})
+	local stripe = Color3.fromRGB(242, 186, 48)
+	for _, spec in ipairs({
+		{ Vector3.new(size.X, 0.32, 0.5), Vector3.new(0, 0.16, -size.Z / 2) },
+		{ Vector3.new(size.X, 0.32, 0.5), Vector3.new(0, 0.16, size.Z / 2) },
+		{ Vector3.new(0.5, 0.32, size.Z), Vector3.new(-size.X / 2, 0.16, 0) },
+		{ Vector3.new(0.5, 0.32, size.Z), Vector3.new(size.X / 2, 0.16, 0) },
+	}) do
+		solid(parent, { Name = "Stripe", Size = spec[1], CFrame = CFrame.new(center + spec[2]), Material = Enum.Material.Neon, Color = stripe, CastShadow = false, CanCollide = false })
+	end
+	local signPos = center + Vector3.new(signSide * (size.X / 2 + 1.5), 0, 0)
+	PartKit.Cylinder(parent, 7, 0.5, CFrame.new(signPos + Vector3.new(0, 3.5, 0)), "Y", { Name = "SignPost", Material = Enum.Material.Wood, Color = Palette.WoodDark, CanCollide = true, CanQuery = true })
+	local sign = PartKit.Part(parent, { Name = "BaySign", Size = Vector3.new(8, 2.2, 0.3), CFrame = CFrame.new(signPos + Vector3.new(0, 6.6, 0)), Color = Palette.Cream })
+	addSurfaceText(sign, Enum.NormalId.Front, {
+		{ Text = title, Height = 0.5 },
+		{ Text = subtitle, Height = 0.3, Font = Enum.Font.GothamBold, Color = Palette.InkSoft },
+	})
+	return pad
+end
+
+local function buildBaysAndGarage(parent)
+	local yard = folder("Yard", parent)
+	WorldBuilder.Refs.KilnBay = bayPad(yard, "KilnTruckBay", Vector3.new(Lot.CenterX - 52, CAMP_Y, ROW1_Z), Vector3.new(16, 0, 18), "🚚 KILN DUMP BAY", "Drive in to tip & sell (1x)", 1)
+
+	local garage = folder("Garage", parent)
+	local center = Vector3.new(Lot.CenterX + 58, CAMP_Y, ROW1_Z)
+	bayPad(garage, "GaragePad", center, Vector3.new(26, 0, 24), "🔧 GARAGE", "Spawn your machines here", -1)
+	-- shed at the back of the pad
+	solid(garage, { Name = "ShedWall", Size = Vector3.new(26, 9, 0.6), CFrame = CFrame.new(center + Vector3.new(0, 4.5, 13)), Material = Enum.Material.CorrodedMetal, Color = Color3.fromRGB(150, 120, 100) })
+	for _, x in ipairs({ -12.6, 12.6 }) do
+		solid(garage, { Name = "ShedPost", Size = Vector3.new(0.8, 9, 0.8), CFrame = CFrame.new(center + Vector3.new(x, 4.5, 6)), Material = Enum.Material.Metal, Color = Color3.fromRGB(60, 60, 64) })
+	end
+	for i = 0, 6 do
+		PartKit.Part(garage, {
+			Name = "ShedRoof",
+			Size = Vector3.new(3.8, 0.35, 15),
+			CFrame = CFrame.new(center + Vector3.new(-11.4 + i * 3.8, 9.3, 6.5)) * CFrame.Angles(math.rad(-6), 0, 0),
+			Color = (i % 2 == 0) and Color3.fromRGB(242, 186, 48) or Color3.fromRGB(64, 64, 68),
+		})
+	end
+	local kiosk = solid(garage, { Name = "Kiosk", Size = Vector3.new(2.4, 4, 2.4), CFrame = CFrame.new(center + Vector3.new(-15.5, 2, -8)), Material = Enum.Material.Metal, Color = Color3.fromRGB(242, 186, 48) })
+	local prompt = Instance.new("ProximityPrompt")
+	prompt.Name = "GaragePrompt"
+	prompt.ActionText = "Open Garage"
+	prompt.ObjectText = "Vehicles"
+	prompt.HoldDuration = 0
+	prompt.MaxActivationDistance = 12
+	prompt.RequiresLineOfSight = false
+	prompt.Parent = kiosk
+	WorldBuilder.Refs.GaragePrompt = prompt
+	WorldBuilder.Refs.GarageSpawns = {
+		CFrame.new(center + Vector3.new(-6, 3.2, -1)),
+		CFrame.new(center + Vector3.new(6, 3.2, -1)),
+		CFrame.new(center + Vector3.new(0, 3.2, -22)),
+		CFrame.new(center + Vector3.new(-14, 3.2, -24)),
+	}
+end
+
+--------------------------------------------------------------------------
 -- LOT PROGRESS BOARD + SPAWN
 --------------------------------------------------------------------------
 local function buildLotBoard(parent)
 	local boardFolder = folder("LotBoard", parent)
-	local origin = Vector3.new(Lot.CenterX - 14, CAMP_Y, CAMP_Z - 10)
+	local origin = Vector3.new(Lot.CenterX - 14, CAMP_Y, ROW1_Z - 10)
 	for _, x in ipairs({ -3.6, 3.6 }) do
 		solid(boardFolder, { Name = "Leg", Size = Vector3.new(0.5, 6, 0.5), CFrame = CFrame.new(origin + Vector3.new(x, 3, 0)), Material = Enum.Material.Wood, Color = Palette.WoodDark })
 	end
@@ -813,7 +884,7 @@ local function buildSpawn(parent)
 	local spawn = Instance.new("SpawnLocation")
 	spawn.Name = "SandsweepSpawn"
 	spawn.Size = Vector3.new(8, 0.4, 8)
-	spawn.CFrame = CFrame.new(Lot.CenterX, CAMP_Y + 0.2, CAMP_Z + 12)
+	spawn.CFrame = CFrame.new(Lot.CenterX, CAMP_Y + 0.2, ROW1_Z + 12)
 	spawn.Anchored = true
 	spawn.Neutral = true
 	spawn.Duration = 0
@@ -855,6 +926,7 @@ function WorldBuilder.Build()
 	buildDecor(map)
 	buildGlassFurnace(stations)
 	buildUpgradeBooth(stations)
+	buildBaysAndGarage(stations)
 	buildLotBoard(stations)
 	buildSpawn(root)
 	return WorldBuilder.Refs

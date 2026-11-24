@@ -72,6 +72,28 @@ local function sanitize(data)
 	for _, skill in ipairs(GameConfig.Skills) do
 		data.Skills[skill.Id] = math.clamp(math.floor(tonumber(data.Skills[skill.Id]) or 0), 0, skill.MaxLevel)
 	end
+	local vehicles, storage = {}, {}
+	for vehicleId, value in pairs(data.OwnedVehicles) do
+		if value and GameConfig.GetVehicle(vehicleId) then
+			vehicles[vehicleId] = true
+		end
+	end
+	for vehicleId, kg in pairs(data.VehicleStorage) do
+		local vehicle = GameConfig.GetVehicle(vehicleId)
+		if vehicle and tonumber(kg) then
+			storage[vehicleId] = math.clamp(tonumber(kg), 0, vehicle.Capacity)
+		end
+	end
+	data.OwnedVehicles = vehicles
+	data.VehicleStorage = storage
+	local factory = {}
+	for machineId, value in pairs(data.Factory) do
+		if value and GameConfig.GetMachine(machineId) then
+			factory[machineId] = true
+		end
+	end
+	data.Factory = factory
+	data.FactoryBufferKg = math.max(0, tonumber(data.FactoryBufferKg) or 0)
 	local finds = {}
 	for findId, value in pairs(data.Finds) do
 		if value and GameConfig.GetFind(findId) then
@@ -117,6 +139,10 @@ local function serialize(data)
 		BagTier = data.BagTier,
 		Skills = Util.DeepCopy(data.Skills),
 		Finds = Util.DeepCopy(data.Finds),
+		OwnedVehicles = Util.DeepCopy(data.OwnedVehicles),
+		VehicleStorage = Util.DeepCopy(data.VehicleStorage),
+		Factory = Util.DeepCopy(data.Factory),
+		FactoryBufferKg = math.floor((data.FactoryBufferKg or 0) * 1000) / 1000,
 		Stats = {
 			TotalKg = math.floor((data.Stats.TotalKg or 0) * 100) / 100,
 			TotalEarned = math.floor(data.Stats.TotalEarned or 0),
