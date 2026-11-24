@@ -17,6 +17,19 @@ Net.Events = {
 	RequestDeploy = "RequestDeploy",
 	SetLoadout = "SetLoadout",
 	SaveSettings = "SaveSettings",
+	-- Phase 2 combat / movement
+	EquipSlot = "EquipSlot", -- client -> server (slot)
+	Fire = "Fire", -- client -> server (shotId, origin, direction)
+	Reload = "Reload", -- client -> server
+	SetStance = "SetStance", -- client -> server (stance, sprinting)
+	HitConfirm = "HitConfirm", -- server -> shooter (kind, damage, position)
+	AmmoSync = "AmmoSync", -- server -> owner (slot, mag, reserve, reloading)
+}
+
+-- High-frequency, loss-tolerant traffic.
+Net.Unreliable = {
+	AimState = "AimState", -- client -> server (pitch, aiming)
+	ShotFx = "ShotFx", -- server -> other clients (character, weaponId, origin, hitPos, normal, material)
 }
 
 Net.Functions = {
@@ -62,6 +75,13 @@ function Net.init()
 			remote.Parent = folder
 		end
 	end
+	for _, name in Net.Unreliable do
+		if not folder:FindFirstChild(name) then
+			local remote = Instance.new("UnreliableRemoteEvent")
+			remote.Name = name
+			remote.Parent = folder
+		end
+	end
 	for _, name in Net.Functions do
 		if not folder:FindFirstChild(name) then
 			local remote = Instance.new("RemoteFunction")
@@ -77,6 +97,14 @@ function Net.event(name: string): RemoteEvent
 		return instance
 	end
 	error(string.format("[Net] '%s' is not a RemoteEvent", name))
+end
+
+function Net.unreliable(name: string): UnreliableRemoteEvent
+	local instance = fetch(name)
+	if instance:IsA("UnreliableRemoteEvent") then
+		return instance
+	end
+	error(string.format("[Net] '%s' is not an UnreliableRemoteEvent", name))
 end
 
 function Net.func(name: string): RemoteFunction

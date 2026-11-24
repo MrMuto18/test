@@ -22,6 +22,7 @@ local Workspace = game:GetService("Workspace")
 local Shared = ReplicatedStorage.Shared
 local Config = require(Shared.Config)
 local Net = require(Shared.Net)
+local Signal = require(Shared.Signal)
 
 local Controllers = script.Parent
 local AudioController = require(Controllers.AudioController)
@@ -34,6 +35,8 @@ local MenuUI = require(Controllers.Parent.UI.MenuUI)
 local player = Players.LocalPlayer
 
 local MenuController = {}
+MenuController.Deployed = Signal.new() -- (character) after the camera hand-off
+MenuController.Entered = Signal.new() -- menu became active (initial load or back from a raid)
 
 local INPUT_ACTION = "ZabourMenuNavigation"
 local TRANSITION_STEP = "ZabourDeployTransition"
@@ -216,6 +219,7 @@ local function deploy()
 	setCoreGui(false)
 	deployed = true
 	busy = false
+	MenuController.Deployed:Fire(character)
 end
 
 --------------------------------------------------------------------------------
@@ -270,6 +274,7 @@ function MenuController.enter(instant: boolean)
 	ui:show(instant)
 	bindInput()
 	player:SetAttribute("ClientMenuReady", true)
+	MenuController.Entered:Fire()
 end
 
 function MenuController.returnFromRaid()

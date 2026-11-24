@@ -17,9 +17,11 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage.Shared
 local Config = require(Shared.Config)
 local Net = require(Shared.Net)
+local Signal = require(Shared.Signal)
 local Types = require(Shared.Types)
 
 local DeployService = {}
+DeployService.Deployed = Signal.new() -- (player, character)
 
 local deployPoints: { BasePart } = {}
 local pointCursor = 0
@@ -103,6 +105,11 @@ local function onDeployRequest(player: Player)
 		character:PivotTo(spawnCF)
 	end
 	watchCharacter(player, character)
+	character:SetAttribute("Stance", "Stand")
+	character:SetAttribute("Sprinting", false)
+	character:SetAttribute("AimPitch", 0)
+	character:SetAttribute("Aiming", false)
+	DeployService.Deployed:Fire(player, character)
 	setState(player, "Deployed")
 end
 

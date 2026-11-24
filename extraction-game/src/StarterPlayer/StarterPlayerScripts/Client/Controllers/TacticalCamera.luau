@@ -1,30 +1,29 @@
 --!strict
 --[[
 	TacticalCamera
-	Over-the-shoulder third-person camera (Phase 2 layers ADS, recoil springs
-	and sprint FOV on top of this).
+	Over-the-shoulder third-person camera.
 
-	• Mouse / right-stick yaw + pitch with user sensitivity
-	• Spring-smoothed pivot follow and shoulder offset
-	• Shoulder swap (V / D-pad right) with a springy slide
-	• Sphere-cast collision: snaps in instantly, eases back out
-	• Strafe roll sway driven by lateral velocity
-	• FOV spring toward the player's FOV setting
-	• Character turns to the camera heading while moving (AlignOrientation)
-	• Fades the character out when the camera is forced very close
+	Phase 1: mouse/stick look, spring-smoothed pivot + shoulder, shoulder swap
+	(V / D-pad right), sphere-cast collision, strafe roll, FOV spring, body
+	turns to heading (AlignOrientation), close-camera character fade.
 
-	evaluate(dt) computes the camera without writing it, which is what lets
-	the deploy transition blend from the menu shot into the live tactical
-	camera with zero cut.
+	Phase 2 adds:
+	  • ADS: shoulder tucks in (AdsShoulderOffset), FOV × weapon multiplier,
+	    sensitivity scaled down, timed by the weapon's AdsTime
+	  • Recoil: permanent climb on pitch/yaw + a damped visual kick spring;
+	    climb partially recovers once you stop firing
+	  • Named FOV offsets (sprint / slide kicks) on the same FOV spring
+	  • Head bob tied to distance travelled (not time), stronger when sprinting
+
+	evaluate(dt) computes the camera without writing it; the deploy transition
+	blends from the menu shot into it with zero cut.
 ]]
 
 local ContextActionService = game:GetService("ContextActionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
-local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
-local Players = game:GetService("Players")
 
 local Shared = ReplicatedStorage.Shared
 local Config = require(Shared.Config)
@@ -44,7 +43,6 @@ local root: BasePart? = nil
 local humanoid: Humanoid? = nil
 local align: AlignOrientation? = nil
 local trove: Trove.Trove? = nil
-local reticle: ScreenGui? = nil
 
 local yaw = 0
 local pitch = 0
@@ -55,10 +53,28 @@ local gamepadLook = Vector2.zero
 local attached = false
 local running = false
 
+-- ADS
+local aimTarget = 0
+local aim = 0
+local adsTime = 0.2
+local adsFovMultiplier = 0.75
+
+-- Recoil
+local recoilDebt = 0
+local lastRecoil = 0
+
+-- FOV offsets (sprint, slide...)
+local fovOffsets: { [string]: number } = {}
+
+-- Bob
+local bobPhase = 0
+local bobWeight = 0
+
 local pivotSpring = Spring.new(Vector3.zero, C.PivotFrequency, 1)
 local shoulderSpring = Spring.new(Vector3.new(1, 0, 0), C.ShoulderFrequency, C.ShoulderDamping)
 local rollSpring = Spring.new(Vector3.zero, 3, 0.7)
 local fovSpring = Spring.new(Vector3.new(72, 0, 0), C.FovFrequency, 1)
+local kickSpring = Spring.new(Vector3.zero, C.RecoilFrequency, C.RecoilDamping)
 
 local castParams = RaycastParams.new()
 castParams.FilterType = Enum.RaycastFilterType.Exclude
@@ -67,8 +83,7 @@ local lastCF = CFrame.identity
 local lastFov = 72
 
 local function sphereCast(origin: Vector3, offset: Vector3): Vector3
-	local length = offset.Magnitude
-	if length < 1e-3 then
+	if offset.Magnitude < 1e-3 then
 		return origin + offset
 	end
 	local result = Workspace:Spherecast(origin, C.CollisionRadius, offset, castParams)
@@ -92,16 +107,24 @@ end
 
 local function readInput(dt: number)
 	local settings = SettingsController.get()
+	local sensitivity = settings.Sensitivity * (1 + (C.AdsSensitivity - 1) * aim)
 	if UserInputService.MouseBehavior == Enum.MouseBehavior.LockCenter then
 		local delta = UserInputService:GetMouseDelta()
-		local k = C.MouseRadiansPerPixel * settings.Sensitivity
+		local k = C.MouseRadiansPerPixel * sensitivity
 		yaw -= delta.X * k
 		pitch -= delta.Y * k
 	end
 	if gamepadLook.Magnitude > C.GamepadDeadzone then
-		local speed = C.GamepadRadiansPerSecond * settings.Sensitivity * dt
+		local speed = C.GamepadRadiansPerSecond * sensitivity * dt
 		yaw -= gamepadLook.X * speed
 		pitch += gamepadLook.Y * speed
+	end
+
+	-- Recover part of the recoil climb once firing stops.
+	if recoilDebt > 0 and os.clock() - lastRecoil > C.RecoilRecoveryDelay then
+		local step = math.min(recoilDebt, C.RecoilRecoveryRate * dt)
+		recoilDebt -= step
+		pitch -= step
 	end
 	pitch = math.clamp(pitch, math.rad(C.MinPitch), math.rad(C.MaxPitch))
 end
@@ -112,10 +135,9 @@ local function updateBody(dt: number)
 	if not h or not constraint then
 		return
 	end
-	if h.MoveDirection.Magnitude > 0.1 then
+	if h.MoveDirection.Magnitude > 0.1 or aim > 0.2 then
 		bodyYaw = yaw
 	else
-		-- Idle free-look; turn the body only when looking far over the shoulder.
 		local diff = math.atan2(math.sin(yaw - bodyYaw), math.cos(yaw - bodyYaw))
 		if math.abs(diff) > math.rad(100) then
 			bodyYaw += diff * math.min(1, dt * 6)
@@ -130,6 +152,8 @@ function TacticalCamera.evaluate(dt: number): (CFrame, number)
 		return lastCF, lastFov
 	end
 
+	aim += (aimTarget - aim) * (1 - math.exp(-dt * 3 / math.max(adsTime, 0.05)))
+
 	readInput(dt)
 	updateBody(dt)
 
@@ -139,9 +163,22 @@ function TacticalCamera.evaluate(dt: number): (CFrame, number)
 	shoulderSpring.Target = Vector3.new(shoulder, 0, 0)
 	local side = shoulderSpring:update(dt).X
 
-	local rotation = CFrame.Angles(0, yaw, 0) * CFrame.Angles(pitch, 0, 0)
-	local offset = C.ShoulderOffset
-	local lateral = rotation.RightVector * (offset.X * side) + rotation.UpVector * offset.Y
+	local kick = kickSpring:update(dt)
+	local rotation = CFrame.Angles(0, yaw + kick.Y, 0) * CFrame.Angles(pitch + kick.X, 0, 0)
+	local offset = C.ShoulderOffset:Lerp(C.AdsShoulderOffset, aim)
+
+	-- Head bob: phase advances with ground distance so it matches footsteps.
+	local velocity = r.AssemblyLinearVelocity
+	local flatSpeed = Vector3.new(velocity.X, 0, velocity.Z).Magnitude
+	local h = humanoid
+	local grounded = h ~= nil and h.FloorMaterial ~= Enum.Material.Air
+	bobPhase += flatSpeed * dt * C.BobFrequency * math.pi
+	local targetWeight = if grounded then math.clamp(flatSpeed / 23, 0, 1.2) * (1 - aim * 0.8) else 0
+	bobWeight += (targetWeight - bobWeight) * (1 - math.exp(-dt * 8))
+	local bobY = math.abs(math.sin(bobPhase)) * C.BobAmplitude * bobWeight
+	local bobRoll = math.sin(bobPhase) * C.BobRoll * bobWeight
+
+	local lateral = rotation.RightVector * (offset.X * side) + rotation.UpVector * (offset.Y - bobY)
 	local back = rotation.LookVector * -offset.Z
 
 	local shoulderPoint = sphereCast(pivot, lateral)
@@ -152,14 +189,19 @@ function TacticalCamera.evaluate(dt: number): (CFrame, number)
 	else
 		currentDistance += (desiredDistance - currentDistance) * (1 - math.exp(-dt * 4))
 	end
+	-- ADS should tuck in quickly, not ease out like collision.
+	currentDistance = math.min(currentDistance, offset.Z)
 	local cameraPosition = shoulderPoint + rotation.LookVector * -currentDistance
 
-	-- Strafe roll
-	local lateralSpeed = rotation.RightVector:Dot(r.AssemblyLinearVelocity)
+	local lateralSpeed = rotation.RightVector:Dot(velocity)
 	rollSpring.Target = Vector3.new(math.clamp(-lateralSpeed * C.RollPerStudPerSecond, -C.MaxRoll, C.MaxRoll), 0, 0)
-	local roll = rollSpring:update(dt).X
+	local roll = rollSpring:update(dt).X + bobRoll + kick.Z
 
-	fovSpring.Target = Vector3.new(SettingsController.get().FieldOfView, 0, 0)
+	local fovTarget = SettingsController.get().FieldOfView * (1 + (adsFovMultiplier - 1) * aim)
+	for _, extra in fovOffsets do
+		fovTarget += extra * (1 - aim)
+	end
+	fovSpring.Target = Vector3.new(fovTarget, 0, 0)
 	local fov = fovSpring:update(dt).X
 
 	local fade = math.clamp((C.CloseFadeStart - currentDistance) / (C.CloseFadeStart - C.CloseFadeEnd), 0, 1)
@@ -168,33 +210,6 @@ function TacticalCamera.evaluate(dt: number): (CFrame, number)
 	lastCF = CFrame.new(cameraPosition) * rotation.Rotation * CFrame.Angles(0, 0, roll)
 	lastFov = fov
 	return lastCF, lastFov
-end
-
-local function buildReticle(): ScreenGui
-	local gui = Instance.new("ScreenGui")
-	gui.Name = "TacticalReticle"
-	gui.IgnoreGuiInset = true
-	gui.ResetOnSpawn = false
-	gui.DisplayOrder = 5
-	local dot = Instance.new("Frame")
-	dot.Name = "Dot"
-	dot.AnchorPoint = Vector2.new(0.5, 0.5)
-	dot.Position = UDim2.fromScale(0.5, 0.5)
-	dot.Size = UDim2.fromOffset(4, 4)
-	dot.BackgroundColor3 = Color3.new(1, 1, 1)
-	dot.BackgroundTransparency = 1
-	dot.BorderSizePixel = 0
-	dot.Parent = gui
-	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(1, 0)
-	corner.Parent = dot
-	local stroke = Instance.new("UIStroke")
-	stroke.Color = Color3.new(0, 0, 0)
-	stroke.Transparency = 1
-	stroke.Thickness = 1
-	stroke.Parent = dot
-	gui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
-	return gui
 end
 
 -- Binds to a freshly spawned character. Call before evaluate()/start().
@@ -217,12 +232,23 @@ function TacticalCamera.attach(model: Model)
 	bodyYaw = yaw
 	pitch = math.rad(-8)
 	shoulder = 1
+	aim, aimTarget = 0, 0
+	recoilDebt = 0
+	table.clear(fovOffsets)
 	currentDistance = C.ShoulderOffset.Z
 	pivotSpring:reset(r.Position + Vector3.new(0, C.PivotHeight, 0))
 	shoulderSpring:reset(Vector3.new(1, 0, 0))
 	rollSpring:reset(Vector3.zero)
+	kickSpring:reset(Vector3.zero)
 	fovSpring:reset(Vector3.new(SettingsController.get().FieldOfView, 0, 0))
-	castParams.FilterDescendantsInstances = { model, Workspace:FindFirstChild("ClientFX") or model }
+	local ignore: { Instance } = { model }
+	for _, name in { "ClientFX", "WeaponFX" } do
+		local folder = Workspace:FindFirstChild(name)
+		if folder then
+			table.insert(ignore, folder)
+		end
+	end
+	castParams.FilterDescendantsInstances = ignore
 
 	h.AutoRotate = false
 	local attachment = r:FindFirstChild("RootAttachment")
@@ -270,7 +296,6 @@ function TacticalCamera.start()
 	ContextActionService:BindAction(SWAP_ACTION, function(_: string, state: Enum.UserInputState): Enum.ContextActionResult
 		if state == Enum.UserInputState.Begin then
 			shoulder = -shoulder
-			-- Small roll kick sells the weight of the swap.
 			rollSpring:impulse(Vector3.new(shoulder * 0.06, 0, 0))
 		end
 		return Enum.ContextActionResult.Sink
@@ -287,19 +312,6 @@ function TacticalCamera.start()
 		camera.CFrame = cf
 		camera.FieldOfView = fov
 	end)
-
-	local gui = reticle or buildReticle()
-	reticle = gui
-	gui.Enabled = true
-	local dot = gui:FindFirstChild("Dot")
-	if dot and dot:IsA("Frame") then
-		dot.BackgroundTransparency = 1
-		TweenService:Create(dot, TweenInfo.new(0.6, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), { BackgroundTransparency = 0.15 }):Play()
-		local stroke = dot:FindFirstChildOfClass("UIStroke")
-		if stroke then
-			TweenService:Create(stroke, TweenInfo.new(0.6), { Transparency = 0.6 }):Play()
-		end
-	end
 end
 
 function TacticalCamera.stop()
@@ -310,9 +322,6 @@ function TacticalCamera.stop()
 	end
 	UserInputService.MouseBehavior = Enum.MouseBehavior.Default
 	UserInputService.MouseIconEnabled = true
-	if reticle then
-		reticle.Enabled = false
-	end
 end
 
 function TacticalCamera.detach()
@@ -332,6 +341,55 @@ function TacticalCamera.detach()
 	humanoid = nil
 	align = nil
 	attached = false
+end
+
+--------------------------------------------------------------------------------
+-- Phase 2 hooks (weapons / movement)
+--------------------------------------------------------------------------------
+function TacticalCamera.setAiming(aiming: boolean, fovMultiplier: number?, time: number?)
+	aimTarget = if aiming then 1 else 0
+	if fovMultiplier then
+		adsFovMultiplier = fovMultiplier
+	end
+	if time then
+		adsTime = time
+	end
+end
+
+function TacticalCamera.getAim(): number
+	return aim
+end
+
+-- pitchDeg climbs permanently (partially recovered later); yawDeg is random drift.
+function TacticalCamera.addRecoil(pitchDeg: number, yawDeg: number, recoveryShare: number)
+	local p = math.rad(pitchDeg)
+	local y = math.rad(yawDeg)
+	pitch += p
+	yaw += y
+	recoilDebt += p * math.clamp(recoveryShare, 0, 1)
+	lastRecoil = os.clock()
+	-- Visual punch on top of the real climb.
+	kickSpring:impulse(Vector3.new(p * 14, y * 10, (math.random() - 0.5) * p * 6))
+end
+
+function TacticalCamera.setFovOffset(key: string, value: number?)
+	fovOffsets[key] = value
+end
+
+function TacticalCamera.getPitch(): number
+	return pitch
+end
+
+function TacticalCamera.getYaw(): number
+	return yaw
+end
+
+function TacticalCamera.getCFrame(): CFrame
+	return lastCF
+end
+
+function TacticalCamera.getFieldOfView(): number
+	return lastFov
 end
 
 function TacticalCamera.isAttached(): boolean

@@ -128,6 +128,16 @@ Config.Camera = {
 		MaxRoll = math.rad(1.2),
 		CloseFadeStart = 2.2,
 		CloseFadeEnd = 0.9,
+		-- Phase 2
+		AdsShoulderOffset = Vector3.new(1.25, 0.35, 3.3),
+		AdsSensitivity = 0.6,
+		RecoilFrequency = 9,
+		RecoilDamping = 0.55,
+		RecoilRecoveryRate = math.rad(9), -- radians/s of climb recovered after firing stops
+		RecoilRecoveryDelay = 0.12,
+		BobFrequency = 1.15, -- steps per stud travelled
+		BobAmplitude = 0.07,
+		BobRoll = math.rad(0.35),
 	},
 }
 
@@ -228,7 +238,7 @@ Config.Weather = {
 }
 
 --------------------------------------------------------------------------------
--- Weapons (Phase 2 builds models + gunplay from these definitions)
+-- Weapons: menu stats (0..1 bars) + real combat numbers used by client & server.
 --------------------------------------------------------------------------------
 local WEAPONS: { [string]: Types.WeaponDef } = {
 	SuppressedRifle = {
@@ -238,6 +248,35 @@ local WEAPONS: { [string]: Types.WeaponDef } = {
 		Description = "Integrally suppressed 5.56 carbine with holographic optic. Quiet, accurate, deliberate.",
 		Stats = { Damage = 0.62, FireRate = 0.68, Handling = 0.52, Range = 0.84 },
 		Order = 1,
+		Combat = {
+			Damage = 28,
+			HeadMultiplier = 2.0,
+			RPM = 720,
+			FireMode = "Auto",
+			MagSize = 30,
+			Reserve = 120,
+			ReloadTime = 2.1,
+			EmptyReloadTime = 2.6,
+			DrawTime = 0.45,
+			Range = 600,
+			FalloffStart = 120,
+			MinDamageRatio = 0.6,
+			HipSpread = 2.4,
+			AdsSpread = 0.35,
+			MoveSpread = 1.6,
+			SpreadPerShot = 0.35,
+			MaxBloom = 2.5,
+			BloomRecovery = 6,
+			RecoilPitch = 1.1,
+			RecoilYaw = 0.5,
+			RecoilRecovery = 0.6,
+			AdsFovMultiplier = 0.72,
+			AdsTime = 0.22,
+			MoveSpeedMultiplier = 1.0,
+			Suppressed = true,
+			TracerColor = Color3.fromRGB(255, 214, 150),
+			FireSound = "FireRifle",
+		},
 	},
 	CompactSMG = {
 		DisplayName = "KR-45 COMPACT",
@@ -246,6 +285,35 @@ local WEAPONS: { [string]: Types.WeaponDef } = {
 		Description = "Short-barrel .45 SMG with folding stock. Brutal up close, falls off fast.",
 		Stats = { Damage = 0.48, FireRate = 0.92, Handling = 0.86, Range = 0.38 },
 		Order = 2,
+		Combat = {
+			Damage = 19,
+			HeadMultiplier = 1.7,
+			RPM = 950,
+			FireMode = "Auto",
+			MagSize = 32,
+			Reserve = 160,
+			ReloadTime = 1.8,
+			EmptyReloadTime = 2.2,
+			DrawTime = 0.35,
+			Range = 300,
+			FalloffStart = 40,
+			MinDamageRatio = 0.45,
+			HipSpread = 3.2,
+			AdsSpread = 0.9,
+			MoveSpread = 1.2,
+			SpreadPerShot = 0.28,
+			MaxBloom = 3.0,
+			BloomRecovery = 8,
+			RecoilPitch = 0.75,
+			RecoilYaw = 0.6,
+			RecoilRecovery = 0.7,
+			AdsFovMultiplier = 0.82,
+			AdsTime = 0.16,
+			MoveSpeedMultiplier = 1.05,
+			Suppressed = false,
+			TracerColor = Color3.fromRGB(255, 190, 120),
+			FireSound = "FireSMG",
+		},
 	},
 	HeavyPistol = {
 		DisplayName = "M-50 HEAVY",
@@ -254,6 +322,35 @@ local WEAPONS: { [string]: Types.WeaponDef } = {
 		Description = "Full-size .50 sidearm with micro red-dot. Two taps, one problem.",
 		Stats = { Damage = 0.82, FireRate = 0.34, Handling = 0.66, Range = 0.55 },
 		Order = 1,
+		Combat = {
+			Damage = 46,
+			HeadMultiplier = 2.2,
+			RPM = 300,
+			FireMode = "Semi",
+			MagSize = 8,
+			Reserve = 40,
+			ReloadTime = 1.6,
+			EmptyReloadTime = 1.9,
+			DrawTime = 0.28,
+			Range = 300,
+			FalloffStart = 50,
+			MinDamageRatio = 0.55,
+			HipSpread = 1.8,
+			AdsSpread = 0.4,
+			MoveSpread = 1.0,
+			SpreadPerShot = 0.9,
+			MaxBloom = 3.0,
+			BloomRecovery = 7,
+			RecoilPitch = 2.6,
+			RecoilYaw = 0.6,
+			RecoilRecovery = 0.75,
+			AdsFovMultiplier = 0.86,
+			AdsTime = 0.14,
+			MoveSpeedMultiplier = 1.1,
+			Suppressed = false,
+			TracerColor = Color3.fromRGB(255, 200, 130),
+			FireSound = "FirePistol",
+		},
 	},
 }
 Config.Weapons = WEAPONS
@@ -286,6 +383,63 @@ Config.Deploy = {
 }
 
 --------------------------------------------------------------------------------
+-- Movement (Phase 2)
+--------------------------------------------------------------------------------
+Config.Movement = {
+	WalkSpeed = 14,
+	SprintSpeed = 23,
+	CrouchSpeed = 7,
+	AdsSpeed = 9,
+	SpeedResponse = 9, -- how fast WalkSpeed eases to its target (1/s)
+	StaminaMax = 100,
+	SprintDrain = 16, -- per second
+	StaminaRegen = 24,
+	RegenDelay = 1.1,
+	MinStaminaToSprint = 15,
+	JumpCost = 10,
+	SlideCost = 22,
+	SlideSpeed = 34,
+	SlideDuration = 0.85,
+	SlideCooldown = 0.9,
+	SlideMinSpeed = 15, -- must be moving at least this fast to slide
+	CrouchHipDrop = 0.9,
+	SprintForwardDot = 0.35, -- must be moving roughly forward to sprint
+	SprintFovKick = 7,
+	SlideFovKick = 10,
+	StanceSendInterval = 0.1,
+}
+
+--------------------------------------------------------------------------------
+-- Combat (Phase 2)
+--------------------------------------------------------------------------------
+Config.Combat = {
+	PvPEnabled = false, -- safehouse is a safe zone; Phase 4 enables it per raid zone
+	MaxOriginDistance = 10, -- muzzle must be this close to the shooter's head
+	FireRateTolerance = 0.8, -- fraction of the real interval the server accepts
+	ShotBurstAllowance = 2, -- token bucket size for network jitter
+	AimSendRate = 12, -- pitch updates per second
+	-- Weapon pose relative to UpperTorso. Pivot is roughly the right shoulder.
+	PosePivot = Vector3.new(0.3, 0.45, 0),
+	HoldOffsets = {
+		RIFLE = { Hip = Vector3.new(0.5, -0.05, -0.75), Ads = Vector3.new(0.32, 0.25, -0.7) },
+		SMG = { Hip = Vector3.new(0.48, -0.02, -0.85), Ads = Vector3.new(0.3, 0.25, -0.8) },
+		PISTOL = { Hip = Vector3.new(0.25, 0.2, -1.55), Ads = Vector3.new(0.12, 0.42, -1.6) },
+	},
+	Keybinds = {
+		Fire = { Enum.UserInputType.MouseButton1, Enum.KeyCode.ButtonR2 },
+		Aim = { Enum.UserInputType.MouseButton2, Enum.KeyCode.ButtonL2 },
+		Reload = { Enum.KeyCode.R, Enum.KeyCode.ButtonX },
+		Primary = { Enum.KeyCode.One },
+		Secondary = { Enum.KeyCode.Two },
+		SwapWeapon = { Enum.KeyCode.ButtonY },
+		Sprint = { Enum.KeyCode.LeftShift, Enum.KeyCode.ButtonL3 },
+		Crouch = { Enum.KeyCode.C, Enum.KeyCode.LeftControl, Enum.KeyCode.ButtonB },
+	},
+	TrainingDummyHealth = 150,
+	TrainingDummyRespawn = 4,
+}
+
+--------------------------------------------------------------------------------
 -- Audio
 -- Built-in rbxasset:// sounds ship with every Roblox client. Rain / thunder /
 -- engine need Creator Store audio you have rights to: paste "rbxassetid://<id>".
@@ -300,6 +454,17 @@ local AUDIO: { [string]: Types.AudioDef } = {
 	RainLoop = { Id = "", Volume = 0.45, Speed = 1, Group = "Ambience" },
 	Thunder = { Id = "", Volume = 0.6, Speed = 1, Group = "Ambience" },
 	EngineIdle = { Id = "", Volume = 0.55, Speed = 1, Group = "World" },
+	-- Combat. Gunshots need Creator Store audio ids; hit feedback uses built-ins.
+	FireRifle = { Id = "", Volume = 0.7, Speed = 1, Group = "World" },
+	FireSMG = { Id = "", Volume = 0.7, Speed = 1, Group = "World" },
+	FirePistol = { Id = "", Volume = 0.8, Speed = 1, Group = "World" },
+	DryFire = { Id = "rbxasset://sounds/clickfast.wav", Volume = 0.4, Speed = 0.7, Group = "World" },
+	ReloadOut = { Id = "rbxasset://sounds/clickfast.wav", Volume = 0.45, Speed = 0.8, Group = "World" },
+	ReloadIn = { Id = "rbxasset://sounds/button.wav", Volume = 0.45, Speed = 0.9, Group = "World" },
+	Equip = { Id = "rbxasset://sounds/swoosh.wav", Volume = 0.25, Speed = 1.6, Group = "World" },
+	HitBody = { Id = "rbxasset://sounds/clickfast.wav", Volume = 0.35, Speed = 2.0, Group = "UI" },
+	HitHead = { Id = "rbxasset://sounds/electronicpingshort.wav", Volume = 0.35, Speed = 1.4, Group = "UI" },
+	HitKill = { Id = "rbxasset://sounds/electronicpingshort.wav", Volume = 0.5, Speed = 0.9, Group = "UI" },
 }
 Config.Audio = AUDIO
 

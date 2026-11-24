@@ -28,13 +28,48 @@ export type WeaponStats = {
 	Range: number,
 }
 
+export type FireMode = "Auto" | "Semi"
+
+export type Stance = "Stand" | "Crouch" | "Slide"
+
+export type WeaponCombat = {
+	Damage: number,
+	HeadMultiplier: number,
+	RPM: number,
+	FireMode: FireMode,
+	MagSize: number,
+	Reserve: number,
+	ReloadTime: number,
+	EmptyReloadTime: number,
+	DrawTime: number,
+	Range: number,
+	FalloffStart: number,
+	MinDamageRatio: number,
+	HipSpread: number, -- degrees (cone half-angle)
+	AdsSpread: number,
+	MoveSpread: number, -- added at full run speed
+	SpreadPerShot: number,
+	MaxBloom: number,
+	BloomRecovery: number, -- degrees per second
+	RecoilPitch: number, -- degrees per shot
+	RecoilYaw: number, -- max random yaw, degrees
+	RecoilRecovery: number, -- 0..1 share of climb that recovers
+	AdsFovMultiplier: number,
+	AdsTime: number,
+	MoveSpeedMultiplier: number,
+	Suppressed: boolean,
+	TracerColor: Color3,
+	FireSound: string, -- key into Config.Audio
+}
+
 export type WeaponDef = {
 	DisplayName: string,
-	Class: string,
+	Class: "RIFLE" | "SMG" | "PISTOL",
 	Slot: WeaponSlot,
 	Description: string,
 	Stats: WeaponStats,
 	Order: number,
+	Combat: WeaponCombat,
 }
 
 export type ProfileData = {

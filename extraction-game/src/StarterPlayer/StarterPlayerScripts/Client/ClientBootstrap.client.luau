@@ -2,7 +2,10 @@
 --[[
 	ClientBootstrap (LocalScript)
 	Client entry point. Initialises controllers in dependency order and wires
-	the server-driven player state to the menu / gameplay flow.
+	the menu ↔ gameplay lifecycle:
+
+	  MenuController.Deployed  → movement, weapons and HUD attach to the character
+	  MenuController.Entered   → they detach (death / return to safehouse)
 ]]
 
 local Players = game:GetService("Players")
@@ -14,6 +17,11 @@ local CinematicGrade = require(Controllers.CinematicGrade)
 local AtmosphereController = require(Controllers.AtmosphereController)
 local MenuCamera = require(Controllers.MenuCamera)
 local MenuController = require(Controllers.MenuController)
+local CharacterPoser = require(Controllers.CharacterPoser)
+local MovementController = require(Controllers.MovementController)
+local WeaponController = require(Controllers.WeaponController)
+local LoadoutDisplay = require(Controllers.LoadoutDisplay)
+local HUD = require(script.Parent.UI.HUD)
 
 local player = Players.LocalPlayer
 
@@ -35,8 +43,22 @@ end
 applyQuality(SettingsController.get())
 SettingsController.Changed:Connect(applyQuality)
 
+HUD.init()
+CharacterPoser.init()
+WeaponController.init()
+LoadoutDisplay.init()
 MenuCamera.init()
 MenuController.init()
+
+MenuController.Deployed:Connect(function(character: any)
+	MovementController.attach(character)
+	WeaponController.attach(character, SettingsController.getLoadout())
+end)
+MenuController.Entered:Connect(function()
+	WeaponController.detach()
+	MovementController.detach()
+end)
+
 MenuController.enter(false)
 
 player:GetAttributeChangedSignal("State"):Connect(function()

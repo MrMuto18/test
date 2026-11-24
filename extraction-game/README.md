@@ -2,7 +2,7 @@
 
 Gritty extraction game inspired by *Rob Run* × *Arc Raiders*. Built in 4 phases.
 
-**Phase 1 (this drop):** project architecture, the lighting/post-processing pipeline, the procedural rain-soaked safehouse alley with the matte-black "Zabour" getaway car, and the live 3D main menu (DEPLOY / LOADOUT / SETTINGS) with a seamless camera blend into the over-the-shoulder tactical camera.
+**Phase 1:** project architecture, the lighting/post-processing pipeline, the procedural rain-soaked safehouse alley with the matte-black "Zabour" getaway car, and the live 3D main menu (DEPLOY / LOADOUT / SETTINGS) with a seamless camera blend into the over-the-shoulder tactical camera.
 
 ---
 
@@ -25,7 +25,8 @@ ReplicatedStorage
     ├── Trove                    [ModuleScript]  src/ReplicatedStorage/Shared/Trove.luau
     └── Builders                 [Folder]
         ├── PartFactory          [ModuleScript]  src/ReplicatedStorage/Shared/Builders/PartFactory.luau
-        └── GetawayCarBody       [ModuleScript]  src/ReplicatedStorage/Shared/Builders/GetawayCarBody.luau
+        ├── GetawayCarBody       [ModuleScript]  src/ReplicatedStorage/Shared/Builders/GetawayCarBody.luau
+        └── WeaponBuilder        [ModuleScript]  src/ReplicatedStorage/Shared/Builders/WeaponBuilder.luau   (Phase 2)
 
 ServerScriptService
 └── Server                       [Folder]
@@ -33,9 +34,11 @@ ServerScriptService
     ├── Services                 [Folder]
     │   ├── LightingService      [ModuleScript]  src/ServerScriptService/Server/Services/LightingService.luau
     │   ├── PlayerDataService    [ModuleScript]  src/ServerScriptService/Server/Services/PlayerDataService.luau
-    │   └── DeployService        [ModuleScript]  src/ServerScriptService/Server/Services/DeployService.luau
+    │   ├── DeployService        [ModuleScript]  src/ServerScriptService/Server/Services/DeployService.luau
+    │   └── CombatService        [ModuleScript]  src/ServerScriptService/Server/Services/CombatService.luau   (Phase 2)
     └── World                    [Folder]
-        └── SafehouseBuilder     [ModuleScript]  src/ServerScriptService/Server/World/SafehouseBuilder.luau
+        ├── SafehouseBuilder     [ModuleScript]  src/ServerScriptService/Server/World/SafehouseBuilder.luau
+        └── TrainingRange        [ModuleScript]  src/ServerScriptService/Server/World/TrainingRange.luau      (Phase 2)
 
 StarterPlayer
 └── StarterPlayerScripts
@@ -48,11 +51,17 @@ StarterPlayer
         │   ├── AtmosphereController [ModuleScript]  .../Client/Controllers/AtmosphereController.luau
         │   ├── MenuCamera           [ModuleScript]  .../Client/Controllers/MenuCamera.luau
         │   ├── TacticalCamera       [ModuleScript]  .../Client/Controllers/TacticalCamera.luau
-        │   └── MenuController       [ModuleScript]  .../Client/Controllers/MenuController.luau
+        │   ├── MenuController       [ModuleScript]  .../Client/Controllers/MenuController.luau
+        │   ├── MovementController   [ModuleScript]  .../Client/Controllers/MovementController.luau   (Phase 2)
+        │   ├── CharacterPoser       [ModuleScript]  .../Client/Controllers/CharacterPoser.luau       (Phase 2)
+        │   ├── WeaponFx             [ModuleScript]  .../Client/Controllers/WeaponFx.luau             (Phase 2)
+        │   ├── WeaponController     [ModuleScript]  .../Client/Controllers/WeaponController.luau     (Phase 2)
+        │   └── LoadoutDisplay       [ModuleScript]  .../Client/Controllers/LoadoutDisplay.luau       (Phase 2)
         └── UI                   [Folder]
             ├── Theme            [ModuleScript]  .../Client/UI/Theme.luau
             ├── Widgets          [ModuleScript]  .../Client/UI/Widgets.luau
-            └── MenuUI           [ModuleScript]  .../Client/UI/MenuUI.luau
+            ├── MenuUI           [ModuleScript]  .../Client/UI/MenuUI.luau
+            └── HUD              [ModuleScript]  .../Client/UI/HUD.luau                           (Phase 2)
 ```
 
 Created at runtime (don't make these by hand):
@@ -70,6 +79,9 @@ Script names matter: every `require` uses these exact names and parents.
 ---
 
 ## 2. Install
+
+### Option 0: one file (easiest)
+Open `build/Zabour.rbxlx` in Roblox Studio (double-click, or File → Open from File). Every script is already in place. Rebuild it after code changes with `python3 tools/build_place.py`.
 
 ### Option A: Rojo (recommended)
 ```
@@ -133,15 +145,43 @@ Client
 |---|---|
 | Menu | Mouse hover/click · ↑↓ / W S / D-pad to navigate · ← → / A D to adjust or jump into the panel · Enter / (A) to select · Backspace / (B) to go back |
 | Deployed | WASD move · mouse / right stick look · **V** / D-pad → shoulder swap |
+| Movement | **Shift** / L3 sprint (hold) · **C** / Ctrl / (B) crouch · crouch while sprinting = **slide** · Space jump (costs stamina; cancels a slide into a hop) |
+| Weapons | **LMB** / R2 fire · **RMB** / L2 aim · **R** / (X) reload · **1** / **2** / wheel / (Y) switch weapon |
 
 ---
 
 ## 6. Phase 1 test checklist
 
 1. **Play** → a black ZABOUR card with a sweeping line, which dissolves into the rainy alley. The camera breathes and follows the mouse slightly, the car idles with exhaust smoke, the neon sign flickers, and lightning flashes now and then.
-2. Output shows `[Safehouse] built N parts`, `[PlayerData] backend: Mock` (or `DataStore`), `[Bootstrap] Phase 1 server ready.`, and a lighting warning only for properties that need setting by hand.
+2. Output shows `[Safehouse] built N parts`, `[PlayerData] backend: Mock` (or `DataStore`), `[Bootstrap] Phase 2 server ready.`, and a lighting warning only for properties that need setting by hand.
 3. Hover the options: the label slides right, the accent bar grows, a tick plays, and the hint text changes. Try the keyboard and a gamepad too.
 4. **LOADOUT** → the camera glides to the workbench and the panel slides in. Select the SMG; the accent marker moves and the stat bars animate. Stop and Play again: with real DataStore on, the choice persists.
 5. **SETTINGS** → the camera moves to the headlight close-up. Change quality to Low (rain thins, beams, mist and shadows switch off), then drag FOV and sensitivity.
 6. **DEPLOY** → the UI sweeps out and the camera pushes in, then blends with no cut into the over-the-shoulder view behind your character. The mouse locks, the reticle dot fades in, and V swaps shoulder.
 7. Reset your character (Esc → Reset) → about 4 s later, fade to black, then back into the menu.
+
+---
+
+## 7. Phase 2: movement + gunplay
+
+**What it adds**
+* **Movement:** walk 14, ADS 9, crouch 7, sprint 23 studs/s, all eased. Stamina drains while sprinting and on jumps; it regenerates after a delay and locks you out of sprint when it hits 0. Slide: a momentum burst that decays into a crouch, with an FOV kick. You can't stand up under low ceilings.
+* **Weapons:** three procedural models of 40–70 parts each: VK-9 suppressed rifle (holographic sight with glowing reticle), KR-45 SMG (reflex dot, wire stock), M-50 pistol (micro red dot, compensator). The equipped weapon is held in front of you; the other is slung on your back or holstered on your thigh.
+* **Poses with no animation assets:** both hands are IK-locked to the weapon grips, the upper body follows your aim, the gun drops to low-ready while sprinting, and crouching keeps your feet planted with a stepping cycle. Every client poses every player.
+* **Shooting:** cone of fire (hip/ADS + movement + bloom), camera recoil (climb that partly recovers + a visual kick), weapon kick, muzzle flash, tracers, sparks/dust, bullet holes, shell casings, a magazine that drops on reload, dry-fire and auto reload.
+* **Server hit validation:** the server tracks ammo, reloads and draw time, limits fire rate, checks the muzzle is near your head and visible from it, does its own raycast, and applies damage falloff and headshot multipliers. The safehouse is a **safe zone** (no PvP) until Phase 4.
+* **HUD:** a crosshair whose gap matches the real spread, hitmarkers (white body / red head / gold kill), ammo, a reload line, stamina, health and a red flash when you take damage.
+* **Training range:** three armoured mannequins (150 HP; they flash when hit, regenerate, collapse and respawn) plus a steel gong down the alley.
+* **Menu:** your selected weapons now lie on the workbench in the LOADOUT shot.
+
+**Phase 2 settings**
+* **Avatar must be R15:** Game Settings → Avatar → R15 (the procedural poses need R15 joints).
+* **Gunshot audio:** `Config.Audio.FireRifle` / `FireSMG` / `FirePistol` are empty until you add Creator Store audio ids you have rights to. Hit, reload and dry-fire sounds use built-in files.
+
+**Phase 2 test checklist**
+1. DEPLOY → the rifle is in your hands with the pistol on your thigh. The HUD fades in.
+2. Hold Shift: the FOV kicks out, the gun drops to low-ready and the stamina line drains. Press C while sprinting to slide.
+3. Shoot the mannequins: tracers, flash, shells, hitmarkers. Headshots show red; a kill shows gold and the mannequin collapses and comes back.
+4. Hold RMB: the camera tucks in, FOV drops and spread shrinks to a dot. Spray and feel the climb recover when you let go.
+5. R reloads (the magazine drops out). 2 / wheel switches to the pistol (semi-auto).
+6. With 2 players (Test → Start, 2 players): each sees the other's poses, tracers and flashes, and bullets on another player show "SAFE ZONE".

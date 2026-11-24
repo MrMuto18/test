@@ -68,8 +68,13 @@ function AudioController.init()
 		)
 	end
 
-	for _, name in { "UIHover", "UIClick", "UIBack", "UIDeploy", "UITick", "Thunder" } do
-		makeSound(name, SoundService)
+	-- 2D one-shots: everything except the loops and per-shot gunfire (WeaponFx
+	-- spawns those positionally at the muzzle).
+	local SPECIAL = { RainLoop = true, EngineIdle = true, FireRifle = true, FireSMG = true, FirePistol = true }
+	for name in Config.Audio do
+		if not SPECIAL[name] then
+			makeSound(name, SoundService)
+		end
 	end
 
 	local rain = makeSound("RainLoop", SoundService)

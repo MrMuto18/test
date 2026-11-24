@@ -136,7 +136,7 @@ local dissolve = TweenService:Create(backdrop, TweenInfo.new(1.3, Enum.EasingSty
 dissolve:Play()
 dissolve.Completed:Wait()
 gui:Destroy()
-]]></ProtectedString></Properties></Item></Item><Item class="ReplicatedStorage" referent="RBX000014"><Properties><string name="Name">ReplicatedStorage</string></Properties><Item class="Folder" referent="RBX000013"><Properties><string name="Name">Shared</string></Properties><Item class="Folder" referent="RBX000005"><Properties><string name="Name">Builders</string></Properties><Item class="ModuleScript" referent="RBX000003"><Properties><string name="Name">GetawayCarBody</string><ProtectedString name="Source"><![CDATA[--!strict
+]]></ProtectedString></Properties></Item></Item><Item class="ReplicatedStorage" referent="RBX000015"><Properties><string name="Name">ReplicatedStorage</string></Properties><Item class="Folder" referent="RBX000014"><Properties><string name="Name">Shared</string></Properties><Item class="Folder" referent="RBX000006"><Properties><string name="Name">Builders</string></Properties><Item class="ModuleScript" referent="RBX000003"><Properties><string name="Name">GetawayCarBody</string><ProtectedString name="Source"><![CDATA[--!strict
 --[[
 	GetawayCarBody
 	Procedural "Zabour" fastback getaway car: ~150 parts, matte-black paint,
@@ -898,7 +898,436 @@ function PartFactory.folder(name: string, parent: Instance): Folder
 end
 
 return PartFactory
-]]></ProtectedString></Properties></Item></Item><Item class="ModuleScript" referent="RBX000006"><Properties><string name="Name">Config</string><ProtectedString name="Source"><![CDATA[--!strict
+]]></ProtectedString></Properties></Item><Item class="ModuleScript" referent="RBX000005"><Properties><string name="Name">WeaponBuilder</string><ProtectedString name="Source"><![CDATA[--!strict
+--[[
+	WeaponBuilder
+	Procedural, multi-part tactical weapons (40-70 parts each):
+
+	  SuppressedRifle  VK-9   — black anodized upper/lower, FDE furniture,
+	                            picatinny rail with teeth, M-LOK handguard,
+	                            vertical foregrip, light module, suppressor,
+	                            holographic sight with emissive reticle
+	  CompactSMG       KR-45  — polymer receiver, vented shroud, muzzle brake,
+	                            angled foregrip, wire folding stock, reflex dot
+	  HeavyPistol      M-50   — serrated slide, compensator, rail, rubber grip
+	                            panels, micro red-dot
+
+	Local space: origin = right-hand grip point, barrel = -Z, up = +Y.
+	Every part is unanchored, massless, non-colliding, non-queryable and welded
+	to Handle, so the weapon never blocks bullets or the camera.
+
+	Attachments on Handle: Muzzle, Ejection, GripRight, GripLeft.
+	Parts named "Magazine*" are the magazine (hidden/dropped on reload).
+]]
+
+local CollectionService = game:GetService("CollectionService")
+
+local PartFactory = require(script.Parent.PartFactory)
+
+export type WeaponHandles = {
+	Model: Model,
+	Handle: BasePart,
+	Muzzle: Attachment,
+	Ejection: Attachment,
+	GripRight: Attachment,
+	GripLeft: Attachment,
+	Magazine: { BasePart },
+}
+
+type Style = PartFactory.Style
+
+local WeaponBuilder = {}
+
+local RUBBER = PartFactory.material("Rubber", Enum.Material.SmoothPlastic)
+
+local function rgb(r: number, g: number, b: number): Color3
+	return Color3.fromRGB(r, g, b)
+end
+
+local STYLES: { [string]: Style } = {
+	Anodized = PartFactory.style(rgb(30, 30, 32), Enum.Material.Metal, 0.05),
+	Steel = PartFactory.style(rgb(70, 72, 76), Enum.Material.Metal, 0.12),
+	SteelDark = PartFactory.style(rgb(22, 22, 24), Enum.Material.Metal, 0.04),
+	Polymer = PartFactory.style(rgb(38, 38, 36), Enum.Material.SmoothPlastic, 0),
+	FDE = PartFactory.style(rgb(146, 124, 94), Enum.Material.SmoothPlastic, 0),
+	Rubber = PartFactory.style(rgb(26, 26, 26), RUBBER, 0),
+	Brass = PartFactory.style(rgb(190, 150, 70), Enum.Material.Metal, 0.2),
+	Lens = PartFactory.style(rgb(120, 170, 200), Enum.Material.Glass, 0.25, 0.75, false),
+	LensRed = PartFactory.style(rgb(160, 60, 60), Enum.Material.Glass, 0.2, 0.7, false),
+	LightLens = PartFactory.style(rgb(220, 235, 255), Enum.Material.Neon, 0, 0.3, false),
+	Invisible = PartFactory.style(rgb(0, 0, 0), Enum.Material.SmoothPlastic, 0, 1, false),
+}
+
+type Ctx = {
+	add: (name: string, size: Vector3, cf: CFrame, style: Style, shape: Enum.PartType?) -> BasePart,
+	attach: (name: string, position: Vector3) -> Attachment,
+	Handle: BasePart,
+	Magazine: { BasePart },
+}
+
+local function at(x: number, y: number, z: number): CFrame
+	return CFrame.new(x, y, z)
+end
+
+local function alongZ(x: number, y: number, z: number): CFrame
+	return CFrame.new(x, y, z) * PartFactory.AxisZ
+end
+
+local function tilt(degrees: number): CFrame
+	return CFrame.Angles(math.rad(degrees), 0, 0)
+end
+
+-- Emissive reticle drawn on the shooter-facing side of an optic window.
+local function addReticle(window: BasePart, color: Color3, holographic: boolean)
+	local gui = Instance.new("SurfaceGui")
+	gui.Name = "Reticle"
+	gui.Face = Enum.NormalId.Back
+	gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+	gui.PixelsPerStud = 400
+	gui.LightInfluence = 0
+	gui.Brightness = 4
+	gui.Parent = window
+
+	local function circle(size: number, filled: boolean): Frame
+		local frame = Instance.new("Frame")
+		frame.AnchorPoint = Vector2.new(0.5, 0.5)
+		frame.Position = UDim2.fromScale(0.5, 0.5)
+		frame.Size = UDim2.fromOffset(size, size)
+		frame.BackgroundColor3 = color
+		frame.BackgroundTransparency = if filled then 0 else 1
+		frame.BorderSizePixel = 0
+		local corner = Instance.new("UICorner")
+		corner.CornerRadius = UDim.new(1, 0)
+		corner.Parent = frame
+		if not filled then
+			local stroke = Instance.new("UIStroke")
+			stroke.Color = color
+			stroke.Thickness = 2
+			stroke.Parent = frame
+		end
+		frame.Parent = gui
+		return frame
+	end
+	circle(5, true)
+	if holographic then
+		circle(36, false)
+	end
+end
+
+local function newCtx(model: Model, origin: CFrame): Ctx
+	local handle = PartFactory.make({
+		Name = "Handle",
+		Size = Vector3.new(0.2, 0.2, 0.2),
+		CFrame = origin,
+		Style = STYLES.Invisible,
+		Anchored = false,
+		Parent = model,
+	})
+	handle.Massless = true
+	handle.CanQuery = false
+	model.PrimaryPart = handle
+
+	local ctx: Ctx
+	ctx = {
+		Handle = handle,
+		Magazine = {},
+		add = function(name: string, size: Vector3, cf: CFrame, style: Style, shape: Enum.PartType?): BasePart
+			local part = PartFactory.make({
+				Name = name,
+				Size = size,
+				CFrame = origin * cf,
+				Style = style,
+				Shape = shape,
+				Anchored = false,
+				Parent = model,
+			})
+			part.Massless = true
+			part.CanQuery = false
+			part.CastShadow = style.Transparency == nil or (style.Transparency :: number) < 0.5
+			PartFactory.weld(handle, part)
+			if string.sub(name, 1, 8) == "Magazine" then
+				table.insert(ctx.Magazine, part)
+			end
+			return part
+		end,
+		attach = function(name: string, position: Vector3): Attachment
+			local attachment = Instance.new("Attachment")
+			attachment.Name = name
+			attachment.Position = position
+			attachment.Parent = handle
+			return attachment
+		end,
+	}
+	return ctx
+end
+
+local function railTeeth(ctx: Ctx, y: number, zStart: number, zEnd: number, width: number)
+	local count = math.floor((zStart - zEnd) / 0.14)
+	for i = 0, count do
+		ctx.add("RailTooth" .. i, Vector3.new(width, 0.025, 0.045), at(0, y, zStart - i * 0.14), STYLES.Anodized)
+	end
+end
+
+--------------------------------------------------------------------------------
+-- VK-9 suppressed rifle
+--------------------------------------------------------------------------------
+local function buildRifle(ctx: Ctx)
+	local S = STYLES
+	local add = ctx.add
+
+	-- Receivers
+	add("LowerReceiver", Vector3.new(0.2, 0.26, 0.85), at(0, 0.16, -0.2), S.Anodized)
+	add("MagWell", Vector3.new(0.2, 0.2, 0.3), at(0, 0.0, -0.45), S.Anodized)
+	add("UpperReceiver", Vector3.new(0.21, 0.22, 1.05), at(0, 0.39, -0.2), S.Anodized)
+	add("EjectionPort", Vector3.new(0.02, 0.09, 0.26), at(0.106, 0.4, -0.15), S.SteelDark)
+	add("DustCover", Vector3.new(0.015, 0.1, 0.22), at(0.112, 0.33, -0.15), S.Anodized)
+	add("ForwardAssist", Vector3.new(0.06, 0.06, 0.12), at(0.12, 0.42, 0.05), S.Steel)
+	add("ChargingHandle", Vector3.new(0.26, 0.05, 0.08), at(0, 0.48, 0.3), S.Anodized)
+	add("BoltRelease", Vector3.new(0.03, 0.08, 0.14), at(-0.11, 0.2, -0.32), S.Steel)
+	add("Selector", Vector3.new(0.03, 0.05, 0.05), at(-0.11, 0.22, -0.02), S.Steel)
+
+	-- Top rail
+	add("TopRail", Vector3.new(0.13, 0.04, 1.75), at(0, 0.52, -0.55), S.Anodized)
+	railTeeth(ctx, 0.545, 0.25, -1.35, 0.15)
+
+	-- Handguard (FDE) with M-LOK slots
+	add("Handguard", Vector3.new(0.25, 0.25, 1.15), at(0, 0.37, -1.3), S.FDE)
+	add("HandguardCap", Vector3.new(0.26, 0.26, 0.05), at(0, 0.37, -1.875), S.Anodized)
+	for _, side in { -1, 1 } do
+		for i, z in { -0.95, -1.3, -1.65 } do
+			add("MLok" .. side .. i, Vector3.new(0.02, 0.06, 0.18), at(side * 0.126, 0.37, z), S.SteelDark)
+		end
+	end
+	add("BottomRail", Vector3.new(0.1, 0.04, 0.6), at(0, 0.23, -1.35), S.Anodized)
+	add("Foregrip", Vector3.new(0.1, 0.32, 0.1), at(0, 0.06, -0.95), S.Polymer)
+	add("ForegripCap", Vector3.new(0.11, 0.04, 0.11), at(0, -0.1, -0.95), S.Rubber)
+	add("ForegripClamp", Vector3.new(0.12, 0.06, 0.16), at(0, 0.21, -0.95), S.Anodized)
+
+	-- Light module
+	add("LightBody", Vector3.new(0.07, 0.1, 0.32), at(-0.16, 0.38, -1.55), S.Anodized)
+	add("LightLens", Vector3.new(0.05, 0.07, 0.02), at(-0.16, 0.38, -1.72), S.LightLens)
+	add("LightMount", Vector3.new(0.05, 0.06, 0.1), at(-0.13, 0.38, -1.5), S.Anodized)
+
+	-- Barrel + suppressor
+	add("Barrel", Vector3.new(0.25, 0.09, 0.09), alongZ(0, 0.38, -2.0), S.SteelDark, Enum.PartType.Cylinder)
+	add("Suppressor", Vector3.new(0.85, 0.23, 0.23), alongZ(0, 0.38, -2.5), S.Anodized, Enum.PartType.Cylinder)
+	add("SuppressorRingA", Vector3.new(0.04, 0.24, 0.24), alongZ(0, 0.38, -2.1), S.Steel, Enum.PartType.Cylinder)
+	add("SuppressorRingB", Vector3.new(0.05, 0.24, 0.24), alongZ(0, 0.38, -2.92), S.Steel, Enum.PartType.Cylinder)
+	add("SuppressorBore", Vector3.new(0.02, 0.07, 0.07), alongZ(0, 0.38, -2.95), S.SteelDark, Enum.PartType.Cylinder)
+
+	-- Grip, trigger
+	add("PistolGrip", Vector3.new(0.15, 0.42, 0.22), at(0, -0.08, 0.06) * tilt(-18), S.Polymer)
+	add("GripTexture", Vector3.new(0.155, 0.26, 0.14), at(0, -0.1, 0.07) * tilt(-18), S.Rubber)
+	add("TriggerGuard", Vector3.new(0.04, 0.04, 0.32), at(0, 0.02, -0.2), S.Anodized)
+	add("Trigger", Vector3.new(0.03, 0.1, 0.03), at(0, 0.07, -0.16), S.Steel)
+
+	-- Curved magazine (two segments + baseplate)
+	add("Magazine", Vector3.new(0.14, 0.55, 0.26), at(0, -0.28, -0.5) * tilt(12), S.Polymer)
+	add("MagazineLower", Vector3.new(0.14, 0.3, 0.26), at(0, -0.62, -0.6) * tilt(22), S.Polymer)
+	add("MagazineBase", Vector3.new(0.16, 0.05, 0.28), at(0, -0.77, -0.66) * tilt(22), S.Rubber)
+
+	-- Stock
+	add("BufferTube", Vector3.new(0.55, 0.12, 0.12), alongZ(0, 0.38, 0.55), S.Anodized, Enum.PartType.Cylinder)
+	add("Stock", Vector3.new(0.17, 0.3, 0.5), at(0, 0.31, 0.88), S.FDE)
+	add("CheekRiser", Vector3.new(0.15, 0.06, 0.36), at(0, 0.48, 0.86), S.FDE)
+	add("ButtPad", Vector3.new(0.19, 0.36, 0.06), at(0, 0.3, 1.15), S.Rubber)
+	add("SlingPoint", Vector3.new(0.05, 0.05, 0.08), at(0.1, 0.3, 0.72), S.Steel)
+
+	-- Holographic sight
+	add("HoloBase", Vector3.new(0.15, 0.07, 0.38), at(0, 0.57, -0.3), S.Anodized)
+	add("HoloWallL", Vector3.new(0.025, 0.22, 0.32), at(-0.075, 0.72, -0.32), S.Anodized)
+	add("HoloWallR", Vector3.new(0.025, 0.22, 0.32), at(0.075, 0.72, -0.32), S.Anodized)
+	add("HoloHood", Vector3.new(0.175, 0.025, 0.32), at(0, 0.835, -0.32), S.Anodized)
+	add("HoloKnob", Vector3.new(0.05, 0.07, 0.12), at(0.11, 0.6, -0.25), S.Steel)
+	local window = add("HoloWindow", Vector3.new(0.125, 0.19, 0.015), at(0, 0.715, -0.45), S.Lens)
+	addReticle(window, rgb(255, 60, 60), true)
+
+	ctx.attach("Muzzle", Vector3.new(0, 0.38, -3.0))
+	ctx.attach("Ejection", Vector3.new(0.14, 0.4, -0.15))
+	ctx.attach("GripRight", Vector3.new(0, 0, 0))
+	ctx.attach("GripLeft", Vector3.new(0, 0.02, -0.95))
+end
+
+--------------------------------------------------------------------------------
+-- KR-45 compact SMG
+--------------------------------------------------------------------------------
+local function buildSMG(ctx: Ctx)
+	local S = STYLES
+	local add = ctx.add
+
+	add("Receiver", Vector3.new(0.22, 0.32, 0.95), at(0, 0.26, -0.25), S.Polymer)
+	add("ReceiverTop", Vector3.new(0.2, 0.06, 0.95), at(0, 0.44, -0.25), S.Anodized)
+	add("TopRail", Vector3.new(0.12, 0.04, 0.7), at(0, 0.49, -0.3), S.Anodized)
+	railTeeth(ctx, 0.515, 0.0, -0.6, 0.14)
+	add("EjectionPort", Vector3.new(0.02, 0.08, 0.22), at(0.112, 0.32, -0.2), S.SteelDark)
+	add("ChargingKnob", Vector3.new(0.06, 0.05, 0.08), at(-0.13, 0.36, -0.55), S.Steel)
+	add("Selector", Vector3.new(0.03, 0.05, 0.05), at(-0.12, 0.2, -0.05), S.Steel)
+
+	-- Vented shroud + brake
+	add("Shroud", Vector3.new(0.2, 0.2, 0.45), at(0, 0.3, -0.95), S.Anodized)
+	for _, side in { -1, 1 } do
+		for i = 0, 2 do
+			add("ShroudVent" .. side .. i, Vector3.new(0.02, 0.05, 0.08), at(side * 0.101, 0.32, -0.8 - i * 0.13), S.SteelDark)
+		end
+	end
+	add("Barrel", Vector3.new(0.22, 0.12, 0.12), alongZ(0, 0.3, -1.29), S.SteelDark, Enum.PartType.Cylinder)
+	add("MuzzleBrake", Vector3.new(0.14, 0.15, 0.15), alongZ(0, 0.3, -1.36), S.Anodized, Enum.PartType.Cylinder)
+	for _, side in { -1, 1 } do
+		add("BrakePort" .. side, Vector3.new(0.02, 0.04, 0.08), at(side * 0.07, 0.3, -1.36), S.SteelDark)
+	end
+
+	-- Grip, trigger, angled foregrip
+	add("PistolGrip", Vector3.new(0.14, 0.38, 0.2), at(0, -0.05, 0.05) * tilt(-15), S.Polymer)
+	add("GripTexture", Vector3.new(0.145, 0.24, 0.13), at(0, -0.06, 0.06) * tilt(-15), S.Rubber)
+	add("TriggerGuard", Vector3.new(0.04, 0.04, 0.3), at(0, 0.05, -0.18), S.Polymer)
+	add("Trigger", Vector3.new(0.03, 0.09, 0.03), at(0, 0.1, -0.15), S.Steel)
+	add("AngledGrip", Vector3.new(0.1, 0.1, 0.32), at(0, 0.12, -0.85) * tilt(-20), S.Polymer)
+	add("BottomRail", Vector3.new(0.1, 0.04, 0.4), at(0, 0.19, -0.9), S.Anodized)
+
+	-- Straight magazine
+	add("Magazine", Vector3.new(0.12, 0.62, 0.2), at(0, -0.18, -0.38) * tilt(6), S.SteelDark)
+	add("MagazineBase", Vector3.new(0.14, 0.05, 0.22), at(0, -0.5, -0.36) * tilt(6), S.Polymer)
+
+	-- Wire folding stock
+	for _, y in { 0.36, 0.16 } do
+		for _, x in { -0.06, 0.06 } do
+			add("StockRail", Vector3.new(0.035, 0.035, 0.7), at(x, y, 0.55), S.Steel)
+		end
+	end
+	add("StockHinge", Vector3.new(0.16, 0.26, 0.08), at(0, 0.26, 0.22), S.Anodized)
+	add("ButtPlate", Vector3.new(0.16, 0.34, 0.05), at(0, 0.26, 0.92), S.Rubber)
+
+	-- Reflex sight
+	add("ReflexBase", Vector3.new(0.12, 0.05, 0.22), at(0, 0.54, -0.3), S.Anodized)
+	add("ReflexPostL", Vector3.new(0.02, 0.16, 0.04), at(-0.06, 0.64, -0.36), S.Anodized)
+	add("ReflexPostR", Vector3.new(0.02, 0.16, 0.04), at(0.06, 0.64, -0.36), S.Anodized)
+	add("ReflexTop", Vector3.new(0.14, 0.02, 0.04), at(0, 0.725, -0.36), S.Anodized)
+	local window = add("ReflexWindow", Vector3.new(0.1, 0.14, 0.01), at(0, 0.64, -0.36), S.LensRed)
+	addReticle(window, rgb(255, 50, 50), false)
+
+	ctx.attach("Muzzle", Vector3.new(0, 0.3, -1.45))
+	ctx.attach("Ejection", Vector3.new(0.14, 0.32, -0.2))
+	ctx.attach("GripRight", Vector3.new(0, 0, 0))
+	ctx.attach("GripLeft", Vector3.new(0, 0.08, -0.85))
+end
+
+--------------------------------------------------------------------------------
+-- M-50 heavy pistol
+--------------------------------------------------------------------------------
+local function buildPistol(ctx: Ctx)
+	local S = STYLES
+	local add = ctx.add
+
+	add("Slide", Vector3.new(0.15, 0.17, 0.95), at(0, 0.33, -0.28), S.SteelDark)
+	for i = 0, 4 do
+		add("RearSerration" .. i, Vector3.new(0.155, 0.12, 0.018), at(0, 0.33, 0.06 + i * 0.03), S.Anodized)
+	end
+	for i = 0, 2 do
+		add("FrontSerration" .. i, Vector3.new(0.155, 0.1, 0.018), at(0, 0.33, -0.55 - i * 0.03), S.Anodized)
+	end
+	add("EjectionPort", Vector3.new(0.02, 0.07, 0.2), at(0.076, 0.36, -0.2), S.Steel)
+	add("Frame", Vector3.new(0.14, 0.12, 0.8), at(0, 0.2, -0.3), S.Polymer)
+	add("DustRail", Vector3.new(0.1, 0.04, 0.25), at(0, 0.13, -0.55), S.Polymer)
+	add("Compensator", Vector3.new(0.15, 0.15, 0.18), at(0, 0.33, -0.84), S.Anodized)
+	add("CompPort", Vector3.new(0.06, 0.02, 0.1), at(0, 0.41, -0.84), S.SteelDark)
+	add("Bore", Vector3.new(0.02, 0.07, 0.07), alongZ(0, 0.33, -0.94), S.SteelDark, Enum.PartType.Cylinder)
+
+	add("Grip", Vector3.new(0.14, 0.48, 0.24), at(0, -0.08, 0.06) * tilt(-18), S.Polymer)
+	add("GripPanel", Vector3.new(0.145, 0.3, 0.16), at(0, -0.06, 0.07) * tilt(-18), S.Rubber)
+	add("Beavertail", Vector3.new(0.12, 0.05, 0.14), at(0, 0.2, 0.2) * tilt(-30), S.Polymer)
+	add("TriggerGuard", Vector3.new(0.04, 0.04, 0.3), at(0, 0.08, -0.2), S.Polymer)
+	add("Trigger", Vector3.new(0.03, 0.09, 0.03), at(0, 0.12, -0.16), S.Steel)
+	add("Hammer", Vector3.new(0.05, 0.08, 0.06), at(0, 0.38, 0.22), S.Steel)
+	add("SlideStop", Vector3.new(0.02, 0.04, 0.14), at(-0.08, 0.24, -0.25), S.Steel)
+
+	add("Magazine", Vector3.new(0.11, 0.44, 0.19), at(0, -0.1, 0.07) * tilt(-18), S.SteelDark)
+	add("MagazineBase", Vector3.new(0.15, 0.06, 0.25), at(0, -0.34, 0.14) * tilt(-18), S.Polymer)
+
+	add("RearSight", Vector3.new(0.12, 0.05, 0.05), at(0, 0.44, 0.12), S.Anodized)
+	add("FrontSight", Vector3.new(0.03, 0.05, 0.04), at(0, 0.44, -0.7), S.Anodized)
+	add("DotHousing", Vector3.new(0.1, 0.09, 0.16), at(0, 0.46, -0.1), S.Anodized)
+	local window = add("DotWindow", Vector3.new(0.08, 0.06, 0.01), at(0, 0.48, -0.18), S.LensRed)
+	addReticle(window, rgb(255, 50, 50), false)
+
+	ctx.attach("Muzzle", Vector3.new(0, 0.33, -0.98))
+	ctx.attach("Ejection", Vector3.new(0.1, 0.38, -0.2))
+	ctx.attach("GripRight", Vector3.new(0, 0, 0))
+	ctx.attach("GripLeft", Vector3.new(-0.12, -0.05, 0.02))
+end
+
+local BUILDERS: { [string]: (Ctx) -> () } = {
+	SuppressedRifle = buildRifle,
+	CompactSMG = buildSMG,
+	HeavyPistol = buildPistol,
+}
+
+function WeaponBuilder.has(weaponId: string): boolean
+	return BUILDERS[weaponId] ~= nil
+end
+
+-- origin: world CFrame of the grip point. Anchored = true for display props.
+function WeaponBuilder.build(weaponId: string, origin: CFrame?, anchored: boolean?): WeaponHandles
+	local builder = BUILDERS[weaponId]
+	assert(builder, "[WeaponBuilder] unknown weapon " .. tostring(weaponId))
+
+	local model = Instance.new("Model")
+	model.Name = weaponId
+	model:SetAttribute("WeaponId", weaponId)
+	local ctx = newCtx(model, origin or CFrame.identity)
+	builder(ctx)
+	ctx.Handle.Anchored = anchored == true
+	CollectionService:AddTag(model, "Weapon")
+
+	local function need(name: string): Attachment
+		local attachment = ctx.Handle:FindFirstChild(name)
+		assert(attachment and attachment:IsA("Attachment"), "[WeaponBuilder] missing attachment " .. name)
+		return attachment
+	end
+
+	return {
+		Model = model,
+		Handle = ctx.Handle,
+		Muzzle = need("Muzzle"),
+		Ejection = need("Ejection"),
+		GripRight = need("GripRight"),
+		GripLeft = need("GripLeft"),
+		Magazine = ctx.Magazine,
+	}
+end
+
+-- Finds the standard attachments on an already-built weapon model.
+function WeaponBuilder.resolve(model: Model): WeaponHandles?
+	local handle = model:FindFirstChild("Handle")
+	if not handle or not handle:IsA("BasePart") then
+		return nil
+	end
+	local function find(name: string): Attachment?
+		local attachment = handle:FindFirstChild(name)
+		return if attachment and attachment:IsA("Attachment") then attachment else nil
+	end
+	local muzzle, ejection, right, left = find("Muzzle"), find("Ejection"), find("GripRight"), find("GripLeft")
+	if not (muzzle and ejection and right and left) then
+		return nil
+	end
+	local magazine: { BasePart } = {}
+	for _, child in model:GetChildren() do
+		if child:IsA("BasePart") and string.sub(child.Name, 1, 8) == "Magazine" then
+			table.insert(magazine, child)
+		end
+	end
+	return {
+		Model = model,
+		Handle = handle,
+		Muzzle = muzzle,
+		Ejection = ejection,
+		GripRight = right,
+		GripLeft = left,
+		Magazine = magazine,
+	}
+end
+
+return WeaponBuilder
+]]></ProtectedString></Properties></Item></Item><Item class="ModuleScript" referent="RBX000007"><Properties><string name="Name">Config</string><ProtectedString name="Source"><![CDATA[--!strict
 --[[
 	Config
 	Single source of truth for every tunable shared by server and client.
@@ -1028,6 +1457,16 @@ Config.Camera = {
 		MaxRoll = math.rad(1.2),
 		CloseFadeStart = 2.2,
 		CloseFadeEnd = 0.9,
+		-- Phase 2
+		AdsShoulderOffset = Vector3.new(1.25, 0.35, 3.3),
+		AdsSensitivity = 0.6,
+		RecoilFrequency = 9,
+		RecoilDamping = 0.55,
+		RecoilRecoveryRate = math.rad(9), -- radians/s of climb recovered after firing stops
+		RecoilRecoveryDelay = 0.12,
+		BobFrequency = 1.15, -- steps per stud travelled
+		BobAmplitude = 0.07,
+		BobRoll = math.rad(0.35),
 	},
 }
 
@@ -1128,7 +1567,7 @@ Config.Weather = {
 }
 
 --------------------------------------------------------------------------------
--- Weapons (Phase 2 builds models + gunplay from these definitions)
+-- Weapons: menu stats (0..1 bars) + real combat numbers used by client & server.
 --------------------------------------------------------------------------------
 local WEAPONS: { [string]: Types.WeaponDef } = {
 	SuppressedRifle = {
@@ -1138,6 +1577,35 @@ local WEAPONS: { [string]: Types.WeaponDef } = {
 		Description = "Integrally suppressed 5.56 carbine with holographic optic. Quiet, accurate, deliberate.",
 		Stats = { Damage = 0.62, FireRate = 0.68, Handling = 0.52, Range = 0.84 },
 		Order = 1,
+		Combat = {
+			Damage = 28,
+			HeadMultiplier = 2.0,
+			RPM = 720,
+			FireMode = "Auto",
+			MagSize = 30,
+			Reserve = 120,
+			ReloadTime = 2.1,
+			EmptyReloadTime = 2.6,
+			DrawTime = 0.45,
+			Range = 600,
+			FalloffStart = 120,
+			MinDamageRatio = 0.6,
+			HipSpread = 2.4,
+			AdsSpread = 0.35,
+			MoveSpread = 1.6,
+			SpreadPerShot = 0.35,
+			MaxBloom = 2.5,
+			BloomRecovery = 6,
+			RecoilPitch = 1.1,
+			RecoilYaw = 0.5,
+			RecoilRecovery = 0.6,
+			AdsFovMultiplier = 0.72,
+			AdsTime = 0.22,
+			MoveSpeedMultiplier = 1.0,
+			Suppressed = true,
+			TracerColor = Color3.fromRGB(255, 214, 150),
+			FireSound = "FireRifle",
+		},
 	},
 	CompactSMG = {
 		DisplayName = "KR-45 COMPACT",
@@ -1146,6 +1614,35 @@ local WEAPONS: { [string]: Types.WeaponDef } = {
 		Description = "Short-barrel .45 SMG with folding stock. Brutal up close, falls off fast.",
 		Stats = { Damage = 0.48, FireRate = 0.92, Handling = 0.86, Range = 0.38 },
 		Order = 2,
+		Combat = {
+			Damage = 19,
+			HeadMultiplier = 1.7,
+			RPM = 950,
+			FireMode = "Auto",
+			MagSize = 32,
+			Reserve = 160,
+			ReloadTime = 1.8,
+			EmptyReloadTime = 2.2,
+			DrawTime = 0.35,
+			Range = 300,
+			FalloffStart = 40,
+			MinDamageRatio = 0.45,
+			HipSpread = 3.2,
+			AdsSpread = 0.9,
+			MoveSpread = 1.2,
+			SpreadPerShot = 0.28,
+			MaxBloom = 3.0,
+			BloomRecovery = 8,
+			RecoilPitch = 0.75,
+			RecoilYaw = 0.6,
+			RecoilRecovery = 0.7,
+			AdsFovMultiplier = 0.82,
+			AdsTime = 0.16,
+			MoveSpeedMultiplier = 1.05,
+			Suppressed = false,
+			TracerColor = Color3.fromRGB(255, 190, 120),
+			FireSound = "FireSMG",
+		},
 	},
 	HeavyPistol = {
 		DisplayName = "M-50 HEAVY",
@@ -1154,6 +1651,35 @@ local WEAPONS: { [string]: Types.WeaponDef } = {
 		Description = "Full-size .50 sidearm with micro red-dot. Two taps, one problem.",
 		Stats = { Damage = 0.82, FireRate = 0.34, Handling = 0.66, Range = 0.55 },
 		Order = 1,
+		Combat = {
+			Damage = 46,
+			HeadMultiplier = 2.2,
+			RPM = 300,
+			FireMode = "Semi",
+			MagSize = 8,
+			Reserve = 40,
+			ReloadTime = 1.6,
+			EmptyReloadTime = 1.9,
+			DrawTime = 0.28,
+			Range = 300,
+			FalloffStart = 50,
+			MinDamageRatio = 0.55,
+			HipSpread = 1.8,
+			AdsSpread = 0.4,
+			MoveSpread = 1.0,
+			SpreadPerShot = 0.9,
+			MaxBloom = 3.0,
+			BloomRecovery = 7,
+			RecoilPitch = 2.6,
+			RecoilYaw = 0.6,
+			RecoilRecovery = 0.75,
+			AdsFovMultiplier = 0.86,
+			AdsTime = 0.14,
+			MoveSpeedMultiplier = 1.1,
+			Suppressed = false,
+			TracerColor = Color3.fromRGB(255, 200, 130),
+			FireSound = "FirePistol",
+		},
 	},
 }
 Config.Weapons = WEAPONS
@@ -1186,6 +1712,63 @@ Config.Deploy = {
 }
 
 --------------------------------------------------------------------------------
+-- Movement (Phase 2)
+--------------------------------------------------------------------------------
+Config.Movement = {
+	WalkSpeed = 14,
+	SprintSpeed = 23,
+	CrouchSpeed = 7,
+	AdsSpeed = 9,
+	SpeedResponse = 9, -- how fast WalkSpeed eases to its target (1/s)
+	StaminaMax = 100,
+	SprintDrain = 16, -- per second
+	StaminaRegen = 24,
+	RegenDelay = 1.1,
+	MinStaminaToSprint = 15,
+	JumpCost = 10,
+	SlideCost = 22,
+	SlideSpeed = 34,
+	SlideDuration = 0.85,
+	SlideCooldown = 0.9,
+	SlideMinSpeed = 15, -- must be moving at least this fast to slide
+	CrouchHipDrop = 0.9,
+	SprintForwardDot = 0.35, -- must be moving roughly forward to sprint
+	SprintFovKick = 7,
+	SlideFovKick = 10,
+	StanceSendInterval = 0.1,
+}
+
+--------------------------------------------------------------------------------
+-- Combat (Phase 2)
+--------------------------------------------------------------------------------
+Config.Combat = {
+	PvPEnabled = false, -- safehouse is a safe zone; Phase 4 enables it per raid zone
+	MaxOriginDistance = 10, -- muzzle must be this close to the shooter's head
+	FireRateTolerance = 0.8, -- fraction of the real interval the server accepts
+	ShotBurstAllowance = 2, -- token bucket size for network jitter
+	AimSendRate = 12, -- pitch updates per second
+	-- Weapon pose relative to UpperTorso. Pivot is roughly the right shoulder.
+	PosePivot = Vector3.new(0.3, 0.45, 0),
+	HoldOffsets = {
+		RIFLE = { Hip = Vector3.new(0.5, -0.05, -0.75), Ads = Vector3.new(0.32, 0.25, -0.7) },
+		SMG = { Hip = Vector3.new(0.48, -0.02, -0.85), Ads = Vector3.new(0.3, 0.25, -0.8) },
+		PISTOL = { Hip = Vector3.new(0.25, 0.2, -1.55), Ads = Vector3.new(0.12, 0.42, -1.6) },
+	},
+	Keybinds = {
+		Fire = { Enum.UserInputType.MouseButton1, Enum.KeyCode.ButtonR2 },
+		Aim = { Enum.UserInputType.MouseButton2, Enum.KeyCode.ButtonL2 },
+		Reload = { Enum.KeyCode.R, Enum.KeyCode.ButtonX },
+		Primary = { Enum.KeyCode.One },
+		Secondary = { Enum.KeyCode.Two },
+		SwapWeapon = { Enum.KeyCode.ButtonY },
+		Sprint = { Enum.KeyCode.LeftShift, Enum.KeyCode.ButtonL3 },
+		Crouch = { Enum.KeyCode.C, Enum.KeyCode.LeftControl, Enum.KeyCode.ButtonB },
+	},
+	TrainingDummyHealth = 150,
+	TrainingDummyRespawn = 4,
+}
+
+--------------------------------------------------------------------------------
 -- Audio
 -- Built-in rbxasset:// sounds ship with every Roblox client. Rain / thunder /
 -- engine need Creator Store audio you have rights to: paste "rbxassetid://<id>".
@@ -1200,6 +1783,17 @@ local AUDIO: { [string]: Types.AudioDef } = {
 	RainLoop = { Id = "", Volume = 0.45, Speed = 1, Group = "Ambience" },
 	Thunder = { Id = "", Volume = 0.6, Speed = 1, Group = "Ambience" },
 	EngineIdle = { Id = "", Volume = 0.55, Speed = 1, Group = "World" },
+	-- Combat. Gunshots need Creator Store audio ids; hit feedback uses built-ins.
+	FireRifle = { Id = "", Volume = 0.7, Speed = 1, Group = "World" },
+	FireSMG = { Id = "", Volume = 0.7, Speed = 1, Group = "World" },
+	FirePistol = { Id = "", Volume = 0.8, Speed = 1, Group = "World" },
+	DryFire = { Id = "rbxasset://sounds/clickfast.wav", Volume = 0.4, Speed = 0.7, Group = "World" },
+	ReloadOut = { Id = "rbxasset://sounds/clickfast.wav", Volume = 0.45, Speed = 0.8, Group = "World" },
+	ReloadIn = { Id = "rbxasset://sounds/button.wav", Volume = 0.45, Speed = 0.9, Group = "World" },
+	Equip = { Id = "rbxasset://sounds/swoosh.wav", Volume = 0.25, Speed = 1.6, Group = "World" },
+	HitBody = { Id = "rbxasset://sounds/clickfast.wav", Volume = 0.35, Speed = 2.0, Group = "UI" },
+	HitHead = { Id = "rbxasset://sounds/electronicpingshort.wav", Volume = 0.35, Speed = 1.4, Group = "UI" },
+	HitKill = { Id = "rbxasset://sounds/electronicpingshort.wav", Volume = 0.5, Speed = 0.9, Group = "UI" },
 }
 Config.Audio = AUDIO
 
@@ -1209,7 +1803,7 @@ Config.CoreGui = {
 }
 
 return Config
-]]></ProtectedString></Properties></Item><Item class="ModuleScript" referent="RBX000007"><Properties><string name="Name">Net</string><ProtectedString name="Source"><![CDATA[--!strict
+]]></ProtectedString></Properties></Item><Item class="ModuleScript" referent="RBX000008"><Properties><string name="Name">Net</string><ProtectedString name="Source"><![CDATA[--!strict
 --[[
 	Net
 	Owns every RemoteEvent / RemoteFunction. The server creates them once in
@@ -1228,6 +1822,19 @@ Net.Events = {
 	RequestDeploy = "RequestDeploy",
 	SetLoadout = "SetLoadout",
 	SaveSettings = "SaveSettings",
+	-- Phase 2 combat / movement
+	EquipSlot = "EquipSlot", -- client -> server (slot)
+	Fire = "Fire", -- client -> server (shotId, origin, direction)
+	Reload = "Reload", -- client -> server
+	SetStance = "SetStance", -- client -> server (stance, sprinting)
+	HitConfirm = "HitConfirm", -- server -> shooter (kind, damage, position)
+	AmmoSync = "AmmoSync", -- server -> owner (slot, mag, reserve, reloading)
+}
+
+-- High-frequency, loss-tolerant traffic.
+Net.Unreliable = {
+	AimState = "AimState", -- client -> server (pitch, aiming)
+	ShotFx = "ShotFx", -- server -> other clients (character, weaponId, origin, hitPos, normal, material)
 }
 
 Net.Functions = {
@@ -1273,6 +1880,13 @@ function Net.init()
 			remote.Parent = folder
 		end
 	end
+	for _, name in Net.Unreliable do
+		if not folder:FindFirstChild(name) then
+			local remote = Instance.new("UnreliableRemoteEvent")
+			remote.Name = name
+			remote.Parent = folder
+		end
+	end
 	for _, name in Net.Functions do
 		if not folder:FindFirstChild(name) then
 			local remote = Instance.new("RemoteFunction")
@@ -1290,6 +1904,14 @@ function Net.event(name: string): RemoteEvent
 	error(string.format("[Net] '%s' is not a RemoteEvent", name))
 end
 
+function Net.unreliable(name: string): UnreliableRemoteEvent
+	local instance = fetch(name)
+	if instance:IsA("UnreliableRemoteEvent") then
+		return instance
+	end
+	error(string.format("[Net] '%s' is not an UnreliableRemoteEvent", name))
+end
+
 function Net.func(name: string): RemoteFunction
 	local instance = fetch(name)
 	if instance:IsA("RemoteFunction") then
@@ -1299,7 +1921,7 @@ function Net.func(name: string): RemoteFunction
 end
 
 return Net
-]]></ProtectedString></Properties></Item><Item class="ModuleScript" referent="RBX000008"><Properties><string name="Name">Schema</string><ProtectedString name="Source"><![CDATA[--!strict
+]]></ProtectedString></Properties></Item><Item class="ModuleScript" referent="RBX000009"><Properties><string name="Name">Schema</string><ProtectedString name="Source"><![CDATA[--!strict
 --[[
 	Schema
 	Validation + sanitising for anything that crosses the network or comes
@@ -1385,7 +2007,7 @@ function Schema.weaponsForSlot(slot: Types.WeaponSlot): { string }
 end
 
 return Schema
-]]></ProtectedString></Properties></Item><Item class="ModuleScript" referent="RBX000009"><Properties><string name="Name">Signal</string><ProtectedString name="Source"><![CDATA[--!strict
+]]></ProtectedString></Properties></Item><Item class="ModuleScript" referent="RBX000010"><Properties><string name="Name">Signal</string><ProtectedString name="Source"><![CDATA[--!strict
 --[[
 	Signal
 	Lightweight pure-Luau signal. Handlers run in their own thread so a
@@ -1480,7 +2102,7 @@ function Signal.new(): Signal
 end
 
 return Signal
-]]></ProtectedString></Properties></Item><Item class="ModuleScript" referent="RBX000010"><Properties><string name="Name">Spring</string><ProtectedString name="Source"><![CDATA[--!strict
+]]></ProtectedString></Properties></Item><Item class="ModuleScript" referent="RBX000011"><Properties><string name="Name">Spring</string><ProtectedString name="Source"><![CDATA[--!strict
 --[[
 	Spring
 	Damped harmonic spring on Vector3 (use the X component for scalars).
@@ -1553,7 +2175,7 @@ function SpringClass.reset(self: Spring, value: Vector3)
 end
 
 return SpringClass
-]]></ProtectedString></Properties></Item><Item class="ModuleScript" referent="RBX000011"><Properties><string name="Name">Trove</string><ProtectedString name="Source"><![CDATA[--!strict
+]]></ProtectedString></Properties></Item><Item class="ModuleScript" referent="RBX000012"><Properties><string name="Name">Trove</string><ProtectedString name="Source"><![CDATA[--!strict
 --[[
 	Trove
 	Collects connections, instances, threads and cleanup callbacks so a whole
@@ -1634,7 +2256,7 @@ function Trove.new(): Trove
 end
 
 return Trove
-]]></ProtectedString></Properties></Item><Item class="ModuleScript" referent="RBX000012"><Properties><string name="Name">Types</string><ProtectedString name="Source"><![CDATA[--!strict
+]]></ProtectedString></Properties></Item><Item class="ModuleScript" referent="RBX000013"><Properties><string name="Name">Types</string><ProtectedString name="Source"><![CDATA[--!strict
 --[[
 	Types
 	Shared type contracts between server and client. No runtime dependencies.
@@ -1664,13 +2286,48 @@ export type WeaponStats = {
 	Range: number,
 }
 
+export type FireMode = "Auto" | "Semi"
+
+export type Stance = "Stand" | "Crouch" | "Slide"
+
+export type WeaponCombat = {
+	Damage: number,
+	HeadMultiplier: number,
+	RPM: number,
+	FireMode: FireMode,
+	MagSize: number,
+	Reserve: number,
+	ReloadTime: number,
+	EmptyReloadTime: number,
+	DrawTime: number,
+	Range: number,
+	FalloffStart: number,
+	MinDamageRatio: number,
+	HipSpread: number, -- degrees (cone half-angle)
+	AdsSpread: number,
+	MoveSpread: number, -- added at full run speed
+	SpreadPerShot: number,
+	MaxBloom: number,
+	BloomRecovery: number, -- degrees per second
+	RecoilPitch: number, -- degrees per shot
+	RecoilYaw: number, -- max random yaw, degrees
+	RecoilRecovery: number, -- 0..1 share of climb that recovers
+	AdsFovMultiplier: number,
+	AdsTime: number,
+	MoveSpeedMultiplier: number,
+	Suppressed: boolean,
+	TracerColor: Color3,
+	FireSound: string, -- key into Config.Audio
+}
+
 export type WeaponDef = {
 	DisplayName: string,
-	Class: string,
+	Class: "RIFLE" | "SMG" | "PISTOL",
 	Slot: WeaponSlot,
 	Description: string,
 	Stats: WeaponStats,
 	Order: number,
+	Combat: WeaponCombat,
 }
 
 export type ProfileData = {
@@ -1708,31 +2365,486 @@ export type QualityPreset = {
 }
 
 return {}
-]]></ProtectedString></Properties></Item></Item></Item><Item class="ServerScriptService" referent="RBX000023"><Properties><string name="Name">ServerScriptService</string></Properties><Item class="Folder" referent="RBX000022"><Properties><string name="Name">Server</string></Properties><Item class="Script" referent="RBX000015"><Properties><string name="Name">Bootstrap</string><ProtectedString name="Source"><![CDATA[--!strict
+]]></ProtectedString></Properties></Item></Item></Item><Item class="ServerScriptService" referent="RBX000026"><Properties><string name="Name">ServerScriptService</string></Properties><Item class="Folder" referent="RBX000025"><Properties><string name="Name">Server</string></Properties><Item class="Script" referent="RBX000016"><Properties><string name="Name">Bootstrap</string><ProtectedString name="Source"><![CDATA[--!strict
 --[[
 	Bootstrap (Script)
 	Server entry point. Order matters:
 	  1. Remotes exist before any client asks for them.
-	  2. Look-dev + safehouse exist before the first player's camera needs them.
-	  3. Data + deploy services start listening for players.
+	  2. Look-dev + safehouse + training range exist before the first camera needs them.
+	  3. Data, deploy and combat services start listening for players.
 ]]
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local Config = require(ReplicatedStorage.Shared.Config)
 local Net = require(ReplicatedStorage.Shared.Net)
 local LightingService = require(script.Parent.Services.LightingService)
 local PlayerDataService = require(script.Parent.Services.PlayerDataService)
 local DeployService = require(script.Parent.Services.DeployService)
+local CombatService = require(script.Parent.Services.CombatService)
 local SafehouseBuilder = require(script.Parent.World.SafehouseBuilder)
+local TrainingRange = require(script.Parent.World.TrainingRange)
 
 Net.init()
 LightingService.apply()
 local safehouse = SafehouseBuilder.ensure(false)
+TrainingRange.build(safehouse)
 PlayerDataService.init()
 DeployService.init(safehouse)
+CombatService.init(DeployService.Deployed, function(player: Player)
+	local data = PlayerDataService.getData(player)
+	return if data then data.Loadout else Config.DefaultLoadout
+end)
 
-print("[Bootstrap] Phase 1 server ready.")
-]]></ProtectedString></Properties></Item><Item class="Folder" referent="RBX000019"><Properties><string name="Name">Services</string></Properties><Item class="ModuleScript" referent="RBX000016"><Properties><string name="Name">DeployService</string><ProtectedString name="Source"><![CDATA[--!strict
+print("[Bootstrap] Phase 2 server ready.")
+]]></ProtectedString></Properties></Item><Item class="Folder" referent="RBX000021"><Properties><string name="Name">Services</string></Properties><Item class="ModuleScript" referent="RBX000017"><Properties><string name="Name">CombatService</string><ProtectedString name="Source"><![CDATA[--!strict
+--[[
+	CombatService
+	Server-authoritative gunplay.
+
+	Client predicts everything visual (tracer, flash, recoil, hitmarker
+	preview) and sends Fire(shotId, muzzle, direction). The server owns the
+	truth:
+
+	  • equipped weapon, magazine + reserve ammo, reload timers, draw time
+	  • fire rate via a token bucket (tolerates network jitter, blocks macros)
+	  • muzzle must be near the shooter's head and in line of sight from it
+	    (no shooting through walls from a muzzle poked through geometry)
+	  • its own raycast decides what was hit; damage falloff + headshots
+	  • PvP gate (safehouse is a safe zone in Phase 2)
+
+	Results: HitConfirm -> shooter, ShotFx -> everyone else, AmmoSync -> owner.
+	Also replicates stance/aim attributes that drive procedural poses.
+]]
+
+local Players = game:GetService("Players")
+local PhysicsService = game:GetService("PhysicsService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
+
+local Shared = ReplicatedStorage.Shared
+local Config = require(Shared.Config)
+local Net = require(Shared.Net)
+local Schema = require(Shared.Schema)
+local Types = require(Shared.Types)
+local WeaponBuilder = require(Shared.Builders.WeaponBuilder)
+
+local CombatService = {}
+
+type WeaponState = {
+	Id: string,
+	Slot: Types.WeaponSlot,
+	Def: Types.WeaponDef,
+	Mag: number,
+	Reserve: number,
+	Tokens: number,
+	LastShot: number,
+	Reloading: boolean,
+	ReloadToken: number,
+	Handles: WeaponBuilder.WeaponHandles,
+	Joint: JointInstance?,
+}
+
+type Combatant = {
+	Player: Player,
+	Character: Model,
+	Humanoid: Humanoid,
+	Head: BasePart,
+	Torso: BasePart,
+	Weapons: { [Types.WeaponSlot]: WeaponState },
+	Equipped: Types.WeaponSlot,
+	ReadyAt: number,
+	LastAim: number,
+	LastStance: number,
+}
+
+local SLOTS: { Types.WeaponSlot } = { "Primary", "Secondary" }
+local VALID_STANCES = { Stand = true, Crouch = true, Slide = true }
+
+local combatants: { [Player]: Combatant } = {}
+
+local hitConfirm: RemoteEvent
+local ammoSync: RemoteEvent
+local shotFx: UnreliableRemoteEvent
+
+local function isFiniteVector(v: Vector3): boolean
+	return Schema.isFiniteNumber(v.X) and Schema.isFiniteNumber(v.Y) and Schema.isFiniteNumber(v.Z)
+end
+
+local function sync(player: Player, weapon: WeaponState)
+	ammoSync:FireClient(player, weapon.Slot, weapon.Mag, weapon.Reserve, weapon.Reloading)
+end
+
+--------------------------------------------------------------------------------
+-- Collision groups: shell casings and debris never push characters around.
+--------------------------------------------------------------------------------
+local function setupCollisionGroups()
+	for _, name in { "Characters", "Debris" } do
+		pcall(function()
+			PhysicsService:RegisterCollisionGroup(name)
+		end)
+	end
+	PhysicsService:CollisionGroupSetCollidable("Debris", "Characters", false)
+	PhysicsService:CollisionGroupSetCollidable("Debris", "Debris", false)
+end
+
+local function assignCharacterGroup(character: Model)
+	local function apply(d: Instance)
+		if d:IsA("BasePart") then
+			d.CollisionGroup = "Characters"
+		end
+	end
+	for _, d in character:GetDescendants() do
+		apply(d)
+	end
+	character.DescendantAdded:Connect(apply)
+end
+
+--------------------------------------------------------------------------------
+-- Holster / equip joints
+--------------------------------------------------------------------------------
+local function limb(character: Model, r15: string, r6: string): BasePart?
+	local part = character:FindFirstChild(r15) or character:FindFirstChild(r6)
+	return if part and part:IsA("BasePart") then part else nil
+end
+
+local function clearJoint(weapon: WeaponState)
+	local joint = weapon.Joint
+	if joint then
+		joint:Destroy()
+		weapon.Joint = nil
+	end
+end
+
+local function holster(c: Combatant, weapon: WeaponState)
+	clearJoint(weapon)
+	local weld = Instance.new("Weld")
+	weld.Name = "Holster"
+	if weapon.Slot == "Primary" then
+		-- Slung diagonally across the back, barrel up-left.
+		weld.Part0 = c.Torso
+		weld.C0 = CFrame.new(0.5, -0.3, 0.62) * CFrame.Angles(0, 0, math.rad(-40)) * CFrame.Angles(0, math.rad(90), 0)
+	else
+		-- Thigh holster, barrel down.
+		local thigh = limb(c.Character, "RightUpperLeg", "Right Leg") or c.Torso
+		weld.Part0 = thigh
+		weld.C0 = CFrame.new(0.58, 0.15, 0) * CFrame.Angles(math.rad(-90), 0, 0)
+	end
+	weld.Part1 = weapon.Handles.Handle
+	weld.Parent = weld.Part0
+	weapon.Joint = weld
+	weapon.Handles.Model.Name = "Holstered_" .. weapon.Slot
+end
+
+local function equip(c: Combatant, weapon: WeaponState)
+	clearJoint(weapon)
+	local offsets = Config.Combat.HoldOffsets[weapon.Def.Class]
+	local motor = Instance.new("Motor6D")
+	motor.Name = "WeaponGrip"
+	motor.Part0 = c.Torso
+	motor.Part1 = weapon.Handles.Handle
+	motor.C0 = CFrame.new(offsets.Hip)
+	motor.Parent = c.Torso
+	weapon.Joint = motor
+	weapon.Handles.Model.Name = "EquippedWeapon"
+	c.Character:SetAttribute("EquippedWeapon", weapon.Id)
+	c.Character:SetAttribute("WeaponClass", weapon.Def.Class)
+end
+
+local function cancelReload(player: Player, weapon: WeaponState)
+	if weapon.Reloading then
+		weapon.Reloading = false
+		weapon.ReloadToken += 1
+		sync(player, weapon)
+	end
+end
+
+--------------------------------------------------------------------------------
+-- Damage
+--------------------------------------------------------------------------------
+local function findHumanoid(part: BasePart): (Humanoid?, Model?)
+	local model = part:FindFirstAncestorOfClass("Model")
+	while model do
+		local humanoid = model:FindFirstChildOfClass("Humanoid")
+		if humanoid then
+			return humanoid, model
+		end
+		model = model:FindFirstAncestorOfClass("Model")
+	end
+	return nil, nil
+end
+
+local function falloff(combat: Types.WeaponCombat, distance: number): number
+	if distance <= combat.FalloffStart then
+		return 1
+	end
+	local t = math.clamp((distance - combat.FalloffStart) / math.max(combat.Range - combat.FalloffStart, 1), 0, 1)
+	return 1 + (combat.MinDamageRatio - 1) * t
+end
+
+local function applyHit(c: Combatant, weapon: WeaponState, result: RaycastResult, distance: number)
+	local part = result.Instance
+	if not part:IsA("BasePart") then
+		return
+	end
+	local humanoid, model = findHumanoid(part)
+	if not humanoid or not model or model == c.Character or humanoid.Health <= 0 then
+		return
+	end
+	if Players:GetPlayerFromCharacter(model) and not Config.Combat.PvPEnabled then
+		hitConfirm:FireClient(c.Player, "Blocked", 0, result.Position)
+		return
+	end
+
+	local combat = weapon.Def.Combat
+	local headshot = part.Name == "Head"
+	local damage = combat.Damage * falloff(combat, distance) * (if headshot then combat.HeadMultiplier else 1)
+	humanoid:TakeDamage(damage)
+	model:SetAttribute("LastHitBy", c.Player.UserId)
+
+	local kind = if humanoid.Health <= 0 then "Kill" elseif headshot then "Head" else "Body"
+	hitConfirm:FireClient(c.Player, kind, math.round(damage), result.Position)
+end
+
+--------------------------------------------------------------------------------
+-- Remote handlers
+--------------------------------------------------------------------------------
+local function onFire(player: Player, _shotId: any, origin: any, direction: any)
+	local c = combatants[player]
+	if not c or typeof(origin) ~= "Vector3" or typeof(direction) ~= "Vector3" then
+		return
+	end
+	if not isFiniteVector(origin) or not isFiniteVector(direction) or direction.Magnitude < 0.5 then
+		return
+	end
+	if c.Humanoid.Health <= 0 or player:GetAttribute("State") ~= "Deployed" then
+		return
+	end
+
+	local now = os.clock()
+	if now < c.ReadyAt then
+		return
+	end
+	local weapon = c.Weapons[c.Equipped]
+	local combat = weapon.Def.Combat
+	if weapon.Reloading or weapon.Mag <= 0 then
+		sync(player, weapon)
+		return
+	end
+
+	-- Fire-rate token bucket
+	local interval = 60 / combat.RPM
+	local refill = (now - weapon.LastShot) / (interval * Config.Combat.FireRateTolerance)
+	weapon.Tokens = math.min(Config.Combat.ShotBurstAllowance, weapon.Tokens + refill)
+	weapon.LastShot = now
+	if weapon.Tokens < 1 then
+		return
+	end
+	weapon.Tokens -= 1
+
+	-- Origin sanity + line of sight from the head to the claimed muzzle.
+	local headPos = c.Head.Position
+	if (origin - headPos).Magnitude > Config.Combat.MaxOriginDistance then
+		return
+	end
+	local params = RaycastParams.new()
+	params.FilterType = Enum.RaycastFilterType.Exclude
+	params.FilterDescendantsInstances = { c.Character }
+	local blocked = Workspace:Raycast(headPos, origin - headPos, params)
+	local shotOrigin = if blocked then headPos else origin
+
+	weapon.Mag -= 1
+
+	local dir = direction.Unit
+	local result = Workspace:Raycast(shotOrigin, dir * combat.Range, params)
+	local hitPos = shotOrigin + dir * combat.Range
+	local normal = -dir
+	local material = "Air"
+	if result then
+		hitPos = result.Position
+		normal = result.Normal
+		material = result.Material.Name
+		applyHit(c, weapon, result, (hitPos - shotOrigin).Magnitude)
+	end
+
+	for _, other in Players:GetPlayers() do
+		if other ~= player then
+			shotFx:FireClient(other, c.Character, weapon.Id, shotOrigin, hitPos, normal, material)
+		end
+	end
+end
+
+local function onReload(player: Player)
+	local c = combatants[player]
+	if not c or c.Humanoid.Health <= 0 then
+		return
+	end
+	local weapon = c.Weapons[c.Equipped]
+	local combat = weapon.Def.Combat
+	if weapon.Reloading or weapon.Mag >= combat.MagSize or weapon.Reserve <= 0 then
+		sync(player, weapon)
+		return
+	end
+	weapon.Reloading = true
+	weapon.ReloadToken += 1
+	local token = weapon.ReloadToken
+	local duration = if weapon.Mag == 0 then combat.EmptyReloadTime else combat.ReloadTime
+	task.delay(duration, function()
+		if combatants[player] ~= c or weapon.ReloadToken ~= token or not weapon.Reloading then
+			return
+		end
+		local take = math.min(combat.MagSize - weapon.Mag, weapon.Reserve)
+		weapon.Mag += take
+		weapon.Reserve -= take
+		weapon.Reloading = false
+		sync(player, weapon)
+	end)
+end
+
+local function onEquip(player: Player, slot: any)
+	local c = combatants[player]
+	if not c or (slot ~= "Primary" and slot ~= "Secondary") or c.Equipped == slot then
+		return
+	end
+	if c.Humanoid.Health <= 0 then
+		return
+	end
+	local current = c.Weapons[c.Equipped]
+	cancelReload(player, current)
+	holster(c, current)
+	local nextWeapon = c.Weapons[slot :: Types.WeaponSlot]
+	equip(c, nextWeapon)
+	c.Equipped = slot
+	c.ReadyAt = os.clock() + nextWeapon.Def.Combat.DrawTime * 0.85
+end
+
+local function onAim(player: Player, pitch: any, aiming: any)
+	local c = combatants[player]
+	if not c or not Schema.isFiniteNumber(pitch) then
+		return
+	end
+	local now = os.clock()
+	if now - c.LastAim < 1 / 30 then
+		return
+	end
+	c.LastAim = now
+	local clamped = math.round(math.clamp(pitch, -1.3, 1.2) * 100) / 100
+	if c.Character:GetAttribute("AimPitch") ~= clamped then
+		c.Character:SetAttribute("AimPitch", clamped)
+	end
+	local isAiming = aiming == true
+	if c.Character:GetAttribute("Aiming") ~= isAiming then
+		c.Character:SetAttribute("Aiming", isAiming)
+	end
+end
+
+local function onStance(player: Player, stance: any, sprinting: any)
+	local c = combatants[player]
+	if not c or typeof(stance) ~= "string" or not VALID_STANCES[stance] then
+		return
+	end
+	local now = os.clock()
+	if now - c.LastStance < 0.05 then
+		return
+	end
+	c.LastStance = now
+	c.Character:SetAttribute("Stance", stance)
+	c.Character:SetAttribute("Sprinting", sprinting == true and stance == "Stand")
+end
+
+--------------------------------------------------------------------------------
+-- Lifecycle
+--------------------------------------------------------------------------------
+local function onDeployed(player: Player, character: Model, loadout: Types.Loadout)
+	local humanoid = character:FindFirstChildOfClass("Humanoid")
+	local head = limb(character, "Head", "Head")
+	local torso = limb(character, "UpperTorso", "Torso")
+	if not humanoid or not head or not torso then
+		warn("[Combat] character missing Humanoid/Head/Torso for", player.Name)
+		return
+	end
+	assignCharacterGroup(character)
+
+	local weapons: { [Types.WeaponSlot]: WeaponState } = {}
+	local c: Combatant = {
+		Player = player,
+		Character = character,
+		Humanoid = humanoid,
+		Head = head,
+		Torso = torso,
+		Weapons = weapons,
+		Equipped = "Primary",
+		ReadyAt = os.clock() + 0.5,
+		LastAim = 0,
+		LastStance = 0,
+	}
+
+	for _, slot in SLOTS do
+		local id = if slot == "Primary" then loadout.Primary else loadout.Secondary
+		local def = Config.Weapons[id]
+		local handles = WeaponBuilder.build(id)
+		weapons[slot] = {
+			Id = id,
+			Slot = slot,
+			Def = def,
+			Mag = def.Combat.MagSize,
+			Reserve = def.Combat.Reserve,
+			Tokens = Config.Combat.ShotBurstAllowance,
+			LastShot = 0,
+			Reloading = false,
+			ReloadToken = 0,
+			Handles = handles,
+			Joint = nil,
+		}
+	end
+
+	holster(c, weapons.Secondary)
+	equip(c, weapons.Primary)
+	for _, slot in SLOTS do
+		weapons[slot].Handles.Model.Parent = character
+	end
+
+	combatants[player] = c
+	for _, slot in SLOTS do
+		sync(player, weapons[slot])
+	end
+
+	character.AncestryChanged:Connect(function(_, parent)
+		if parent == nil and combatants[player] == c then
+			combatants[player] = nil
+		end
+	end)
+	humanoid.Died:Once(function()
+		if combatants[player] == c then
+			combatants[player] = nil
+		end
+	end)
+end
+
+function CombatService.init(deployed: any, getLoadout: (Player) -> Types.Loadout)
+	setupCollisionGroups()
+
+	hitConfirm = Net.event(Net.Events.HitConfirm)
+	ammoSync = Net.event(Net.Events.AmmoSync)
+	shotFx = Net.unreliable(Net.Unreliable.ShotFx)
+
+	Net.event(Net.Events.Fire).OnServerEvent:Connect(onFire)
+	Net.event(Net.Events.Reload).OnServerEvent:Connect(onReload)
+	Net.event(Net.Events.EquipSlot).OnServerEvent:Connect(onEquip)
+	Net.event(Net.Events.SetStance).OnServerEvent:Connect(onStance)
+	Net.unreliable(Net.Unreliable.AimState).OnServerEvent:Connect(onAim)
+
+	deployed:Connect(function(player: Player, character: Model)
+		onDeployed(player, character, getLoadout(player))
+	end)
+
+	Players.PlayerRemoving:Connect(function(player: Player)
+		combatants[player] = nil
+	end)
+end
+
+return CombatService
+]]></ProtectedString></Properties></Item><Item class="ModuleScript" referent="RBX000018"><Properties><string name="Name">DeployService</string><ProtectedString name="Source"><![CDATA[--!strict
 --[[
 	DeployService
 	Server-authoritative player state machine:
@@ -1751,9 +2863,11 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage.Shared
 local Config = require(Shared.Config)
 local Net = require(Shared.Net)
+local Signal = require(Shared.Signal)
 local Types = require(Shared.Types)
 
 local DeployService = {}
+DeployService.Deployed = Signal.new() -- (player, character)
 
 local deployPoints: { BasePart } = {}
 local pointCursor = 0
@@ -1837,6 +2951,11 @@ local function onDeployRequest(player: Player)
 		character:PivotTo(spawnCF)
 	end
 	watchCharacter(player, character)
+	character:SetAttribute("Stance", "Stand")
+	character:SetAttribute("Sprinting", false)
+	character:SetAttribute("AimPitch", 0)
+	character:SetAttribute("Aiming", false)
+	DeployService.Deployed:Fire(player, character)
 	setState(player, "Deployed")
 end
 
@@ -1879,7 +2998,7 @@ function DeployService.init(safehouse: Model)
 end
 
 return DeployService
-]]></ProtectedString></Properties></Item><Item class="ModuleScript" referent="RBX000017"><Properties><string name="Name">LightingService</string><ProtectedString name="Source"><![CDATA[--!strict
+]]></ProtectedString></Properties></Item><Item class="ModuleScript" referent="RBX000019"><Properties><string name="Name">LightingService</string><ProtectedString name="Source"><![CDATA[--!strict
 --[[
 	LightingService
 	Applies the gritty dusk/overcast look-dev to Lighting, MaterialService,
@@ -2060,7 +3179,7 @@ function LightingService.apply(): { string }
 end
 
 return LightingService
-]]></ProtectedString></Properties></Item><Item class="ModuleScript" referent="RBX000018"><Properties><string name="Name">PlayerDataService</string><ProtectedString name="Source"><![CDATA[--!strict
+]]></ProtectedString></Properties></Item><Item class="ModuleScript" referent="RBX000020"><Properties><string name="Name">PlayerDataService</string><ProtectedString name="Source"><![CDATA[--!strict
 --[[
 	PlayerDataService
 	Owns each player's persistent profile (settings, loadout, stash).
@@ -2389,7 +3508,7 @@ function PlayerDataService.init()
 end
 
 return PlayerDataService
-]]></ProtectedString></Properties></Item></Item><Item class="Folder" referent="RBX000021"><Properties><string name="Name">World</string></Properties><Item class="ModuleScript" referent="RBX000020"><Properties><string name="Name">SafehouseBuilder</string><ProtectedString name="Source"><![CDATA[--!strict
+]]></ProtectedString></Properties></Item></Item><Item class="Folder" referent="RBX000024"><Properties><string name="Name">World</string></Properties><Item class="ModuleScript" referent="RBX000022"><Properties><string name="Name">SafehouseBuilder</string><ProtectedString name="Source"><![CDATA[--!strict
 --[[
 	SafehouseBuilder
 	Procedurally builds the rain-slicked safehouse alley used by the main menu
@@ -3289,11 +4408,245 @@ function SafehouseBuilder.ensure(rebuild: boolean?): Model
 end
 
 return SafehouseBuilder
-]]></ProtectedString></Properties></Item></Item></Item></Item><Item class="StarterPlayer" referent="RBX000039"><Properties><string name="Name">StarterPlayer</string></Properties><Item class="StarterPlayerScripts" referent="RBX000038"><Properties><string name="Name">StarterPlayerScripts</string></Properties><Item class="Folder" referent="RBX000037"><Properties><string name="Name">Client</string></Properties><Item class="LocalScript" referent="RBX000024"><Properties><string name="Name">ClientBootstrap</string><ProtectedString name="Source"><![CDATA[--!strict
+]]></ProtectedString></Properties></Item><Item class="ModuleScript" referent="RBX000023"><Properties><string name="Name">TrainingRange</string><ProtectedString name="Source"><![CDATA[--!strict
+--[[
+	TrainingRange
+	Shooting lane down the alley for testing gunplay before Phase 4 brings real
+	threats. Three armoured mannequins (Humanoid-driven: headshots, kills,
+	falloff all work through the real CombatService path), distance boards and
+	a steel gong plate for impact sparks.
+
+	Mannequins flash on hit, regenerate when left alone, collapse on death and
+	respawn after Config.Combat.TrainingDummyRespawn seconds.
+]]
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Shared = ReplicatedStorage.Shared
+local Config = require(Shared.Config)
+local PartFactory = require(Shared.Builders.PartFactory)
+
+local TrainingRange = {}
+
+local function rgb(r: number, g: number, b: number): Color3
+	return Color3.fromRGB(r, g, b)
+end
+
+local S = {
+	Mannequin = PartFactory.style(rgb(184, 172, 152), Enum.Material.SmoothPlastic, 0.02),
+	Joint = PartFactory.style(rgb(60, 60, 64), Enum.Material.Metal, 0.05),
+	Carrier = PartFactory.style(rgb(74, 80, 58), Enum.Material.Fabric),
+	Pouch = PartFactory.style(rgb(62, 68, 48), Enum.Material.Fabric),
+	Steel = PartFactory.style(rgb(80, 82, 86), Enum.Material.Metal, 0.1),
+	SteelDark = PartFactory.style(rgb(40, 42, 46), Enum.Material.DiamondPlate),
+	Board = PartFactory.style(rgb(30, 30, 32), Enum.Material.SmoothPlastic),
+	Invisible = PartFactory.style(rgb(0, 0, 0), Enum.Material.SmoothPlastic, 0, 1, false),
+}
+
+local function rings(part: BasePart)
+	local gui = Instance.new("SurfaceGui")
+	gui.Name = "Target"
+	gui.Face = Enum.NormalId.Front
+	gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+	gui.PixelsPerStud = 60
+	gui.LightInfluence = 1
+	gui.Parent = part
+	for i, size in { 90, 60, 30 } do
+		local ring = Instance.new("Frame")
+		ring.AnchorPoint = Vector2.new(0.5, 0.5)
+		ring.Position = UDim2.fromScale(0.5, 0.45)
+		ring.Size = UDim2.fromOffset(size, size)
+		ring.BackgroundTransparency = if i == 3 then 0.1 else 1
+		ring.BackgroundColor3 = rgb(200, 60, 40)
+		ring.BorderSizePixel = 0
+		local corner = Instance.new("UICorner")
+		corner.CornerRadius = UDim.new(1, 0)
+		corner.Parent = ring
+		local stroke = Instance.new("UIStroke")
+		stroke.Color = rgb(200, 60, 40)
+		stroke.Thickness = 3
+		stroke.Parent = ring
+		ring.Parent = gui
+	end
+end
+
+local function buildDummy(parent: Instance, base: CFrame, index: number)
+	local model = Instance.new("Model")
+	model.Name = "TrainingDummy" .. index
+
+	local function add(name: string, size: Vector3, offset: CFrame, style: PartFactory.Style, anchored: boolean?): BasePart
+		return PartFactory.make({
+			Name = name,
+			Size = size,
+			CFrame = base * offset,
+			Style = style,
+			CanCollide = true,
+			Anchored = anchored == true,
+			Parent = model,
+		})
+	end
+
+	-- Stand (separate, stays when the mannequin collapses)
+	local stand = Instance.new("Model")
+	stand.Name = "DummyStand" .. index
+	stand.Parent = parent
+	PartFactory.make({ Name = "StandPlate", Size = Vector3.new(2.2, 0.2, 2.2), CFrame = base * CFrame.new(0, 0.1, 0), Style = S.SteelDark, CanCollide = true, Parent = stand })
+
+	local root = add("HumanoidRootPart", Vector3.new(2, 2, 1), CFrame.new(0, 3.1, 0), S.Invisible, true)
+	root.CanCollide = false
+	model.PrimaryPart = root
+
+	local limbs: { BasePart } = {}
+	local function limb(name: string, size: Vector3, offset: CFrame, style: PartFactory.Style): BasePart
+		local part = add(name, size, offset, style)
+		PartFactory.weld(root, part)
+		table.insert(limbs, part)
+		return part
+	end
+
+	limb("LeftLeg", Vector3.new(0.85, 2.0, 0.85), CFrame.new(-0.5, 1.2, 0), S.Mannequin)
+	limb("RightLeg", Vector3.new(0.85, 2.0, 0.85), CFrame.new(0.5, 1.2, 0), S.Mannequin)
+	local torso = limb("Torso", Vector3.new(2, 2, 1), CFrame.new(0, 3.2, 0), S.Mannequin)
+	limb("LeftArm", Vector3.new(0.85, 1.9, 0.85), CFrame.new(-1.45, 3.15, 0), S.Mannequin)
+	limb("RightArm", Vector3.new(0.85, 1.9, 0.85), CFrame.new(1.45, 3.15, 0), S.Mannequin)
+	limb("Neck", Vector3.new(0.45, 0.3, 0.45), CFrame.new(0, 4.35, 0), S.Joint)
+	limb("Head", Vector3.new(1.1, 1.15, 1.1), CFrame.new(0, 4.95, 0), S.Mannequin)
+	limb("PlateCarrier", Vector3.new(2.12, 1.45, 1.14), CFrame.new(0, 3.3, 0), S.Carrier)
+	for i, x in { -0.6, 0, 0.6 } do
+		limb("MagPouch" .. i, Vector3.new(0.45, 0.55, 0.2), CFrame.new(x, 2.95, -0.66), S.Pouch)
+	end
+	rings(torso)
+
+	local humanoid = Instance.new("Humanoid")
+	humanoid.MaxHealth = Config.Combat.TrainingDummyHealth
+	humanoid.Health = Config.Combat.TrainingDummyHealth
+	humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
+	humanoid.HealthDisplayType = Enum.HumanoidHealthDisplayType.AlwaysOff
+	humanoid.BreakJointsOnDeath = false
+	humanoid.RequiresNeck = false
+	humanoid.Parent = model
+
+	local flash = Instance.new("Highlight")
+	flash.FillColor = rgb(255, 255, 255)
+	flash.FillTransparency = 1
+	flash.OutlineTransparency = 1
+	flash.DepthMode = Enum.HighlightDepthMode.Occluded
+	flash.Parent = model
+
+	model.Parent = parent
+
+	local lastHealth = humanoid.Health
+	local lastHit = 0
+	humanoid.HealthChanged:Connect(function(health: number)
+		if health < lastHealth then
+			lastHit = os.clock()
+			flash.FillTransparency = 0.55
+			task.delay(0.07, function()
+				flash.FillTransparency = 1
+			end)
+		end
+		lastHealth = health
+	end)
+
+	-- Regenerate when left alone.
+	task.spawn(function()
+		while model.Parent and humanoid.Health > 0 do
+			task.wait(0.5)
+			if humanoid.Health > 0 and os.clock() - lastHit > 3 and humanoid.Health < humanoid.MaxHealth then
+				humanoid.Health = math.min(humanoid.MaxHealth, humanoid.Health + humanoid.MaxHealth * 0.25)
+			end
+		end
+	end)
+
+	humanoid.Died:Once(function()
+		for _, part in limbs do
+			for _, weld in part:GetChildren() do
+				if weld:IsA("WeldConstraint") then
+					weld:Destroy()
+				end
+			end
+			part.Anchored = false
+			part.AssemblyLinearVelocity = Vector3.new(math.random(-6, 6), 4, math.random(4, 10))
+		end
+		task.delay(Config.Combat.TrainingDummyRespawn, function()
+			model:Destroy()
+			stand:Destroy()
+			buildDummy(parent, base, index)
+		end)
+	end)
+end
+
+local function distanceBoard(parent: Instance, origin: CFrame, position: Vector3, text: string)
+	local board = PartFactory.make({
+		Name = "DistanceBoard",
+		Size = Vector3.new(0.2, 1.2, 3),
+		CFrame = origin * CFrame.new(position),
+		Style = S.Board,
+		CanCollide = true,
+		Parent = parent,
+	})
+	PartFactory.make({
+		Name = "BoardPost",
+		Size = Vector3.new(0.2, position.Y, 0.2),
+		CFrame = origin * CFrame.new(position.X, position.Y / 2, position.Z),
+		Style = S.Steel,
+		Parent = parent,
+	})
+	local gui = Instance.new("SurfaceGui")
+	gui.Face = Enum.NormalId.Right
+	gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+	gui.PixelsPerStud = 50
+	gui.LightInfluence = 0.6
+	gui.Parent = board
+	local label = Instance.new("TextLabel")
+	label.BackgroundTransparency = 1
+	label.Size = UDim2.fromScale(1, 1)
+	label.Text = text
+	label.TextScaled = true
+	label.TextColor3 = rgb(255, 168, 86)
+	label.FontFace = Font.new("rbxasset://fonts/families/RobotoMono.json", Enum.FontWeight.Bold)
+	label.Parent = gui
+end
+
+function TrainingRange.build(safehouse: Model)
+	local existing = safehouse:FindFirstChild("TrainingRange")
+	if existing then
+		existing:Destroy()
+	end
+	local folder = PartFactory.folder("TrainingRange", safehouse)
+	local origin = Config.World.Origin
+
+	-- Dummies face -Z, toward the deploy points.
+	local spots = { Vector3.new(0, 0, 24), Vector3.new(-6, 0, 40), Vector3.new(5, 0, 56) }
+	for i, p in spots do
+		buildDummy(folder, origin * CFrame.new(p), i)
+	end
+
+	-- Distance boards on the left sidewalk, readable from the deploy area.
+	for _, z in { 24, 40, 56 } do
+		distanceBoard(folder, origin, Vector3.new(-11.8, 2.4, z), string.format("%dm", math.floor((z + 2) * 0.28 + 0.5)))
+	end
+
+	-- Steel gong for impact sparks at the end of the lane.
+	local gongCF = origin * CFrame.new(-1, 3.4, 68)
+	PartFactory.make({ Name = "GongPlate", Size = Vector3.new(2.4, 2.4, 0.3), CFrame = gongCF, Style = S.Steel, CanCollide = true, Parent = folder })
+	PartFactory.make({ Name = "GongChainL", Size = Vector3.new(0.08, 2.6, 0.08), CFrame = gongCF * CFrame.new(-0.9, 2.5, 0), Style = S.SteelDark, Parent = folder })
+	PartFactory.make({ Name = "GongChainR", Size = Vector3.new(0.08, 2.6, 0.08), CFrame = gongCF * CFrame.new(0.9, 2.5, 0), Style = S.SteelDark, Parent = folder })
+	PartFactory.make({ Name = "GongBeam", Size = Vector3.new(4.4, 0.3, 0.3), CFrame = gongCF * CFrame.new(0, 3.8, 0), Style = S.SteelDark, CanCollide = true, Parent = folder })
+	for _, x in { -2.1, 2.1 } do
+		PartFactory.make({ Name = "GongPost", Size = Vector3.new(0.3, 7.4, 0.3), CFrame = origin * CFrame.new(-1 + x, 3.7, 68), Style = S.SteelDark, CanCollide = true, Parent = folder })
+	end
+end
+
+return TrainingRange
+]]></ProtectedString></Properties></Item></Item></Item></Item><Item class="StarterPlayer" referent="RBX000048"><Properties><string name="Name">StarterPlayer</string></Properties><Item class="StarterPlayerScripts" referent="RBX000047"><Properties><string name="Name">StarterPlayerScripts</string></Properties><Item class="Folder" referent="RBX000046"><Properties><string name="Name">Client</string></Properties><Item class="LocalScript" referent="RBX000027"><Properties><string name="Name">ClientBootstrap</string><ProtectedString name="Source"><![CDATA[--!strict
 --[[
 	ClientBootstrap (LocalScript)
 	Client entry point. Initialises controllers in dependency order and wires
-	the server-driven player state to the menu / gameplay flow.
+	the menu ↔ gameplay lifecycle:
+
+	  MenuController.Deployed  → movement, weapons and HUD attach to the character
+	  MenuController.Entered   → they detach (death / return to safehouse)
 ]]
 
 local Players = game:GetService("Players")
@@ -3305,6 +4658,11 @@ local CinematicGrade = require(Controllers.CinematicGrade)
 local AtmosphereController = require(Controllers.AtmosphereController)
 local MenuCamera = require(Controllers.MenuCamera)
 local MenuController = require(Controllers.MenuController)
+local CharacterPoser = require(Controllers.CharacterPoser)
+local MovementController = require(Controllers.MovementController)
+local WeaponController = require(Controllers.WeaponController)
+local LoadoutDisplay = require(Controllers.LoadoutDisplay)
+local HUD = require(script.Parent.UI.HUD)
 
 local player = Players.LocalPlayer
 
@@ -3326,8 +4684,22 @@ end
 applyQuality(SettingsController.get())
 SettingsController.Changed:Connect(applyQuality)
 
+HUD.init()
+CharacterPoser.init()
+WeaponController.init()
+LoadoutDisplay.init()
 MenuCamera.init()
 MenuController.init()
+
+MenuController.Deployed:Connect(function(character: any)
+	MovementController.attach(character)
+	WeaponController.attach(character, SettingsController.getLoadout())
+end)
+MenuController.Entered:Connect(function()
+	WeaponController.detach()
+	MovementController.detach()
+end)
+
 MenuController.enter(false)
 
 player:GetAttributeChangedSignal("State"):Connect(function()
@@ -3335,7 +4707,7 @@ player:GetAttributeChangedSignal("State"):Connect(function()
 		task.spawn(MenuController.returnFromRaid)
 	end
 end)
-]]></ProtectedString></Properties></Item><Item class="Folder" referent="RBX000032"><Properties><string name="Name">Controllers</string></Properties><Item class="ModuleScript" referent="RBX000025"><Properties><string name="Name">AtmosphereController</string><ProtectedString name="Source"><![CDATA[--!strict
+]]></ProtectedString></Properties></Item><Item class="Folder" referent="RBX000040"><Properties><string name="Name">Controllers</string></Properties><Item class="ModuleScript" referent="RBX000028"><Properties><string name="Name">AtmosphereController</string><ProtectedString name="Source"><![CDATA[--!strict
 --[[
 	AtmosphereController
 	Everything weather/ambience that should run per-client:
@@ -3693,7 +5065,7 @@ function AtmosphereController.init(injected: Hooks)
 end
 
 return AtmosphereController
-]]></ProtectedString></Properties></Item><Item class="ModuleScript" referent="RBX000026"><Properties><string name="Name">AudioController</string><ProtectedString name="Source"><![CDATA[--!strict
+]]></ProtectedString></Properties></Item><Item class="ModuleScript" referent="RBX000029"><Properties><string name="Name">AudioController</string><ProtectedString name="Source"><![CDATA[--!strict
 --[[
 	AudioController
 	SoundGroups (UI / Ambience / World), 2D UI one-shots with pitch variance,
@@ -3763,8 +5135,13 @@ function AudioController.init()
 		)
 	end
 
-	for _, name in { "UIHover", "UIClick", "UIBack", "UIDeploy", "UITick", "Thunder" } do
-		makeSound(name, SoundService)
+	-- 2D one-shots: everything except the loops and per-shot gunfire (WeaponFx
+	-- spawns those positionally at the muzzle).
+	local SPECIAL = { RainLoop = true, EngineIdle = true, FireRifle = true, FireSMG = true, FirePistol = true }
+	for name in Config.Audio do
+		if not SPECIAL[name] then
+			makeSound(name, SoundService)
+		end
 	end
 
 	local rain = makeSound("RainLoop", SoundService)
@@ -3832,7 +5209,347 @@ function AudioController.setMenuMix(inMenu: boolean, duration: number?)
 end
 
 return AudioController
-]]></ProtectedString></Properties></Item><Item class="ModuleScript" referent="RBX000027"><Properties><string name="Name">CinematicGrade</string><ProtectedString name="Source"><![CDATA[--!strict
+]]></ProtectedString></Properties></Item><Item class="ModuleScript" referent="RBX000030"><Properties><string name="Name">CharacterPoser</string><ProtectedString name="Source"><![CDATA[--!strict
+--[[
+	CharacterPoser
+	Procedural third-person poses for EVERY character, solved locally on each
+	client (no animation assets needed):
+
+	  • Upper body follows aim pitch (Waist + Neck Motor6D C0 offsets)
+	  • Weapon Motor6D ("WeaponGrip", created by the server) is posed from the
+	    weapon class hold offsets: hip ↔ ADS blend, pitch, sprint low-ready,
+	    and a local recoil kick spring for your own gun
+	  • Both hands are IK-locked to the weapon's GripRight / GripLeft
+	  • Crouch / slide: leg IK keeps feet planted while HipHeight drops, with a
+	    procedural crouch-walk step cycle driven by velocity
+
+	Inputs come from replicated character attributes (Stance, Sprinting,
+	AimPitch, Aiming, WeaponClass). Your own character reads the live camera
+	pitch instead, so it never lags behind your aim.
+
+	Requires R15 rigs (Game Settings → Avatar → R15). R6 characters are skipped.
+]]
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+
+local Shared = ReplicatedStorage.Shared
+local Config = require(Shared.Config)
+local Spring = require(Shared.Spring)
+local WeaponBuilder = require(Shared.Builders.WeaponBuilder)
+
+local TacticalCamera = require(script.Parent.TacticalCamera)
+
+local CharacterPoser = {}
+
+local localPlayer = Players.LocalPlayer
+local COMBAT = Config.Combat
+
+type Record = {
+	Character: Model,
+	Humanoid: Humanoid,
+	Root: BasePart,
+	UpperTorso: BasePart,
+	Waist: Motor6D?,
+	Neck: Motor6D?,
+	WaistC0: CFrame,
+	NeckC0: CFrame,
+	BaseHip: number,
+	IsLocal: boolean,
+	Pitch: number,
+	Aim: number,
+	Crouch: number,
+	Slide: number,
+	Sprint: number,
+	StepPhase: number,
+	Kick: Spring.Spring?,
+	WeaponModel: Model?,
+	ArmRight: IKControl,
+	ArmLeft: IKControl,
+	LegRight: IKControl,
+	LegLeft: IKControl,
+	FootRight: Attachment,
+	FootLeft: Attachment,
+	Instances: { Instance },
+}
+
+local records: { [Model]: Record } = {}
+local localAiming = false
+
+local function smooth(current: number, target: number, rate: number, dt: number): number
+	return current + (target - current) * (1 - math.exp(-rate * dt))
+end
+
+local function newAttachment(parent: BasePart, name: string, position: Vector3, list: { Instance }): Attachment
+	local attachment = Instance.new("Attachment")
+	attachment.Name = name
+	attachment.Position = position
+	attachment.Parent = parent
+	table.insert(list, attachment)
+	return attachment
+end
+
+local function newIK(record: { Humanoid: Humanoid }, name: string, chainRoot: BasePart, endEffector: BasePart, pole: Attachment, list: { Instance }): IKControl
+	local ik = Instance.new("IKControl")
+	ik.Name = name
+	ik.Type = Enum.IKControlType.Position
+	ik.ChainRoot = chainRoot
+	ik.EndEffector = endEffector
+	ik.Pole = pole
+	ik.Priority = 1
+	ik.Weight = 0
+	ik.Enabled = false
+	pcall(function()
+		(ik :: any).SmoothTime = 0.03
+	end)
+	ik.Parent = record.Humanoid
+	table.insert(list, ik)
+	return ik
+end
+
+local function part(model: Model, name: string): BasePart?
+	local found = model:FindFirstChild(name)
+	return if found and found:IsA("BasePart") then found else nil
+end
+
+local function register(character: Model, isLocal: boolean)
+	if records[character] then
+		return
+	end
+	local humanoid = character:WaitForChild("Humanoid", 10)
+	local root = character:WaitForChild("HumanoidRootPart", 10)
+	local upper = character:WaitForChild("UpperTorso", 10)
+	if not humanoid or not humanoid:IsA("Humanoid") or not root or not root:IsA("BasePart") or not upper or not upper:IsA("BasePart") then
+		return -- R6 or broken rig: no procedural pose
+	end
+	if humanoid.RigType ~= Enum.HumanoidRigType.R15 then
+		return
+	end
+	local rightUpperArm = part(character, "RightUpperArm")
+	local rightHand = part(character, "RightHand")
+	local leftUpperArm = part(character, "LeftUpperArm")
+	local leftHand = part(character, "LeftHand")
+	local rightUpperLeg = part(character, "RightUpperLeg")
+	local rightFoot = part(character, "RightFoot")
+	local leftUpperLeg = part(character, "LeftUpperLeg")
+	local leftFoot = part(character, "LeftFoot")
+	if not (rightUpperArm and rightHand and leftUpperArm and leftHand and rightUpperLeg and rightFoot and leftUpperLeg and leftFoot) then
+		return
+	end
+
+	local waist = upper:FindFirstChild("Waist")
+	local head = part(character, "Head")
+	local neck = if head then head:FindFirstChild("Neck") else nil
+	local instances: { Instance } = {}
+	local holder = { Humanoid = humanoid }
+
+	local armPoleR = newAttachment(upper, "PoseArmPoleR", Vector3.new(1.6, -1.4, 0.8), instances)
+	local armPoleL = newAttachment(upper, "PoseArmPoleL", Vector3.new(-1.6, -1.4, 0.4), instances)
+	local kneePoleR = newAttachment(root, "PoseKneePoleR", Vector3.new(0.6, -1, -3), instances)
+	local kneePoleL = newAttachment(root, "PoseKneePoleL", Vector3.new(-0.6, -1, -3), instances)
+	local footR = newAttachment(root, "PoseFootR", Vector3.new(0.45, -3, 0), instances)
+	local footL = newAttachment(root, "PoseFootL", Vector3.new(-0.45, -3, 0), instances)
+
+	local legR = newIK(holder, "PoseLegR", rightUpperLeg, rightFoot, kneePoleR, instances)
+	local legL = newIK(holder, "PoseLegL", leftUpperLeg, leftFoot, kneePoleL, instances)
+	legR.Target = footR
+	legL.Target = footL
+
+	local record: Record = {
+		Character = character,
+		Humanoid = humanoid,
+		Root = root,
+		UpperTorso = upper,
+		Waist = if waist and waist:IsA("Motor6D") then waist else nil,
+		Neck = if neck and neck:IsA("Motor6D") then neck else nil,
+		WaistC0 = if waist and waist:IsA("Motor6D") then waist.C0 else CFrame.identity,
+		NeckC0 = if neck and neck:IsA("Motor6D") then neck.C0 else CFrame.identity,
+		BaseHip = humanoid.HipHeight,
+		IsLocal = isLocal,
+		Pitch = 0,
+		Aim = 0,
+		Crouch = 0,
+		Slide = 0,
+		Sprint = 0,
+		StepPhase = 0,
+		Kick = if isLocal then Spring.new(Vector3.zero, 11, 0.5) else nil,
+		WeaponModel = nil,
+		ArmRight = newIK(holder, "PoseArmR", rightUpperArm, rightHand, armPoleR, instances),
+		ArmLeft = newIK(holder, "PoseArmL", leftUpperArm, leftHand, armPoleL, instances),
+		LegRight = legR,
+		LegLeft = legL,
+		FootRight = footR,
+		FootLeft = footL,
+		Instances = instances,
+	}
+	records[character] = record
+
+	character.AncestryChanged:Connect(function(_, parent)
+		if parent == nil then
+			for _, inst in record.Instances do
+				inst:Destroy()
+			end
+			records[character] = nil
+		end
+	end)
+end
+
+local function attrNumber(model: Model, name: string): number
+	local v = model:GetAttribute(name)
+	return if typeof(v) == "number" then v else 0
+end
+
+local function poseWeapon(record: Record, dt: number)
+	local character = record.Character
+	local grip = record.UpperTorso:FindFirstChild("WeaponGrip")
+	local model = character:FindFirstChild("EquippedWeapon")
+	if not grip or not grip:IsA("Motor6D") or not model or not model:IsA("Model") then
+		record.ArmRight.Enabled = false
+		record.ArmLeft.Enabled = false
+		record.WeaponModel = nil
+		return
+	end
+
+	if record.WeaponModel ~= model then
+		local handles = WeaponBuilder.resolve(model)
+		if not handles then
+			return
+		end
+		record.WeaponModel = model
+		record.ArmRight.Target = handles.GripRight
+		record.ArmLeft.Target = handles.GripLeft
+	end
+	record.ArmRight.Enabled = true
+	record.ArmLeft.Enabled = true
+	record.ArmRight.Weight = 1
+	record.ArmLeft.Weight = 1
+
+	local class = character:GetAttribute("WeaponClass")
+	local offsets = COMBAT.HoldOffsets[if typeof(class) == "string" then class else "RIFLE"] or COMBAT.HoldOffsets.RIFLE
+	local position = offsets.Hip:Lerp(offsets.Ads, record.Aim)
+	local pivot = COMBAT.PosePivot
+
+	local kickBack, kickRot = 0, 0
+	local kick = record.Kick
+	if kick then
+		kick.Target = Vector3.zero
+		local k = kick:update(dt)
+		kickBack, kickRot = k.X, k.Y
+	end
+
+	-- Low-ready when sprinting: barrel down and across the body.
+	local sprint = record.Sprint
+	local rotation = CFrame.Angles(record.Pitch * 0.55 - sprint * 0.75 + kickRot, sprint * 0.55, sprint * 0.2)
+	grip.C0 = CFrame.new(pivot) * rotation * CFrame.new(position - pivot + Vector3.new(0, 0, kickBack))
+end
+
+local function poseLegs(record: Record, dt: number)
+	local crouch = record.Crouch
+	local enabled = crouch > 0.02
+	record.LegRight.Enabled = enabled
+	record.LegLeft.Enabled = enabled
+	if not enabled then
+		return
+	end
+	record.LegRight.Weight = crouch
+	record.LegLeft.Weight = crouch
+
+	local root = record.Root
+	local hip = record.BaseHip - Config.Movement.CrouchHipDrop * crouch
+	local groundY = -(hip + root.Size.Y * 0.5) + 0.12
+
+	local velocity = root.AssemblyLinearVelocity
+	local localVel = root.CFrame:VectorToObjectSpace(Vector3.new(velocity.X, 0, velocity.Z))
+	local speed = localVel.Magnitude
+	record.StepPhase += speed * dt * 1.4
+	local stride = math.clamp(speed / 7, 0, 1) * 0.55 * (1 - record.Slide)
+	local dir = if speed > 0.5 then localVel.Unit else Vector3.zero
+
+	local function foot(attachment: Attachment, side: number, phaseOffset: number, idleZ: number, slideZ: number)
+		local phase = record.StepPhase + phaseOffset
+		local stepOffset = dir * math.sin(phase) * stride
+		local lift = math.max(0, math.cos(phase)) * 0.3 * math.clamp(stride * 2, 0, 1)
+		local z = idleZ + (slideZ - idleZ) * record.Slide
+		attachment.Position = Vector3.new(side * 0.45 + stepOffset.X, groundY + lift + record.Slide * 0.25 * (if side > 0 then 1 else 0), z + stepOffset.Z)
+	end
+	foot(record.FootRight, 1, 0, -0.35, -1.2)
+	foot(record.FootLeft, -1, math.pi, 0.25, -0.5)
+end
+
+local function step(dt: number)
+	for character, record in records do
+		if not character.Parent or record.Humanoid.Health <= 0 then
+			record.ArmRight.Enabled = false
+			record.ArmLeft.Enabled = false
+			record.LegRight.Enabled = false
+			record.LegLeft.Enabled = false
+			continue
+		end
+
+		local pitchTarget = if record.IsLocal and TacticalCamera.isAttached()
+			then TacticalCamera.getPitch()
+			else attrNumber(character, "AimPitch")
+		record.Pitch = smooth(record.Pitch, pitchTarget, if record.IsLocal then 30 else 12, dt)
+
+		local aimTarget = if record.IsLocal then (if localAiming then 1 else 0) else (if character:GetAttribute("Aiming") == true then 1 else 0)
+		record.Aim = smooth(record.Aim, aimTarget, 14, dt)
+
+		local stance = character:GetAttribute("Stance")
+		record.Crouch = smooth(record.Crouch, if stance == "Crouch" or stance == "Slide" then 1 else 0, 12, dt)
+		record.Slide = smooth(record.Slide, if stance == "Slide" then 1 else 0, 14, dt)
+		record.Sprint = smooth(record.Sprint, if character:GetAttribute("Sprinting") == true then 1 else 0, 10, dt)
+
+		local waist = record.Waist
+		if waist then
+			waist.C0 = record.WaistC0 * CFrame.Angles(record.Pitch * 0.45 * (1 - record.Sprint * 0.6), 0, 0)
+		end
+		local neck = record.Neck
+		if neck then
+			neck.C0 = record.NeckC0 * CFrame.Angles(record.Pitch * 0.35, 0, 0)
+		end
+
+		poseWeapon(record, dt)
+		poseLegs(record, dt)
+	end
+end
+
+local function watchPlayer(player: Player)
+	local isLocal = player == localPlayer
+	if player.Character then
+		task.spawn(register, player.Character, isLocal)
+	end
+	player.CharacterAdded:Connect(function(character: Model)
+		register(character, isLocal)
+	end)
+end
+
+function CharacterPoser.init()
+	for _, player in Players:GetPlayers() do
+		watchPlayer(player)
+	end
+	Players.PlayerAdded:Connect(watchPlayer)
+	-- PreSimulation runs after the Animator, so these C0 offsets layer on top
+	-- of the default animations and IK solves on the final pose.
+	RunService.PreSimulation:Connect(step)
+end
+
+function CharacterPoser.setLocalAim(aiming: boolean)
+	localAiming = aiming
+end
+
+-- Local weapon kick: back = studs pushed toward the shoulder, rise = radians.
+function CharacterPoser.kick(back: number, rise: number)
+	local character = localPlayer.Character
+	local record = if character then records[character] else nil
+	local spring = if record then record.Kick else nil
+	if spring then
+		spring:impulse(Vector3.new(back * 30, rise * 30, 0))
+	end
+end
+
+return CharacterPoser
+]]></ProtectedString></Properties></Item><Item class="ModuleScript" referent="RBX000031"><Properties><string name="Name">CinematicGrade</string><ProtectedString name="Source"><![CDATA[--!strict
 --[[
 	CinematicGrade
 	Client-side owner of the post-processing stack created by the server's
@@ -3963,7 +5680,109 @@ function CinematicGrade.applyQuality(quality: Types.QualityLevel)
 end
 
 return CinematicGrade
-]]></ProtectedString></Properties></Item><Item class="ModuleScript" referent="RBX000028"><Properties><string name="Name">MenuCamera</string><ProtectedString name="Source"><![CDATA[--!strict
+]]></ProtectedString></Properties></Item><Item class="ModuleScript" referent="RBX000032"><Properties><string name="Name">LoadoutDisplay</string><ProtectedString name="Source"><![CDATA[--!strict
+--[[
+	LoadoutDisplay
+	Shows YOUR selected weapons lying on the safehouse workbench (client-local
+	models at Safehouse.Workbench.WeaponDisplays). They rebuild with a small
+	drop-in whenever the loadout changes, so the LOADOUT camera shot always
+	shows the real kit you'll deploy with.
+]]
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+
+local Shared = ReplicatedStorage.Shared
+local Config = require(Shared.Config)
+local Types = require(Shared.Types)
+local WeaponBuilder = require(Shared.Builders.WeaponBuilder)
+
+local SettingsController = require(script.Parent.SettingsController)
+
+local LoadoutDisplay = {}
+
+-- Lying on the left side, barrel toward +Z, sights facing the alley (-X).
+local LAY_FLAT = CFrame.Angles(0, math.pi, 0) * CFrame.Angles(0, 0, math.rad(-90))
+local OFFSETS: { [Types.WeaponSlot]: CFrame } = {
+	Primary = CFrame.new(-0.45, 0, -1.0),
+	Secondary = CFrame.new(0.7, 0, -1.6),
+}
+
+local anchors: { [Types.WeaponSlot]: BasePart } = {}
+local shown: { [Types.WeaponSlot]: { Id: string, Model: Model } } = {}
+
+local function dropIn(model: Model, target: CFrame)
+	local elapsed = 0
+	local connection: RBXScriptConnection
+	connection = RunService.RenderStepped:Connect(function(dt: number)
+		elapsed += dt
+		local t = math.clamp(elapsed / 0.35, 0, 1)
+		local bounce = 1 - (1 - t) ^ 3
+		if model.Parent == nil then
+			connection:Disconnect()
+			return
+		end
+		model:PivotTo(target * CFrame.new(0, (1 - bounce) * 0.6, 0) * CFrame.Angles(0, (1 - bounce) * 0.3, 0))
+		if t >= 1 then
+			connection:Disconnect()
+		end
+	end)
+end
+
+local function show(slot: Types.WeaponSlot, weaponId: string, animate: boolean)
+	local anchor = anchors[slot]
+	if not anchor or not WeaponBuilder.has(weaponId) then
+		return
+	end
+	local existing = shown[slot]
+	if existing and existing.Id == weaponId then
+		return
+	end
+	if existing then
+		existing.Model:Destroy()
+	end
+	local target = anchor.CFrame * OFFSETS[slot] * LAY_FLAT
+	local handles = WeaponBuilder.build(weaponId, target, true)
+	handles.Model.Name = "Display_" .. weaponId
+	handles.Model.Parent = Workspace
+	shown[slot] = { Id = weaponId, Model = handles.Model }
+	if animate then
+		dropIn(handles.Model, target)
+	end
+end
+
+local function apply(loadout: Types.Loadout, animate: boolean)
+	show("Primary", loadout.Primary, animate)
+	show("Secondary", loadout.Secondary, animate)
+end
+
+function LoadoutDisplay.init()
+	task.spawn(function()
+		local safehouse = Workspace:WaitForChild(Config.World.SafehouseName, 60)
+		local bench = safehouse and safehouse:WaitForChild("Workbench", 30)
+		local displays = bench and bench:WaitForChild("WeaponDisplays", 30)
+		if not displays then
+			warn("[LoadoutDisplay] Workbench.WeaponDisplays not found")
+			return
+		end
+		local primary = displays:WaitForChild("Display_Primary", 10)
+		local secondary = displays:WaitForChild("Display_Secondary", 10)
+		if primary and primary:IsA("BasePart") then
+			anchors.Primary = primary
+		end
+		if secondary and secondary:IsA("BasePart") then
+			anchors.Secondary = secondary
+		end
+		apply(SettingsController.getLoadout(), false)
+		SettingsController.LoadoutChanged:Connect(function(loadout: any)
+			apply(loadout, true)
+		end)
+	end)
+end
+
+return LoadoutDisplay
+]]></ProtectedString></Properties></Item><Item class="ModuleScript" referent="RBX000033"><Properties><string name="Name">MenuCamera</string><ProtectedString name="Source"><![CDATA[--!strict
 --[[
 	MenuCamera
 	Cinematic camera for the safehouse menu.
@@ -4156,7 +5975,7 @@ function MenuCamera.isRunning(): boolean
 end
 
 return MenuCamera
-]]></ProtectedString></Properties></Item><Item class="ModuleScript" referent="RBX000029"><Properties><string name="Name">MenuController</string><ProtectedString name="Source"><![CDATA[--!strict
+]]></ProtectedString></Properties></Item><Item class="ModuleScript" referent="RBX000034"><Properties><string name="Name">MenuController</string><ProtectedString name="Source"><![CDATA[--!strict
 --[[
 	MenuController
 	Orchestrates the safehouse menu experience:
@@ -4180,6 +5999,7 @@ local Workspace = game:GetService("Workspace")
 local Shared = ReplicatedStorage.Shared
 local Config = require(Shared.Config)
 local Net = require(Shared.Net)
+local Signal = require(Shared.Signal)
 
 local Controllers = script.Parent
 local AudioController = require(Controllers.AudioController)
@@ -4192,6 +6012,8 @@ local MenuUI = require(Controllers.Parent.UI.MenuUI)
 local player = Players.LocalPlayer
 
 local MenuController = {}
+MenuController.Deployed = Signal.new() -- (character) after the camera hand-off
+MenuController.Entered = Signal.new() -- menu became active (initial load or back from a raid)
 
 local INPUT_ACTION = "ZabourMenuNavigation"
 local TRANSITION_STEP = "ZabourDeployTransition"
@@ -4374,6 +6196,7 @@ local function deploy()
 	setCoreGui(false)
 	deployed = true
 	busy = false
+	MenuController.Deployed:Fire(character)
 end
 
 --------------------------------------------------------------------------------
@@ -4428,6 +6251,7 @@ function MenuController.enter(instant: boolean)
 	ui:show(instant)
 	bindInput()
 	player:SetAttribute("ClientMenuReady", true)
+	MenuController.Entered:Fire()
 end
 
 function MenuController.returnFromRaid()
@@ -4445,7 +6269,377 @@ function MenuController.isDeployed(): boolean
 end
 
 return MenuController
-]]></ProtectedString></Properties></Item><Item class="ModuleScript" referent="RBX000030"><Properties><string name="Name">SettingsController</string><ProtectedString name="Source"><![CDATA[--!strict
+]]></ProtectedString></Properties></Item><Item class="ModuleScript" referent="RBX000035"><Properties><string name="Name">MovementController</string><ProtectedString name="Source"><![CDATA[--!strict
+--[[
+	MovementController
+	Tactical locomotion for the local character:
+
+	  • Walk / ADS walk / crouch / sprint speeds, eased (no instant snaps)
+	  • Sprint (hold Shift / L3): only while moving forward, drains stamina,
+	    blocked while aiming or right after firing
+	  • Crouch (C / Ctrl / B): toggles; real collision change via HipHeight
+	  • Slide: crouch while sprinting fast enough → momentum burst that decays
+	    into a crouch; costs stamina; jump cancels it into a slide-hop
+	  • Stamina with regen delay + exhaustion lockout; jumps cost stamina
+	  • Can't stand up under low ceilings
+	  • FOV kicks for sprint/slide through TacticalCamera
+	  • Stance + sprint state replicated (throttled) so others see the pose
+]]
+
+local ContextActionService = game:GetService("ContextActionService")
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+
+local Shared = ReplicatedStorage.Shared
+local Config = require(Shared.Config)
+local Net = require(Shared.Net)
+local Signal = require(Shared.Signal)
+local Trove = require(Shared.Trove)
+local Types = require(Shared.Types)
+
+local TacticalCamera = require(script.Parent.TacticalCamera)
+
+local M = Config.Movement
+local KEYS = Config.Combat.Keybinds
+local player = Players.LocalPlayer
+
+local MovementController = {}
+MovementController.StanceChanged = Signal.new() -- (stance)
+
+local character: Model? = nil
+local humanoid: Humanoid? = nil
+local root: BasePart? = nil
+local trove: Trove.Trove? = nil
+
+local stance: Types.Stance = "Stand"
+local sprintHeld = false
+local sprinting = false
+local stamina = M.StaminaMax
+local exhausted = false
+local lastDrain = 0
+local aiming = false
+local speedMultiplier = 1
+local sprintBlockedUntil = 0
+local baseHipHeight = 2
+local slideTime = 0
+local slideDir = Vector3.zero
+local lastSlideEnd = -math.huge
+local lastSent = 0
+local pendingSend = false
+local controls: any = nil
+
+local function getControls(): any
+	if controls then
+		return controls
+	end
+	local ok, result = pcall(function(): any
+		local scripts = player:WaitForChild("PlayerScripts")
+		local module = scripts:WaitForChild("PlayerModule", 5)
+		return if module then (require(module :: ModuleScript) :: any):GetControls() else nil
+	end)
+	if ok then
+		controls = result
+	end
+	return controls
+end
+
+local function replicate()
+	local model = character
+	if not model then
+		return
+	end
+	model:SetAttribute("Stance", stance)
+	model:SetAttribute("Sprinting", sprinting)
+	local now = os.clock()
+	if now - lastSent >= M.StanceSendInterval then
+		lastSent = now
+		pendingSend = false
+		Net.event(Net.Events.SetStance):FireServer(stance, sprinting)
+	else
+		pendingSend = true
+	end
+end
+
+local function blockedAbove(): boolean
+	local r = root
+	if not r or not character then
+		return false
+	end
+	local params = RaycastParams.new()
+	params.FilterType = Enum.RaycastFilterType.Exclude
+	params.FilterDescendantsInstances = { character :: Model }
+	local height = baseHipHeight + r.Size.Y * 0.5 + 0.6
+	return Workspace:Spherecast(r.Position, 0.9, Vector3.new(0, height, 0), params) ~= nil
+end
+
+local function setStance(nextStance: Types.Stance): boolean
+	local h = humanoid
+	if not h or nextStance == stance then
+		return false
+	end
+	if nextStance == "Stand" and blockedAbove() then
+		return false
+	end
+	stance = nextStance
+	h.HipHeight = if nextStance == "Stand" then baseHipHeight else baseHipHeight - M.CrouchHipDrop
+	if nextStance ~= "Stand" then
+		sprinting = false
+		TacticalCamera.setFovOffset("Sprint", nil)
+	end
+	replicate()
+	MovementController.StanceChanged:Fire(stance)
+	return true
+end
+
+local function endSlide(toStance: Types.Stance)
+	local c = getControls()
+	if c then
+		c:Enable()
+	end
+	TacticalCamera.setFovOffset("Slide", nil)
+	lastSlideEnd = os.clock()
+	if not setStance(toStance) and stance == "Slide" then
+		setStance("Crouch")
+	end
+end
+
+local function startSlide(): boolean
+	local r = root
+	local h = humanoid
+	if not r or not h then
+		return false
+	end
+	local now = os.clock()
+	if stamina < M.SlideCost or now - lastSlideEnd < M.SlideCooldown or h.FloorMaterial == Enum.Material.Air then
+		return false
+	end
+	local v = r.AssemblyLinearVelocity
+	local flat = Vector3.new(v.X, 0, v.Z)
+	if flat.Magnitude < M.SlideMinSpeed then
+		return false
+	end
+	slideDir = flat.Unit
+	slideTime = 0
+	stamina -= M.SlideCost
+	lastDrain = now
+	setStance("Slide")
+	local c = getControls()
+	if c then
+		c:Disable()
+	end
+	TacticalCamera.setFovOffset("Slide", M.SlideFovKick)
+	return true
+end
+
+local function onCrouch()
+	if stance == "Stand" then
+		if sprinting and startSlide() then
+			return
+		end
+		setStance("Crouch")
+	elseif stance == "Crouch" then
+		setStance("Stand")
+	end
+end
+
+local function cameraForward(): Vector3
+	local yaw = TacticalCamera.getYaw()
+	return Vector3.new(-math.sin(yaw), 0, -math.cos(yaw))
+end
+
+local function update(dt: number)
+	local h = humanoid
+	local r = root
+	if not h or not r or h.Health <= 0 then
+		return
+	end
+	local now = os.clock()
+	local moveDir = h.MoveDirection
+
+	-- Crouch/slide + jump interplay
+	if h.Jump then
+		if stance == "Crouch" then
+			h.Jump = false
+			setStance("Stand")
+		elseif stance == "Slide" then
+			endSlide("Stand")
+		end
+	end
+	h:SetStateEnabled(Enum.HumanoidStateType.Jumping, stamina >= M.JumpCost and stance ~= "Crouch")
+
+	-- Slide physics: drive the humanoid along the slide direction, decaying.
+	if stance == "Slide" then
+		slideTime += dt
+		local t = math.clamp(slideTime / M.SlideDuration, 0, 1)
+		local eased = 1 - (1 - t) * (1 - t)
+		h.WalkSpeed = M.SlideSpeed + (M.CrouchSpeed - M.SlideSpeed) * eased
+		h:Move(slideDir, false)
+		if t >= 1 then
+			endSlide("Crouch")
+		end
+	else
+		-- Sprint gate
+		local forwardDot = if moveDir.Magnitude > 0.1 then moveDir.Unit:Dot(cameraForward()) else 0
+		local canSprint = sprintHeld
+			and stance == "Stand"
+			and not aiming
+			and not exhausted
+			and now >= sprintBlockedUntil
+			and forwardDot > M.SprintForwardDot
+			and h.FloorMaterial ~= Enum.Material.Air
+		if canSprint ~= sprinting then
+			sprinting = canSprint
+			TacticalCamera.setFovOffset("Sprint", if sprinting then M.SprintFovKick else nil)
+			replicate()
+		end
+
+		local target = M.WalkSpeed
+		if stance == "Crouch" then
+			target = M.CrouchSpeed
+		elseif sprinting then
+			target = M.SprintSpeed
+		elseif aiming then
+			target = M.AdsSpeed
+		end
+		target *= speedMultiplier
+		h.WalkSpeed += (target - h.WalkSpeed) * (1 - math.exp(-dt * M.SpeedResponse))
+	end
+
+	-- Stamina
+	if sprinting then
+		stamina = math.max(0, stamina - M.SprintDrain * dt)
+		lastDrain = now
+		if stamina <= 0 then
+			exhausted = true
+		end
+	elseif now - lastDrain > M.RegenDelay then
+		stamina = math.min(M.StaminaMax, stamina + M.StaminaRegen * dt)
+	end
+	if exhausted and stamina >= M.MinStaminaToSprint * 2 then
+		exhausted = false
+	end
+
+	if pendingSend and now - lastSent >= M.StanceSendInterval then
+		replicate()
+	end
+end
+
+local function bind()
+	ContextActionService:BindAction("MoveSprint", function(_: string, state: Enum.UserInputState): Enum.ContextActionResult
+		if state == Enum.UserInputState.Begin then
+			sprintHeld = true
+		elseif state == Enum.UserInputState.End or state == Enum.UserInputState.Cancel then
+			sprintHeld = false
+		end
+		return Enum.ContextActionResult.Sink
+	end, false, table.unpack(KEYS.Sprint))
+
+	ContextActionService:BindAction("MoveCrouch", function(_: string, state: Enum.UserInputState): Enum.ContextActionResult
+		if state == Enum.UserInputState.Begin then
+			onCrouch()
+		end
+		return Enum.ContextActionResult.Sink
+	end, false, table.unpack(KEYS.Crouch))
+end
+
+local function unbind()
+	ContextActionService:UnbindAction("MoveSprint")
+	ContextActionService:UnbindAction("MoveCrouch")
+end
+
+function MovementController.attach(model: Model)
+	MovementController.detach()
+	local h = model:FindFirstChildOfClass("Humanoid")
+	local r = model:FindFirstChild("HumanoidRootPart")
+	if not h or not r or not r:IsA("BasePart") then
+		return
+	end
+	character = model
+	humanoid = h
+	root = r
+	baseHipHeight = h.HipHeight
+	stance = "Stand"
+	sprinting = false
+	sprintHeld = false
+	stamina = M.StaminaMax
+	exhausted = false
+	h.WalkSpeed = M.WalkSpeed
+
+	local t = Trove.new()
+	trove = t
+	t:Connect(RunService.Heartbeat, update)
+	t:Connect(h.StateChanged, function(_, newState: Enum.HumanoidStateType)
+		if newState == Enum.HumanoidStateType.Jumping then
+			stamina = math.max(0, stamina - M.JumpCost)
+			lastDrain = os.clock()
+		end
+	end)
+	t:Connect(h.Died, function()
+		MovementController.detach()
+	end)
+	bind()
+	replicate()
+end
+
+function MovementController.detach()
+	unbind()
+	if trove then
+		local t = trove
+		trove = nil
+		t:Clean()
+	end
+	if stance == "Slide" then
+		local c = getControls()
+		if c then
+			c:Enable()
+		end
+	end
+	TacticalCamera.setFovOffset("Sprint", nil)
+	TacticalCamera.setFovOffset("Slide", nil)
+	local h = humanoid
+	if h and h.Parent then
+		h.HipHeight = baseHipHeight
+	end
+	character = nil
+	humanoid = nil
+	root = nil
+	stance = "Stand"
+	sprinting = false
+end
+
+function MovementController.setAiming(value: boolean)
+	aiming = value
+end
+
+function MovementController.setSpeedMultiplier(value: number)
+	speedMultiplier = value
+end
+
+-- Firing or reloading drops you out of sprint for a beat.
+function MovementController.interruptSprint(duration: number?)
+	sprintBlockedUntil = os.clock() + (duration or 0.3)
+end
+
+function MovementController.isSprinting(): boolean
+	return sprinting
+end
+
+function MovementController.getStance(): Types.Stance
+	return stance
+end
+
+function MovementController.getStamina01(): number
+	return stamina / M.StaminaMax
+end
+
+function MovementController.isExhausted(): boolean
+	return exhausted
+end
+
+return MovementController
+]]></ProtectedString></Properties></Item><Item class="ModuleScript" referent="RBX000036"><Properties><string name="Name">SettingsController</string><ProtectedString name="Source"><![CDATA[--!strict
 --[[
 	SettingsController
 	Client copy of the player's settings + loadout. Pulls the profile from the
@@ -4553,33 +6747,32 @@ function SettingsController.setLoadout(slot: Types.WeaponSlot, weaponId: string)
 end
 
 return SettingsController
-]]></ProtectedString></Properties></Item><Item class="ModuleScript" referent="RBX000031"><Properties><string name="Name">TacticalCamera</string><ProtectedString name="Source"><![CDATA[--!strict
+]]></ProtectedString></Properties></Item><Item class="ModuleScript" referent="RBX000037"><Properties><string name="Name">TacticalCamera</string><ProtectedString name="Source"><![CDATA[--!strict
 --[[
 	TacticalCamera
-	Over-the-shoulder third-person camera (Phase 2 layers ADS, recoil springs
-	and sprint FOV on top of this).
+	Over-the-shoulder third-person camera.
 
-	• Mouse / right-stick yaw + pitch with user sensitivity
-	• Spring-smoothed pivot follow and shoulder offset
-	• Shoulder swap (V / D-pad right) with a springy slide
-	• Sphere-cast collision: snaps in instantly, eases back out
-	• Strafe roll sway driven by lateral velocity
-	• FOV spring toward the player's FOV setting
-	• Character turns to the camera heading while moving (AlignOrientation)
-	• Fades the character out when the camera is forced very close
+	Phase 1: mouse/stick look, spring-smoothed pivot + shoulder, shoulder swap
+	(V / D-pad right), sphere-cast collision, strafe roll, FOV spring, body
+	turns to heading (AlignOrientation), close-camera character fade.
 
-	evaluate(dt) computes the camera without writing it, which is what lets
-	the deploy transition blend from the menu shot into the live tactical
-	camera with zero cut.
+	Phase 2 adds:
+	  • ADS: shoulder tucks in (AdsShoulderOffset), FOV × weapon multiplier,
+	    sensitivity scaled down, timed by the weapon's AdsTime
+	  • Recoil: permanent climb on pitch/yaw + a damped visual kick spring;
+	    climb partially recovers once you stop firing
+	  • Named FOV offsets (sprint / slide kicks) on the same FOV spring
+	  • Head bob tied to distance travelled (not time), stronger when sprinting
+
+	evaluate(dt) computes the camera without writing it; the deploy transition
+	blends from the menu shot into it with zero cut.
 ]]
 
 local ContextActionService = game:GetService("ContextActionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
-local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
-local Players = game:GetService("Players")
 
 local Shared = ReplicatedStorage.Shared
 local Config = require(Shared.Config)
@@ -4599,7 +6792,6 @@ local root: BasePart? = nil
 local humanoid: Humanoid? = nil
 local align: AlignOrientation? = nil
 local trove: Trove.Trove? = nil
-local reticle: ScreenGui? = nil
 
 local yaw = 0
 local pitch = 0
@@ -4610,10 +6802,28 @@ local gamepadLook = Vector2.zero
 local attached = false
 local running = false
 
+-- ADS
+local aimTarget = 0
+local aim = 0
+local adsTime = 0.2
+local adsFovMultiplier = 0.75
+
+-- Recoil
+local recoilDebt = 0
+local lastRecoil = 0
+
+-- FOV offsets (sprint, slide...)
+local fovOffsets: { [string]: number } = {}
+
+-- Bob
+local bobPhase = 0
+local bobWeight = 0
+
 local pivotSpring = Spring.new(Vector3.zero, C.PivotFrequency, 1)
 local shoulderSpring = Spring.new(Vector3.new(1, 0, 0), C.ShoulderFrequency, C.ShoulderDamping)
 local rollSpring = Spring.new(Vector3.zero, 3, 0.7)
 local fovSpring = Spring.new(Vector3.new(72, 0, 0), C.FovFrequency, 1)
+local kickSpring = Spring.new(Vector3.zero, C.RecoilFrequency, C.RecoilDamping)
 
 local castParams = RaycastParams.new()
 castParams.FilterType = Enum.RaycastFilterType.Exclude
@@ -4622,8 +6832,7 @@ local lastCF = CFrame.identity
 local lastFov = 72
 
 local function sphereCast(origin: Vector3, offset: Vector3): Vector3
-	local length = offset.Magnitude
-	if length < 1e-3 then
+	if offset.Magnitude < 1e-3 then
 		return origin + offset
 	end
 	local result = Workspace:Spherecast(origin, C.CollisionRadius, offset, castParams)
@@ -4647,16 +6856,24 @@ end
 
 local function readInput(dt: number)
 	local settings = SettingsController.get()
+	local sensitivity = settings.Sensitivity * (1 + (C.AdsSensitivity - 1) * aim)
 	if UserInputService.MouseBehavior == Enum.MouseBehavior.LockCenter then
 		local delta = UserInputService:GetMouseDelta()
-		local k = C.MouseRadiansPerPixel * settings.Sensitivity
+		local k = C.MouseRadiansPerPixel * sensitivity
 		yaw -= delta.X * k
 		pitch -= delta.Y * k
 	end
 	if gamepadLook.Magnitude > C.GamepadDeadzone then
-		local speed = C.GamepadRadiansPerSecond * settings.Sensitivity * dt
+		local speed = C.GamepadRadiansPerSecond * sensitivity * dt
 		yaw -= gamepadLook.X * speed
 		pitch += gamepadLook.Y * speed
+	end
+
+	-- Recover part of the recoil climb once firing stops.
+	if recoilDebt > 0 and os.clock() - lastRecoil > C.RecoilRecoveryDelay then
+		local step = math.min(recoilDebt, C.RecoilRecoveryRate * dt)
+		recoilDebt -= step
+		pitch -= step
 	end
 	pitch = math.clamp(pitch, math.rad(C.MinPitch), math.rad(C.MaxPitch))
 end
@@ -4667,10 +6884,9 @@ local function updateBody(dt: number)
 	if not h or not constraint then
 		return
 	end
-	if h.MoveDirection.Magnitude > 0.1 then
+	if h.MoveDirection.Magnitude > 0.1 or aim > 0.2 then
 		bodyYaw = yaw
 	else
-		-- Idle free-look; turn the body only when looking far over the shoulder.
 		local diff = math.atan2(math.sin(yaw - bodyYaw), math.cos(yaw - bodyYaw))
 		if math.abs(diff) > math.rad(100) then
 			bodyYaw += diff * math.min(1, dt * 6)
@@ -4685,6 +6901,8 @@ function TacticalCamera.evaluate(dt: number): (CFrame, number)
 		return lastCF, lastFov
 	end
 
+	aim += (aimTarget - aim) * (1 - math.exp(-dt * 3 / math.max(adsTime, 0.05)))
+
 	readInput(dt)
 	updateBody(dt)
 
@@ -4694,9 +6912,22 @@ function TacticalCamera.evaluate(dt: number): (CFrame, number)
 	shoulderSpring.Target = Vector3.new(shoulder, 0, 0)
 	local side = shoulderSpring:update(dt).X
 
-	local rotation = CFrame.Angles(0, yaw, 0) * CFrame.Angles(pitch, 0, 0)
-	local offset = C.ShoulderOffset
-	local lateral = rotation.RightVector * (offset.X * side) + rotation.UpVector * offset.Y
+	local kick = kickSpring:update(dt)
+	local rotation = CFrame.Angles(0, yaw + kick.Y, 0) * CFrame.Angles(pitch + kick.X, 0, 0)
+	local offset = C.ShoulderOffset:Lerp(C.AdsShoulderOffset, aim)
+
+	-- Head bob: phase advances with ground distance so it matches footsteps.
+	local velocity = r.AssemblyLinearVelocity
+	local flatSpeed = Vector3.new(velocity.X, 0, velocity.Z).Magnitude
+	local h = humanoid
+	local grounded = h ~= nil and h.FloorMaterial ~= Enum.Material.Air
+	bobPhase += flatSpeed * dt * C.BobFrequency * math.pi
+	local targetWeight = if grounded then math.clamp(flatSpeed / 23, 0, 1.2) * (1 - aim * 0.8) else 0
+	bobWeight += (targetWeight - bobWeight) * (1 - math.exp(-dt * 8))
+	local bobY = math.abs(math.sin(bobPhase)) * C.BobAmplitude * bobWeight
+	local bobRoll = math.sin(bobPhase) * C.BobRoll * bobWeight
+
+	local lateral = rotation.RightVector * (offset.X * side) + rotation.UpVector * (offset.Y - bobY)
 	local back = rotation.LookVector * -offset.Z
 
 	local shoulderPoint = sphereCast(pivot, lateral)
@@ -4707,14 +6938,19 @@ function TacticalCamera.evaluate(dt: number): (CFrame, number)
 	else
 		currentDistance += (desiredDistance - currentDistance) * (1 - math.exp(-dt * 4))
 	end
+	-- ADS should tuck in quickly, not ease out like collision.
+	currentDistance = math.min(currentDistance, offset.Z)
 	local cameraPosition = shoulderPoint + rotation.LookVector * -currentDistance
 
-	-- Strafe roll
-	local lateralSpeed = rotation.RightVector:Dot(r.AssemblyLinearVelocity)
+	local lateralSpeed = rotation.RightVector:Dot(velocity)
 	rollSpring.Target = Vector3.new(math.clamp(-lateralSpeed * C.RollPerStudPerSecond, -C.MaxRoll, C.MaxRoll), 0, 0)
-	local roll = rollSpring:update(dt).X
+	local roll = rollSpring:update(dt).X + bobRoll + kick.Z
 
-	fovSpring.Target = Vector3.new(SettingsController.get().FieldOfView, 0, 0)
+	local fovTarget = SettingsController.get().FieldOfView * (1 + (adsFovMultiplier - 1) * aim)
+	for _, extra in fovOffsets do
+		fovTarget += extra * (1 - aim)
+	end
+	fovSpring.Target = Vector3.new(fovTarget, 0, 0)
 	local fov = fovSpring:update(dt).X
 
 	local fade = math.clamp((C.CloseFadeStart - currentDistance) / (C.CloseFadeStart - C.CloseFadeEnd), 0, 1)
@@ -4723,33 +6959,6 @@ function TacticalCamera.evaluate(dt: number): (CFrame, number)
 	lastCF = CFrame.new(cameraPosition) * rotation.Rotation * CFrame.Angles(0, 0, roll)
 	lastFov = fov
 	return lastCF, lastFov
-end
-
-local function buildReticle(): ScreenGui
-	local gui = Instance.new("ScreenGui")
-	gui.Name = "TacticalReticle"
-	gui.IgnoreGuiInset = true
-	gui.ResetOnSpawn = false
-	gui.DisplayOrder = 5
-	local dot = Instance.new("Frame")
-	dot.Name = "Dot"
-	dot.AnchorPoint = Vector2.new(0.5, 0.5)
-	dot.Position = UDim2.fromScale(0.5, 0.5)
-	dot.Size = UDim2.fromOffset(4, 4)
-	dot.BackgroundColor3 = Color3.new(1, 1, 1)
-	dot.BackgroundTransparency = 1
-	dot.BorderSizePixel = 0
-	dot.Parent = gui
-	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(1, 0)
-	corner.Parent = dot
-	local stroke = Instance.new("UIStroke")
-	stroke.Color = Color3.new(0, 0, 0)
-	stroke.Transparency = 1
-	stroke.Thickness = 1
-	stroke.Parent = dot
-	gui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
-	return gui
 end
 
 -- Binds to a freshly spawned character. Call before evaluate()/start().
@@ -4772,12 +6981,23 @@ function TacticalCamera.attach(model: Model)
 	bodyYaw = yaw
 	pitch = math.rad(-8)
 	shoulder = 1
+	aim, aimTarget = 0, 0
+	recoilDebt = 0
+	table.clear(fovOffsets)
 	currentDistance = C.ShoulderOffset.Z
 	pivotSpring:reset(r.Position + Vector3.new(0, C.PivotHeight, 0))
 	shoulderSpring:reset(Vector3.new(1, 0, 0))
 	rollSpring:reset(Vector3.zero)
+	kickSpring:reset(Vector3.zero)
 	fovSpring:reset(Vector3.new(SettingsController.get().FieldOfView, 0, 0))
-	castParams.FilterDescendantsInstances = { model, Workspace:FindFirstChild("ClientFX") or model }
+	local ignore: { Instance } = { model }
+	for _, name in { "ClientFX", "WeaponFX" } do
+		local folder = Workspace:FindFirstChild(name)
+		if folder then
+			table.insert(ignore, folder)
+		end
+	end
+	castParams.FilterDescendantsInstances = ignore
 
 	h.AutoRotate = false
 	local attachment = r:FindFirstChild("RootAttachment")
@@ -4825,7 +7045,6 @@ function TacticalCamera.start()
 	ContextActionService:BindAction(SWAP_ACTION, function(_: string, state: Enum.UserInputState): Enum.ContextActionResult
 		if state == Enum.UserInputState.Begin then
 			shoulder = -shoulder
-			-- Small roll kick sells the weight of the swap.
 			rollSpring:impulse(Vector3.new(shoulder * 0.06, 0, 0))
 		end
 		return Enum.ContextActionResult.Sink
@@ -4842,19 +7061,6 @@ function TacticalCamera.start()
 		camera.CFrame = cf
 		camera.FieldOfView = fov
 	end)
-
-	local gui = reticle or buildReticle()
-	reticle = gui
-	gui.Enabled = true
-	local dot = gui:FindFirstChild("Dot")
-	if dot and dot:IsA("Frame") then
-		dot.BackgroundTransparency = 1
-		TweenService:Create(dot, TweenInfo.new(0.6, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), { BackgroundTransparency = 0.15 }):Play()
-		local stroke = dot:FindFirstChildOfClass("UIStroke")
-		if stroke then
-			TweenService:Create(stroke, TweenInfo.new(0.6), { Transparency = 0.6 }):Play()
-		end
-	end
 end
 
 function TacticalCamera.stop()
@@ -4865,9 +7071,6 @@ function TacticalCamera.stop()
 	end
 	UserInputService.MouseBehavior = Enum.MouseBehavior.Default
 	UserInputService.MouseIconEnabled = true
-	if reticle then
-		reticle.Enabled = false
-	end
 end
 
 function TacticalCamera.detach()
@@ -4889,6 +7092,55 @@ function TacticalCamera.detach()
 	attached = false
 end
 
+--------------------------------------------------------------------------------
+-- Phase 2 hooks (weapons / movement)
+--------------------------------------------------------------------------------
+function TacticalCamera.setAiming(aiming: boolean, fovMultiplier: number?, time: number?)
+	aimTarget = if aiming then 1 else 0
+	if fovMultiplier then
+		adsFovMultiplier = fovMultiplier
+	end
+	if time then
+		adsTime = time
+	end
+end
+
+function TacticalCamera.getAim(): number
+	return aim
+end
+
+-- pitchDeg climbs permanently (partially recovered later); yawDeg is random drift.
+function TacticalCamera.addRecoil(pitchDeg: number, yawDeg: number, recoveryShare: number)
+	local p = math.rad(pitchDeg)
+	local y = math.rad(yawDeg)
+	pitch += p
+	yaw += y
+	recoilDebt += p * math.clamp(recoveryShare, 0, 1)
+	lastRecoil = os.clock()
+	-- Visual punch on top of the real climb.
+	kickSpring:impulse(Vector3.new(p * 14, y * 10, (math.random() - 0.5) * p * 6))
+end
+
+function TacticalCamera.setFovOffset(key: string, value: number?)
+	fovOffsets[key] = value
+end
+
+function TacticalCamera.getPitch(): number
+	return pitch
+end
+
+function TacticalCamera.getYaw(): number
+	return yaw
+end
+
+function TacticalCamera.getCFrame(): CFrame
+	return lastCF
+end
+
+function TacticalCamera.getFieldOfView(): number
+	return lastFov
+end
+
 function TacticalCamera.isAttached(): boolean
 	return attached
 end
@@ -4898,7 +7150,1427 @@ function TacticalCamera.isRunning(): boolean
 end
 
 return TacticalCamera
-]]></ProtectedString></Properties></Item></Item><Item class="Folder" referent="RBX000036"><Properties><string name="Name">UI</string></Properties><Item class="ModuleScript" referent="RBX000033"><Properties><string name="Name">MenuUI</string><ProtectedString name="Source"><![CDATA[--!strict
+]]></ProtectedString></Properties></Item><Item class="ModuleScript" referent="RBX000038"><Properties><string name="Name">WeaponController</string><ProtectedString name="Source"><![CDATA[--!strict
+--[[
+	WeaponController
+	Client gunplay with server-authoritative results.
+
+	Per shot (predicted instantly, then confirmed by CombatService):
+	  1. Ray from the camera through the crosshair, inside the current cone of
+	     fire (hip/ADS base + movement + bloom, tighter when crouched).
+	  2. Real bullet ray from the muzzle to that aim point — cover between gun
+	     and target is respected, like the server.
+	  3. Muzzle flash, tracer, impact, shell, sound, camera recoil (climb +
+	     kick spring), weapon kick on the procedural pose, crosshair bloom.
+	  4. Fire(shotId, muzzle, direction) → server validates and raycasts.
+
+	Also: ADS (hold RMB / L2), reload with physical mag drop (R / X), slot
+	switch (1 / 2 / wheel / Y) with draw time, dry-fire + auto reload, sprint
+	interruption, AmmoSync reconciliation, hitmarkers from HitConfirm, and
+	replicated shot FX for other players.
+]]
+
+local ContextActionService = game:GetService("ContextActionService")
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local Workspace = game:GetService("Workspace")
+
+local Shared = ReplicatedStorage.Shared
+local Config = require(Shared.Config)
+local Net = require(Shared.Net)
+local Trove = require(Shared.Trove)
+local Types = require(Shared.Types)
+local WeaponBuilder = require(Shared.Builders.WeaponBuilder)
+
+local Controllers = script.Parent
+local AudioController = require(Controllers.AudioController)
+local CharacterPoser = require(Controllers.CharacterPoser)
+local MovementController = require(Controllers.MovementController)
+local TacticalCamera = require(Controllers.TacticalCamera)
+local WeaponFx = require(Controllers.WeaponFx)
+local HUD = require(Controllers.Parent.UI.HUD)
+
+local player = Players.LocalPlayer
+local KEYS = Config.Combat.Keybinds
+local RENDER_NAME = "WeaponController"
+
+local WeaponController = {}
+
+local SLOTS: { Types.WeaponSlot } = { "Primary", "Secondary" }
+
+type SlotState = {
+	Id: string,
+	Def: Types.WeaponDef,
+	Mag: number,
+	Reserve: number,
+}
+
+local character: Model? = nil
+local humanoid: Humanoid? = nil
+local root: BasePart? = nil
+local trove: Trove.Trove? = nil
+local slots: { [Types.WeaponSlot]: SlotState } = {}
+local equipped: Types.WeaponSlot = "Primary"
+local handles: WeaponBuilder.WeaponHandles? = nil
+
+local firingHeld = false
+local aimingHeld = false
+local dryClicked = false
+local nextShotTime = 0
+local readyAt = 0
+local bloom = 0
+local shotId = 0
+local reloading = false
+local reloadStart = 0
+local reloadEnd = 0
+local reloadToken = 0
+local lastAimSend = 0
+local rng = Random.new()
+
+local rayParams = RaycastParams.new()
+rayParams.FilterType = Enum.RaycastFilterType.Exclude
+
+local function current(): SlotState?
+	return slots[equipped]
+end
+
+local function refreshRayFilter()
+	local ignore: { Instance } = {}
+	if character then
+		table.insert(ignore, character)
+	end
+	for _, name in { "ClientFX", "WeaponFX" } do
+		local f = Workspace:FindFirstChild(name)
+		if f then
+			table.insert(ignore, f)
+		end
+	end
+	rayParams.FilterDescendantsInstances = ignore
+end
+
+local function resolveHandles(): WeaponBuilder.WeaponHandles?
+	local model = character
+	local state = current()
+	if not model or not state then
+		return nil
+	end
+	local h = handles
+	if h and h.Model.Parent == model and h.Model.Name == "EquippedWeapon" and h.Model:GetAttribute("WeaponId") == state.Id then
+		return h
+	end
+	local weaponModel = model:FindFirstChild("EquippedWeapon")
+	if weaponModel and weaponModel:IsA("Model") and weaponModel:GetAttribute("WeaponId") == state.Id then
+		handles = WeaponBuilder.resolve(weaponModel)
+		return handles
+	end
+	handles = nil
+	return nil
+end
+
+local function updateHudWeapon()
+	local state = current()
+	if not state then
+		return
+	end
+	HUD.setWeapon(state.Def.DisplayName, state.Def.Combat.FireMode, state.Def.Combat.MagSize)
+	HUD.setAmmo(state.Mag, state.Reserve)
+end
+
+local function currentSpread(): number
+	local state = current()
+	local r = root
+	if not state or not r then
+		return 0
+	end
+	local combat = state.Def.Combat
+	local aim = TacticalCamera.getAim()
+	local base = combat.HipSpread + (combat.AdsSpread - combat.HipSpread) * aim
+	local v = r.AssemblyLinearVelocity
+	local speed01 = math.clamp(Vector3.new(v.X, 0, v.Z).Magnitude / Config.Movement.WalkSpeed, 0, 1.5)
+	local move = speed01 * combat.MoveSpread * (1 - aim * 0.6)
+	local airborne = if humanoid and humanoid.FloorMaterial == Enum.Material.Air then 2 else 0
+	local stanceMul = if MovementController.getStance() ~= "Stand" then 0.75 else 1
+	return (base + move + bloom + airborne) * stanceMul
+end
+
+-- Uniform random direction inside a cone of half-angle `angle` (radians).
+local function coneDirection(forward: Vector3, angle: number): Vector3
+	if angle <= 0 then
+		return forward
+	end
+	local cosMax = math.cos(angle)
+	local z = cosMax + (1 - cosMax) * rng:NextNumber()
+	local r = math.sqrt(math.max(0, 1 - z * z))
+	local phi = rng:NextNumber() * 2 * math.pi
+	local basis = CFrame.lookAt(Vector3.zero, forward)
+	return basis:VectorToWorldSpace(Vector3.new(r * math.cos(phi), r * math.sin(phi), -z)).Unit
+end
+
+--------------------------------------------------------------------------------
+-- Reload
+--------------------------------------------------------------------------------
+local function cancelReload()
+	if not reloading then
+		return
+	end
+	reloading = false
+	reloadToken += 1
+	HUD.setReload(nil)
+	local h = handles
+	if h then
+		WeaponFx.restoreMagazine(h.Magazine)
+	end
+end
+
+local function reload()
+	local state = current()
+	local h = resolveHandles()
+	if not state or reloading or not h then
+		return
+	end
+	local combat = state.Def.Combat
+	if state.Mag >= combat.MagSize or state.Reserve <= 0 then
+		return
+	end
+	reloading = true
+	reloadToken += 1
+	local token = reloadToken
+	local duration = (if state.Mag == 0 then combat.EmptyReloadTime else combat.ReloadTime) + 0.1
+	reloadStart = os.clock()
+	reloadEnd = reloadStart + duration
+	MovementController.interruptSprint(0.2)
+	Net.event(Net.Events.Reload):FireServer()
+
+	WeaponFx.sound("ReloadOut", h.Handle)
+	WeaponFx.dropMagazine(h.Magazine, duration * 0.62)
+	task.delay(duration * 0.62, function()
+		if token == reloadToken and h.Handle.Parent then
+			WeaponFx.sound("ReloadIn", h.Handle)
+		end
+	end)
+	task.delay(duration, function()
+		if token ~= reloadToken or not reloading then
+			return
+		end
+		-- Predicted fill; AmmoSync from the server is authoritative.
+		local take = math.min(combat.MagSize - state.Mag, state.Reserve)
+		state.Mag += take
+		state.Reserve -= take
+		reloading = false
+		HUD.setReload(nil)
+		HUD.setAmmo(state.Mag, state.Reserve)
+	end)
+end
+
+--------------------------------------------------------------------------------
+-- Fire
+--------------------------------------------------------------------------------
+local function fireOnce(state: SlotState, h: WeaponBuilder.WeaponHandles)
+	local combat = state.Def.Combat
+	local camCF = TacticalCamera.getCFrame()
+	local muzzle = h.Muzzle.WorldPosition
+
+	-- 1. Aim point through the crosshair (ray starts level with the muzzle so
+	--    things between the camera and the player are never targeted).
+	local dir = coneDirection(camCF.LookVector, math.rad(currentSpread()))
+	local startT = math.max((muzzle - camCF.Position):Dot(dir), 0)
+	local aimOrigin = camCF.Position + dir * startT
+	local aimHit = Workspace:Raycast(aimOrigin, dir * combat.Range, rayParams)
+	local aimPoint = if aimHit then aimHit.Position else aimOrigin + dir * combat.Range
+
+	-- 2. Bullet from the muzzle.
+	local shotDir = aimPoint - muzzle
+	if shotDir.Magnitude < 0.05 then
+		shotDir = dir
+	end
+	shotDir = shotDir.Unit
+	local hit = Workspace:Raycast(muzzle, shotDir * combat.Range, rayParams)
+	local hitPos = if hit then hit.Position else muzzle + shotDir * combat.Range
+
+	-- 3. Feedback
+	WeaponFx.muzzleFlash(h.Muzzle, combat.Suppressed)
+	WeaponFx.tracer(muzzle, hitPos, combat.TracerColor)
+	if hit then
+		WeaponFx.impact(hit.Position, hit.Normal, hit.Material.Name, hit.Instance)
+	end
+	local r = root
+	WeaponFx.shell(h.Ejection, state.Def.Class, if r then r.AssemblyLinearVelocity else Vector3.zero)
+	WeaponFx.sound(combat.FireSound, h.Muzzle, if combat.Suppressed then 0.55 else 1)
+
+	local aim = TacticalCamera.getAim()
+	local stanceMul = if MovementController.getStance() ~= "Stand" then 0.8 else 1
+	local recoilScale = (1 - aim * 0.3) * stanceMul
+	TacticalCamera.addRecoil(combat.RecoilPitch * recoilScale, rng:NextNumber(-combat.RecoilYaw, combat.RecoilYaw) * recoilScale, combat.RecoilRecovery)
+	local kickBack = if state.Def.Class == "PISTOL" then 0.12 else 0.08
+	CharacterPoser.kick(kickBack, math.rad(combat.RecoilPitch * 1.6))
+	bloom = math.min(bloom + combat.SpreadPerShot, combat.MaxBloom)
+	HUD.pulse(4 + combat.SpreadPerShot * 6)
+
+	state.Mag -= 1
+	HUD.setAmmo(state.Mag, state.Reserve)
+
+	-- 4. Server
+	shotId += 1
+	Net.event(Net.Events.Fire):FireServer(shotId, muzzle, shotDir)
+end
+
+local function tryFire(): boolean
+	local state = current()
+	local h = humanoid
+	if not state or not h or h.Health <= 0 then
+		return false
+	end
+	local now = os.clock()
+	if now < readyAt or reloading then
+		return false
+	end
+	if MovementController.isSprinting() then
+		MovementController.interruptSprint(0.35)
+		readyAt = now + 0.12 -- sprint-out time
+		return false
+	end
+	local weapon = resolveHandles()
+	if not weapon then
+		return false
+	end
+	if state.Mag <= 0 then
+		if not dryClicked then
+			dryClicked = true
+			WeaponFx.sound("DryFire", weapon.Handle)
+			if state.Reserve > 0 then
+				task.delay(0.2, reload)
+			end
+		end
+		return false
+	end
+	local interval = 60 / state.Def.Combat.RPM
+	if now < nextShotTime then
+		return false
+	end
+	if nextShotTime < now - interval then
+		nextShotTime = now
+	end
+	nextShotTime += interval
+	MovementController.interruptSprint(0.35)
+	fireOnce(state, weapon)
+	return true
+end
+
+--------------------------------------------------------------------------------
+-- Equip
+--------------------------------------------------------------------------------
+local function equip(slot: Types.WeaponSlot)
+	if slot == equipped or not slots[slot] then
+		return
+	end
+	cancelReload()
+	equipped = slot
+	handles = nil
+	local state = slots[slot]
+	readyAt = os.clock() + state.Def.Combat.DrawTime
+	nextShotTime = readyAt
+	bloom = 0
+	dryClicked = false
+	Net.event(Net.Events.EquipSlot):FireServer(slot)
+	AudioController.play("Equip")
+	updateHudWeapon()
+end
+
+--------------------------------------------------------------------------------
+-- Frame loop
+--------------------------------------------------------------------------------
+local function step(dt: number)
+	local state = current()
+	local h = humanoid
+	if not state or not h then
+		return
+	end
+	local combat = state.Def.Combat
+	local alive = h.Health > 0
+
+	-- Aim
+	local aiming = alive and aimingHeld and not reloading and os.clock() >= readyAt - combat.DrawTime * 0.5
+	TacticalCamera.setAiming(aiming, combat.AdsFovMultiplier, combat.AdsTime)
+	CharacterPoser.setLocalAim(aiming)
+	MovementController.setAiming(aiming)
+	MovementController.setSpeedMultiplier(combat.MoveSpeedMultiplier)
+
+	-- Automatic fire
+	if alive and firingHeld and combat.FireMode == "Auto" then
+		local shots = 0
+		while shots < 3 and tryFire() do
+			shots += 1
+		end
+	end
+
+	bloom = math.max(0, bloom - combat.BloomRecovery * dt)
+
+	-- HUD
+	local spread = currentSpread()
+	HUD.setSpread(spread, TacticalCamera.getFieldOfView(), TacticalCamera.getAim(), not MovementController.isSprinting() and alive)
+	HUD.setStamina(MovementController.getStamina01())
+	if reloading then
+		HUD.setReload((os.clock() - reloadStart) / math.max(reloadEnd - reloadStart, 0.01))
+	end
+
+	-- Replicate aim pitch for other players' views of you.
+	local now = os.clock()
+	if now - lastAimSend >= 1 / Config.Combat.AimSendRate then
+		lastAimSend = now
+		Net.unreliable(Net.Unreliable.AimState):FireServer(TacticalCamera.getPitch(), aiming)
+	end
+end
+
+--------------------------------------------------------------------------------
+-- Input
+--------------------------------------------------------------------------------
+local ACTIONS = { "WeaponFire", "WeaponAim", "WeaponReload", "WeaponPrimary", "WeaponSecondary", "WeaponSwap" }
+
+local function bind()
+	ContextActionService:BindAction("WeaponFire", function(_: string, state: Enum.UserInputState): Enum.ContextActionResult
+		if state == Enum.UserInputState.Begin then
+			firingHeld = true
+			dryClicked = false
+			local s = current()
+			if s and s.Def.Combat.FireMode == "Semi" then
+				tryFire()
+			end
+		elseif state == Enum.UserInputState.End or state == Enum.UserInputState.Cancel then
+			firingHeld = false
+		end
+		return Enum.ContextActionResult.Sink
+	end, false, table.unpack(KEYS.Fire))
+
+	ContextActionService:BindAction("WeaponAim", function(_: string, state: Enum.UserInputState): Enum.ContextActionResult
+		if state == Enum.UserInputState.Begin then
+			aimingHeld = true
+		elseif state == Enum.UserInputState.End or state == Enum.UserInputState.Cancel then
+			aimingHeld = false
+		end
+		return Enum.ContextActionResult.Sink
+	end, false, table.unpack(KEYS.Aim))
+
+	ContextActionService:BindAction("WeaponReload", function(_: string, state: Enum.UserInputState): Enum.ContextActionResult
+		if state == Enum.UserInputState.Begin then
+			reload()
+		end
+		return Enum.ContextActionResult.Sink
+	end, false, table.unpack(KEYS.Reload))
+
+	ContextActionService:BindAction("WeaponPrimary", function(_: string, state: Enum.UserInputState): Enum.ContextActionResult
+		if state == Enum.UserInputState.Begin then
+			equip("Primary")
+		end
+		return Enum.ContextActionResult.Sink
+	end, false, table.unpack(KEYS.Primary))
+
+	ContextActionService:BindAction("WeaponSecondary", function(_: string, state: Enum.UserInputState): Enum.ContextActionResult
+		if state == Enum.UserInputState.Begin then
+			equip("Secondary")
+		end
+		return Enum.ContextActionResult.Sink
+	end, false, table.unpack(KEYS.Secondary))
+
+	ContextActionService:BindAction("WeaponSwap", function(_: string, state: Enum.UserInputState): Enum.ContextActionResult
+		if state == Enum.UserInputState.Begin then
+			equip(if equipped == "Primary" then "Secondary" else "Primary")
+		end
+		return Enum.ContextActionResult.Sink
+	end, false, table.unpack(KEYS.SwapWeapon))
+end
+
+local function unbind()
+	for _, name in ACTIONS do
+		ContextActionService:UnbindAction(name)
+	end
+	firingHeld = false
+	aimingHeld = false
+end
+
+--------------------------------------------------------------------------------
+-- Network handlers (connected once)
+--------------------------------------------------------------------------------
+local function onAmmoSync(slot: any, mag: any, reserve: any, serverReloading: any)
+	local state = slots[slot :: Types.WeaponSlot]
+	if not state or typeof(mag) ~= "number" or typeof(reserve) ~= "number" then
+		return
+	end
+	state.Mag = mag
+	state.Reserve = reserve
+	if slot == equipped then
+		if serverReloading ~= true and reloading and os.clock() >= reloadEnd - 0.35 then
+			reloading = false
+			HUD.setReload(nil)
+		end
+		HUD.setAmmo(state.Mag, state.Reserve)
+	end
+end
+
+local function onHitConfirm(kind: any, _damage: any, _position: any)
+	if typeof(kind) ~= "string" then
+		return
+	end
+	HUD.hitmarker(kind)
+	if kind == "Kill" then
+		AudioController.play("HitKill", 0.02)
+	elseif kind == "Head" then
+		AudioController.play("HitHead", 0.02)
+	elseif kind == "Body" then
+		AudioController.play("HitBody", 0.05)
+	elseif kind == "Blocked" then
+		HUD.toast("SAFE ZONE — PLAYERS PROTECTED")
+	end
+end
+
+local function onShotFx(shooter: any, weaponId: any, origin: any, hitPos: any, normal: any, material: any)
+	if typeof(shooter) ~= "Instance" or not shooter:IsA("Model") or shooter == character then
+		return
+	end
+	if typeof(origin) ~= "Vector3" or typeof(hitPos) ~= "Vector3" or typeof(normal) ~= "Vector3" then
+		return
+	end
+	local def = if typeof(weaponId) == "string" then Config.Weapons[weaponId] else nil
+	if not def then
+		return
+	end
+	local camera = Workspace.CurrentCamera
+	local far = camera ~= nil and (camera.CFrame.Position - origin).Magnitude > 450
+
+	local weaponModel = shooter:FindFirstChild("EquippedWeapon")
+	local remote = if weaponModel and weaponModel:IsA("Model") then WeaponBuilder.resolve(weaponModel) else nil
+	local from = if remote then remote.Muzzle.WorldPosition else origin
+	if remote then
+		WeaponFx.sound(def.Combat.FireSound, remote.Muzzle, if def.Combat.Suppressed then 0.55 else 1)
+	end
+	if far then
+		return
+	end
+	if remote then
+		WeaponFx.muzzleFlash(remote.Muzzle, def.Combat.Suppressed)
+		WeaponFx.shell(remote.Ejection, def.Class, Vector3.zero)
+	end
+	WeaponFx.tracer(from, hitPos, def.Combat.TracerColor)
+	if typeof(material) == "string" and material ~= "Air" then
+		local probe = Workspace:Raycast(hitPos + normal * 0.2, -normal * 0.4, rayParams)
+		WeaponFx.impact(hitPos, normal, material, if probe then probe.Instance else nil)
+	end
+end
+
+--------------------------------------------------------------------------------
+-- Public
+--------------------------------------------------------------------------------
+function WeaponController.init()
+	WeaponFx.init()
+	Net.event(Net.Events.AmmoSync).OnClientEvent:Connect(onAmmoSync)
+	Net.event(Net.Events.HitConfirm).OnClientEvent:Connect(onHitConfirm)
+	Net.unreliable(Net.Unreliable.ShotFx).OnClientEvent:Connect(onShotFx)
+
+	UserInputService.InputChanged:Connect(function(input: InputObject, processed: boolean)
+		if processed or not trove or input.UserInputType ~= Enum.UserInputType.MouseWheel then
+			return
+		end
+		equip(if equipped == "Primary" then "Secondary" else "Primary")
+	end)
+end
+
+function WeaponController.attach(model: Model, loadout: Types.Loadout)
+	WeaponController.detach()
+	local h = model:FindFirstChildOfClass("Humanoid")
+	local r = model:FindFirstChild("HumanoidRootPart")
+	if not h or not r or not r:IsA("BasePart") then
+		return
+	end
+	character = model
+	humanoid = h
+	root = r
+	slots = {}
+	for _, slot in SLOTS do
+		local id = if slot == "Primary" then loadout.Primary else loadout.Secondary
+		local def = Config.Weapons[id]
+		slots[slot] = { Id = id, Def = def, Mag = def.Combat.MagSize, Reserve = def.Combat.Reserve }
+	end
+	equipped = "Primary"
+	handles = nil
+	reloading = false
+	bloom = 0
+	readyAt = os.clock() + slots.Primary.Def.Combat.DrawTime
+	nextShotTime = readyAt
+	refreshRayFilter()
+
+	local t = Trove.new()
+	trove = t
+	t:BindToRenderStep(RENDER_NAME, Enum.RenderPriority.Camera.Value + 5, step)
+	t:Connect(h.HealthChanged, function(health: number)
+		HUD.setHealth(health, h.MaxHealth)
+	end)
+	t:Connect(h.Died, function()
+		unbind()
+		cancelReload()
+		TacticalCamera.setAiming(false)
+		HUD.hide()
+	end)
+
+	bind()
+	HUD.resetHealth(h.MaxHealth)
+	updateHudWeapon()
+	HUD.show()
+end
+
+function WeaponController.detach()
+	unbind()
+	cancelReload()
+	if trove then
+		local t = trove
+		trove = nil
+		t:Clean()
+	end
+	TacticalCamera.setAiming(false)
+	CharacterPoser.setLocalAim(false)
+	HUD.hide(true)
+	character = nil
+	humanoid = nil
+	root = nil
+	handles = nil
+end
+
+return WeaponController
+]]></ProtectedString></Properties></Item><Item class="ModuleScript" referent="RBX000039"><Properties><string name="Name">WeaponFx</string><ProtectedString name="Source"><![CDATA[--!strict
+--[[
+	WeaponFx
+	Client-side gunfire visuals and audio, used for your own predicted shots
+	and for other players' replicated shots:
+
+	  muzzleFlash   PointLight pop + star burst + smoke wisp (smaller if suppressed)
+	  tracer        neon streak travelling at bullet speed, culled when done
+	  impact        sparks on metal, dust elsewhere, hit puff on characters,
+	                plus pooled bullet holes on static geometry
+	  shell         physical brass ejecting right/up (Debris collision group)
+	  dropMagazine  physical mag falls out during reloads
+	  sound         3D one-shots at the muzzle (skipped if no asset id)
+]]
+
+local Debris = game:GetService("Debris")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+
+local Shared = ReplicatedStorage.Shared
+local Config = require(Shared.Config)
+
+local WeaponFx = {}
+
+local SPARK = "rbxasset://textures/particles/sparkles_main.dds"
+local SMOKE = "rbxasset://textures/particles/smoke_main.dds"
+local TRACER_SPEED = 1100
+local TRACER_LENGTH = 3.5
+local MAX_TRACERS = 48
+local MAX_HOLES = 60
+local MAX_SHELLS = 30
+
+local METALLIC: { [string]: boolean } = {
+	Metal = true,
+	DiamondPlate = true,
+	CorrodedMetal = true,
+	Foil = true,
+}
+
+type Tracer = {
+	Part: BasePart,
+	From: Vector3,
+	Dir: Vector3,
+	Total: number,
+	Travelled: number,
+}
+
+local folder: Folder
+local tracers: { Tracer } = {}
+local holes: { BasePart } = {}
+local shells: { BasePart } = {}
+local rng = Random.new()
+
+local function particle(parent: Instance, name: string, props: { [string]: any }): ParticleEmitter
+	local emitter = Instance.new("ParticleEmitter")
+	emitter.Name = name
+	emitter.Enabled = false
+	emitter.Rate = 0
+	for key, value in props do
+		(emitter :: any)[key] = value
+	end
+	emitter.Parent = parent
+	return emitter
+end
+
+-- Lazily equips a muzzle attachment with its flash rig.
+local function flashRig(muzzle: Attachment): (PointLight, ParticleEmitter, ParticleEmitter)
+	local light = muzzle:FindFirstChild("FxFlash")
+	local core = muzzle:FindFirstChild("FxFlashCore")
+	local smoke = muzzle:FindFirstChild("FxFlashSmoke")
+	if light and light:IsA("PointLight") and core and core:IsA("ParticleEmitter") and smoke and smoke:IsA("ParticleEmitter") then
+		return light, core, smoke
+	end
+	local newLight = Instance.new("PointLight")
+	newLight.Name = "FxFlash"
+	newLight.Color = Color3.fromRGB(255, 190, 110)
+	newLight.Range = 12
+	newLight.Brightness = 8
+	newLight.Shadows = false
+	newLight.Enabled = false
+	newLight.Parent = muzzle
+	local newCore = particle(muzzle, "FxFlashCore", {
+		Texture = SPARK,
+		LightEmission = 1,
+		LightInfluence = 0,
+		LockedToPart = true,
+		Lifetime = NumberRange.new(0.04, 0.06),
+		Speed = NumberRange.new(0, 0),
+		Rotation = NumberRange.new(0, 360),
+		Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.7), NumberSequenceKeypoint.new(1, 0.1) }),
+		Color = ColorSequence.new(Color3.fromRGB(255, 200, 120), Color3.fromRGB(255, 120, 40)),
+		ZOffset = 0.5,
+	})
+	local newSmoke = particle(muzzle, "FxFlashSmoke", {
+		Texture = SMOKE,
+		EmissionDirection = Enum.NormalId.Front,
+		LightInfluence = 1,
+		Lifetime = NumberRange.new(0.4, 0.8),
+		Speed = NumberRange.new(2, 4),
+		SpreadAngle = Vector2.new(15, 15),
+		Drag = 3,
+		Acceleration = Vector3.new(0, 1.5, 0),
+		Rotation = NumberRange.new(0, 360),
+		Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.2), NumberSequenceKeypoint.new(1, 1.2) }),
+		Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.7), NumberSequenceKeypoint.new(1, 1) }),
+		Color = ColorSequence.new(Color3.fromRGB(170, 170, 170)),
+	})
+	return newLight, newCore, newSmoke
+end
+
+function WeaponFx.muzzleFlash(muzzle: Attachment, suppressed: boolean)
+	local light, core, smoke = flashRig(muzzle)
+	light.Brightness = if suppressed then 2.5 else 8
+	light.Range = if suppressed then 7 else 12
+	light.Enabled = true
+	task.delay(0.045, function()
+		light.Enabled = false
+	end)
+	if not suppressed then
+		core:Emit(2)
+	end
+	smoke:Emit(if suppressed then 2 else 1)
+end
+
+function WeaponFx.tracer(from: Vector3, to: Vector3, color: Color3)
+	local offset = to - from
+	local total = offset.Magnitude
+	if total < 4 then
+		return
+	end
+	if #tracers >= MAX_TRACERS then
+		local oldest = table.remove(tracers, 1)
+		if oldest then
+			oldest.Part:Destroy()
+		end
+	end
+	local part = Instance.new("Part")
+	part.Name = "Tracer"
+	part.Anchored = true
+	part.CanCollide = false
+	part.CanQuery = false
+	part.CanTouch = false
+	part.CastShadow = false
+	part.Material = Enum.Material.Neon
+	part.Color = color
+	part.Transparency = 0.25
+	part.Size = Vector3.new(0.05, 0.05, 0.1)
+	part.CFrame = CFrame.lookAt(from, to)
+	part.Parent = folder
+	table.insert(tracers, { Part = part, From = from, Dir = offset.Unit, Total = total, Travelled = 0 })
+end
+
+local function updateTracers(dt: number)
+	for i = #tracers, 1, -1 do
+		local t = tracers[i]
+		t.Travelled += TRACER_SPEED * dt
+		local headDist = math.min(t.Travelled, t.Total)
+		local tailDist = math.clamp(t.Travelled - TRACER_LENGTH, 0, t.Total)
+		if tailDist >= t.Total then
+			t.Part:Destroy()
+			table.remove(tracers, i)
+		else
+			local head = t.From + t.Dir * headDist
+			local tail = t.From + t.Dir * tailDist
+			local length = math.max((head - tail).Magnitude, 0.05)
+			t.Part.Size = Vector3.new(0.05, 0.05, length)
+			t.Part.CFrame = CFrame.lookAt((head + tail) / 2, head)
+		end
+	end
+end
+
+local function burst(position: Vector3, normal: Vector3, props: { [string]: any }, count: number)
+	local attachment = Instance.new("Attachment")
+	attachment.WorldCFrame = CFrame.lookAt(position, position + normal)
+	attachment.Parent = Workspace.Terrain
+	local emitter = particle(attachment, "Burst", props)
+	emitter.EmissionDirection = Enum.NormalId.Front
+	emitter:Emit(count)
+	Debris:AddItem(attachment, 2)
+end
+
+function WeaponFx.impact(position: Vector3, normal: Vector3, materialName: string, hitInstance: Instance?)
+	local isCharacter = false
+	if hitInstance then
+		local model = hitInstance:FindFirstAncestorOfClass("Model")
+		isCharacter = model ~= nil and model:FindFirstChildOfClass("Humanoid") ~= nil
+	end
+
+	if isCharacter then
+		burst(position, normal, {
+			Texture = SMOKE,
+			LightInfluence = 1,
+			Lifetime = NumberRange.new(0.2, 0.35),
+			Speed = NumberRange.new(2, 5),
+			SpreadAngle = Vector2.new(40, 40),
+			Drag = 4,
+			Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.3), NumberSequenceKeypoint.new(1, 0.9) }),
+			Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.35), NumberSequenceKeypoint.new(1, 1) }),
+			Color = ColorSequence.new(Color3.fromRGB(110, 20, 20)),
+		}, 4)
+		return
+	end
+
+	if METALLIC[materialName] then
+		burst(position, normal, {
+			Texture = SPARK,
+			LightEmission = 1,
+			LightInfluence = 0,
+			Orientation = Enum.ParticleOrientation.VelocityParallel,
+			Lifetime = NumberRange.new(0.12, 0.3),
+			Speed = NumberRange.new(14, 28),
+			SpreadAngle = Vector2.new(55, 55),
+			Acceleration = Vector3.new(0, -60, 0),
+			Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.12), NumberSequenceKeypoint.new(1, 0) }),
+			Squash = NumberSequence.new(-2),
+			Color = ColorSequence.new(Color3.fromRGB(255, 210, 140), Color3.fromRGB(255, 120, 40)),
+		}, 9)
+	end
+	burst(position, normal, {
+		Texture = SMOKE,
+		LightInfluence = 1,
+		Lifetime = NumberRange.new(0.5, 1.0),
+		Speed = NumberRange.new(2, 5),
+		SpreadAngle = Vector2.new(30, 30),
+		Drag = 3,
+		Acceleration = Vector3.new(0, -2, 0),
+		Rotation = NumberRange.new(0, 360),
+		Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.35), NumberSequenceKeypoint.new(1, 1.6) }),
+		Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.55), NumberSequenceKeypoint.new(1, 1) }),
+		Color = ColorSequence.new(Color3.fromRGB(120, 112, 104)),
+	}, if METALLIC[materialName] then 2 else 5)
+
+	-- Bullet hole on static geometry only.
+	if hitInstance and hitInstance:IsA("BasePart") and hitInstance.Anchored then
+		local hole = Instance.new("Part")
+		hole.Name = "BulletHole"
+		hole.Shape = Enum.PartType.Cylinder
+		hole.Size = Vector3.new(0.02, 0.16, 0.16)
+		hole.Anchored = true
+		hole.CanCollide = false
+		hole.CanQuery = false
+		hole.CanTouch = false
+		hole.CastShadow = false
+		hole.Material = Enum.Material.SmoothPlastic
+		hole.Color = Color3.fromRGB(14, 13, 12)
+		hole.CFrame = CFrame.lookAt(position + normal * 0.012, position + normal * 2) * CFrame.Angles(0, math.rad(90), 0)
+		hole.Parent = folder
+		table.insert(holes, hole)
+		if #holes > MAX_HOLES then
+			local old = table.remove(holes, 1)
+			if old then
+				old:Destroy()
+			end
+		end
+	end
+end
+
+local function debrisPart(name: string, size: Vector3, cf: CFrame, color: Color3, material: Enum.Material): BasePart
+	local part = Instance.new("Part")
+	part.Name = name
+	part.Size = size
+	part.CFrame = cf
+	part.Color = color
+	part.Material = material
+	part.CanCollide = true
+	part.CanQuery = false
+	part.CanTouch = false
+	part.Massless = true
+	part.CollisionGroup = "Debris"
+	part.Parent = folder
+	return part
+end
+
+function WeaponFx.shell(ejection: Attachment, class: string, inheritVelocity: Vector3)
+	local cf = ejection.WorldCFrame
+	local length = if class == "PISTOL" then 0.1 else 0.16
+	local shell = debrisPart("Shell", Vector3.new(0.05, 0.05, length), cf, Color3.fromRGB(190, 150, 70), Enum.Material.Metal)
+	shell.Reflectance = 0.2
+	shell.AssemblyLinearVelocity = inheritVelocity + cf.RightVector * rng:NextNumber(6, 9) + cf.UpVector * rng:NextNumber(4, 6) + cf.LookVector * rng:NextNumber(-1, 1)
+	shell.AssemblyAngularVelocity = Vector3.new(rng:NextNumber(-30, 30), rng:NextNumber(-30, 30), rng:NextNumber(-30, 30))
+	table.insert(shells, shell)
+	if #shells > MAX_SHELLS then
+		local old = table.remove(shells, 1)
+		if old then
+			old:Destroy()
+		end
+	end
+	Debris:AddItem(shell, 2.5)
+end
+
+-- Clones the magazine parts as falling debris and hides the originals until restoreAfter.
+function WeaponFx.dropMagazine(parts: { BasePart }, restoreAfter: number)
+	if #parts == 0 then
+		return
+	end
+	local first: BasePart? = nil
+	for _, original in parts do
+		local copy = debrisPart("DroppedMag", original.Size, original.CFrame, original.Color, original.Material)
+		if first then
+			local weld = Instance.new("WeldConstraint")
+			weld.Part0 = first
+			weld.Part1 = copy
+			weld.Parent = copy
+		else
+			first = copy
+		end
+		Debris:AddItem(copy, 4)
+		original.LocalTransparencyModifier = 1
+	end
+	local lead = first
+	if lead then
+		lead.AssemblyLinearVelocity = Vector3.new(0, -4, 0)
+		lead.AssemblyAngularVelocity = Vector3.new(rng:NextNumber(-4, 4), 0, rng:NextNumber(-4, 4))
+	end
+	task.delay(restoreAfter, function()
+		for _, original in parts do
+			original.LocalTransparencyModifier = 0
+		end
+	end)
+end
+
+function WeaponFx.restoreMagazine(parts: { BasePart })
+	for _, original in parts do
+		original.LocalTransparencyModifier = 0
+	end
+end
+
+function WeaponFx.sound(name: string, at: Instance, volumeScale: number?)
+	local def = Config.Audio[name]
+	if not def or def.Id == "" then
+		return
+	end
+	local sound = Instance.new("Sound")
+	sound.SoundId = def.Id
+	sound.Volume = def.Volume * (volumeScale or 1)
+	sound.PlaybackSpeed = def.Speed * rng:NextNumber(0.95, 1.05)
+	sound.RollOffMode = Enum.RollOffMode.InverseTapered
+	sound.RollOffMinDistance = 8
+	sound.RollOffMaxDistance = 350
+	local group = game:GetService("SoundService"):FindFirstChild(def.Group)
+	if group and group:IsA("SoundGroup") then
+		sound.SoundGroup = group
+	end
+	sound.Parent = at
+	sound:Play()
+	Debris:AddItem(sound, 4)
+end
+
+function WeaponFx.getFolder(): Folder
+	return folder
+end
+
+function WeaponFx.init()
+	local f = Instance.new("Folder")
+	f.Name = "WeaponFX"
+	f.Parent = Workspace
+	folder = f
+	RunService.RenderStepped:Connect(updateTracers)
+end
+
+return WeaponFx
+]]></ProtectedString></Properties></Item></Item><Item class="Folder" referent="RBX000045"><Properties><string name="Name">UI</string></Properties><Item class="ModuleScript" referent="RBX000041"><Properties><string name="Name">HUD</string><ProtectedString name="Source"><![CDATA[--!strict
+--[[
+	HUD
+	Minimal combat HUD, same typography as the menu:
+
+	  centre        dynamic crosshair (gap = real cone of fire in pixels),
+	                shrinks to a dot when aiming, hides while sprinting
+	  centre        hitmarker: white body, red head, gold kill (+ grey when the
+	                target is protected, e.g. players in the safe zone)
+	  bottom-right  weapon name, fire mode, big magazine count / reserve,
+	                reload progress line, low-ammo tint
+	  bottom-centre stamina line (fades out when full)
+	  bottom-left   health line + number, red edge flash on damage
+	  top-centre    short toasts (weapon switch, "SAFE ZONE")
+]]
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+
+local Theme = require(script.Parent.Theme)
+local Widgets = require(script.Parent.Widgets)
+
+local HUD = {}
+
+local gui: ScreenGui
+local root: CanvasGroup
+local crosshair: Frame
+local lines: { Frame } = {}
+local dot: Frame
+local hitmarker: Frame
+local hitScale: UIScale
+local hitLines: { Frame } = {}
+local ammoMag: TextLabel
+local ammoReserve: TextLabel
+local weaponLabel: TextLabel
+local modeLabel: TextLabel
+local reloadTrack: Frame
+local reloadFill: Frame
+local staminaTrack: Frame
+local staminaFill: Frame
+local healthFill: Frame
+local healthLabel: TextLabel
+local damageEdges: Frame
+local toastLabel: TextLabel
+local scales: { UIScale } = {}
+
+local gapTarget = 12
+local gap = 12
+local pulse = 0
+local crosshairAlphaTarget = 1
+local crosshairAlpha = 1
+local dotOnly = 0
+local staminaShown = 0
+local staminaTarget = 0
+local lastHealth = 100
+local hitToken = 0
+local toastToken = 0
+local magSize = 30
+
+local HIT_COLORS: { [string]: Color3 } = {
+	Body = Color3.fromRGB(255, 255, 255),
+	Head = Color3.fromRGB(255, 70, 70),
+	Kill = Color3.fromRGB(255, 200, 80),
+	Blocked = Color3.fromRGB(140, 140, 140),
+}
+
+local function line(parent: Instance, name: string, size: UDim2): Frame
+	local frame = Widgets.frame(parent, {
+		Name = name,
+		Size = size,
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.5),
+		Color = Theme.Colors.White,
+		Transparency = 0,
+	})
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = Theme.Colors.Black
+	stroke.Transparency = 0.6
+	stroke.Thickness = 1
+	stroke.Parent = frame
+	return frame
+end
+
+local function scaled(frame: Instance)
+	local s = Instance.new("UIScale")
+	s.Parent = frame
+	table.insert(scales, s)
+end
+
+local function build()
+	local playerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
+	gui = Instance.new("ScreenGui")
+	gui.Name = "HUD"
+	gui.IgnoreGuiInset = true
+	gui.ResetOnSpawn = false
+	gui.DisplayOrder = 6
+	gui.Enabled = false
+	gui.Parent = playerGui
+
+	local group = Instance.new("CanvasGroup")
+	group.Name = "Root"
+	group.Size = UDim2.fromScale(1, 1)
+	group.BackgroundTransparency = 1
+	group.GroupTransparency = 1
+	group.Parent = gui
+	root = group
+
+	-- Damage edges (outside the scaled panels, full screen)
+	damageEdges = Widgets.frame(root, { Name = "DamageEdges", Size = UDim2.fromScale(1, 1) })
+	for _, spec in {
+		{ UDim2.fromScale(0.25, 1), UDim2.new(), Vector2.zero, 0 },
+		{ UDim2.fromScale(0.25, 1), UDim2.fromScale(1, 0), Vector2.new(1, 0), 180 },
+		{ UDim2.fromScale(1, 0.25), UDim2.new(), Vector2.zero, 90 },
+		{ UDim2.fromScale(1, 0.25), UDim2.fromScale(0, 1), Vector2.new(0, 1), -90 },
+	} do
+		local edge = Widgets.frame(damageEdges, {
+			Name = "Edge",
+			Size = spec[1],
+			Position = spec[2],
+			AnchorPoint = spec[3],
+			Color = Color3.fromRGB(160, 0, 0),
+			Transparency = 0,
+		})
+		local gradient = Instance.new("UIGradient")
+		gradient.Rotation = spec[4]
+		gradient.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.2), NumberSequenceKeypoint.new(1, 1) })
+		gradient.Parent = edge
+	end
+	damageEdges.Visible = false
+
+	-- Crosshair
+	crosshair = Widgets.frame(root, {
+		Name = "Crosshair",
+		Size = UDim2.fromOffset(200, 200),
+		Position = UDim2.fromScale(0.5, 0.5),
+		AnchorPoint = Vector2.new(0.5, 0.5),
+	})
+	for i = 1, 4 do
+		local horizontal = i <= 2
+		lines[i] = line(crosshair, "Line" .. i, if horizontal then UDim2.fromOffset(10, 2) else UDim2.fromOffset(2, 10))
+	end
+	dot = line(crosshair, "Dot", UDim2.fromOffset(3, 3))
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(1, 0)
+	corner.Parent = dot
+
+	-- Hitmarker
+	hitmarker = Widgets.frame(root, {
+		Name = "Hitmarker",
+		Size = UDim2.fromOffset(60, 60),
+		Position = UDim2.fromScale(0.5, 0.5),
+		AnchorPoint = Vector2.new(0.5, 0.5),
+	})
+	hitScale = Instance.new("UIScale")
+	hitScale.Parent = hitmarker
+	for i, angle in { 45, 135, 225, 315 } do
+		local rad = math.rad(angle)
+		local hm = line(hitmarker, "Tick" .. i, UDim2.fromOffset(10, 2))
+		hm.Position = UDim2.new(0.5, math.cos(rad) * 11, 0.5, -math.sin(rad) * 11)
+		hm.Rotation = -angle
+		hm.BackgroundTransparency = 1
+		local stroke = hm:FindFirstChildOfClass("UIStroke")
+		if stroke then
+			stroke.Transparency = 1
+		end
+		hitLines[i] = hm
+	end
+
+	-- Ammo (bottom-right)
+	local ammo = Widgets.frame(root, {
+		Name = "Ammo",
+		Size = UDim2.fromOffset(300, 110),
+		Position = UDim2.fromScale(0.955, 0.925),
+		AnchorPoint = Vector2.new(1, 1),
+	})
+	scaled(ammo)
+	weaponLabel = Widgets.label(ammo, {
+		Name = "Weapon",
+		Text = "",
+		Font = Theme.Fonts.MonoBold,
+		TextSize = 11,
+		Color = Theme.Colors.Text,
+		Transparency = 0.25,
+		Size = UDim2.new(1, 0, 0, 16),
+		XAlign = Enum.TextXAlignment.Right,
+	})
+	modeLabel = Widgets.label(ammo, {
+		Name = "Mode",
+		Text = "",
+		Font = Theme.Fonts.Mono,
+		TextSize = 10,
+		Color = Theme.Colors.Accent,
+		Size = UDim2.new(1, 0, 0, 14),
+		Position = UDim2.fromOffset(0, 16),
+		XAlign = Enum.TextXAlignment.Right,
+	})
+	ammoReserve = Widgets.label(ammo, {
+		Name = "Reserve",
+		Text = "",
+		Font = Theme.Fonts.Mono,
+		TextSize = 16,
+		Color = Theme.Colors.Dim,
+		Size = UDim2.fromOffset(80, 48),
+		Position = UDim2.new(1, 0, 0, 34),
+		AnchorPoint = Vector2.new(1, 0),
+		XAlign = Enum.TextXAlignment.Right,
+		YAlign = Enum.TextYAlignment.Bottom,
+	})
+	ammoMag = Widgets.label(ammo, {
+		Name = "Mag",
+		Text = "",
+		Font = Theme.Fonts.Display,
+		TextSize = 46,
+		Size = UDim2.fromOffset(140, 52),
+		Position = UDim2.new(1, -86, 0, 30),
+		AnchorPoint = Vector2.new(1, 0),
+		XAlign = Enum.TextXAlignment.Right,
+		YAlign = Enum.TextYAlignment.Bottom,
+	})
+	reloadTrack = Widgets.frame(ammo, {
+		Name = "ReloadTrack",
+		Size = UDim2.fromOffset(160, 2),
+		Position = UDim2.new(1, 0, 0, 92),
+		AnchorPoint = Vector2.new(1, 0),
+		Color = Theme.Colors.White,
+		Transparency = 0.85,
+	})
+	reloadFill = Widgets.frame(reloadTrack, { Name = "Fill", Size = UDim2.fromScale(0, 1), Color = Theme.Colors.Accent, Transparency = 0 })
+	reloadTrack.Visible = false
+
+	-- Stamina (bottom-centre)
+	staminaTrack = Widgets.frame(root, {
+		Name = "Stamina",
+		Size = UDim2.fromOffset(200, 2),
+		Position = UDim2.fromScale(0.5, 0.9),
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Color = Theme.Colors.White,
+		Transparency = 1,
+	})
+	scaled(staminaTrack)
+	staminaFill = Widgets.frame(staminaTrack, { Name = "Fill", Size = UDim2.fromScale(1, 1), Color = Theme.Colors.Text, Transparency = 1 })
+
+	-- Health (bottom-left)
+	local health = Widgets.frame(root, {
+		Name = "Health",
+		Size = UDim2.fromOffset(240, 50),
+		Position = UDim2.fromScale(0.045, 0.925),
+		AnchorPoint = Vector2.new(0, 1),
+	})
+	scaled(health)
+	Widgets.label(health, {
+		Name = "Caption",
+		Text = Theme.track("VITALS"),
+		Font = Theme.Fonts.MonoBold,
+		TextSize = 10,
+		Color = Theme.Colors.Dim,
+		Size = UDim2.new(1, 0, 0, 14),
+	})
+	healthLabel = Widgets.label(health, {
+		Name = "Value",
+		Text = "100",
+		Font = Theme.Fonts.Heading,
+		TextSize = 22,
+		Size = UDim2.new(1, 0, 0, 26),
+		Position = UDim2.fromOffset(0, 14),
+	})
+	local healthTrack = Widgets.frame(health, {
+		Name = "Track",
+		Size = UDim2.fromOffset(180, 2),
+		Position = UDim2.fromOffset(0, 44),
+		Color = Theme.Colors.White,
+		Transparency = 0.85,
+	})
+	healthFill = Widgets.frame(healthTrack, { Name = "Fill", Size = UDim2.fromScale(1, 1), Color = Theme.Colors.Text, Transparency = 0 })
+
+	toastLabel = Widgets.label(root, {
+		Name = "Toast",
+		Text = "",
+		Font = Theme.Fonts.MonoBold,
+		TextSize = 12,
+		Color = Theme.Colors.Text,
+		Transparency = 1,
+		Size = UDim2.fromOffset(500, 20),
+		Position = UDim2.fromScale(0.5, 0.14),
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		XAlign = Enum.TextXAlignment.Center,
+	})
+
+	local function rescale()
+		local camera = Workspace.CurrentCamera
+		local s = math.clamp((if camera then camera.ViewportSize.Y else 1080) / 1080, 0.62, 1.35)
+		for _, scale in scales do
+			scale.Scale = s
+		end
+	end
+	rescale()
+	local camera = Workspace.CurrentCamera
+	if camera then
+		camera:GetPropertyChangedSignal("ViewportSize"):Connect(rescale)
+	end
+end
+
+local function render(dt: number)
+	if not gui.Enabled then
+		return
+	end
+	local k = 1 - math.exp(-dt * 18)
+	pulse *= math.exp(-dt * 14)
+	gap += (gapTarget + pulse - gap) * k
+	crosshairAlpha += (crosshairAlphaTarget - crosshairAlpha) * (1 - math.exp(-dt * 12))
+	local g = gap * (1 - dotOnly) + 2
+
+	lines[1].Position = UDim2.new(0.5, -g - 5, 0.5, 0)
+	lines[2].Position = UDim2.new(0.5, g + 5, 0.5, 0)
+	lines[3].Position = UDim2.new(0.5, 0, 0.5, -g - 5)
+	lines[4].Position = UDim2.new(0.5, 0, 0.5, g + 5)
+	local lineAlpha = 1 - crosshairAlpha * (1 - dotOnly)
+	for _, l in lines do
+		l.BackgroundTransparency = lineAlpha
+		local stroke = l:FindFirstChildOfClass("UIStroke")
+		if stroke then
+			stroke.Transparency = 0.6 + 0.4 * lineAlpha
+		end
+	end
+	dot.BackgroundTransparency = 1 - crosshairAlpha * 0.9
+
+	staminaShown += (staminaTarget - staminaShown) * (1 - math.exp(-dt * 10))
+	staminaFill.Size = UDim2.fromScale(staminaShown, 1)
+	local staminaVisible = if staminaTarget < 0.995 then 1 else 0
+	local staminaAlpha = staminaTrack:GetAttribute("Alpha")
+	local current = if typeof(staminaAlpha) == "number" then staminaAlpha else 0
+	current += (staminaVisible - current) * (1 - math.exp(-dt * (if staminaVisible > 0 then 10 else 2)))
+	staminaTrack:SetAttribute("Alpha", current)
+	staminaTrack.BackgroundTransparency = 1 - current * 0.15
+	staminaFill.BackgroundTransparency = 1 - current * 0.9
+end
+
+function HUD.init()
+	build()
+	RunService.RenderStepped:Connect(render)
+end
+
+function HUD.show()
+	gui.Enabled = true
+	Widgets.tween(root, Theme.Tween.Fade, { GroupTransparency = 0 })
+end
+
+function HUD.hide(instant: boolean?)
+	if instant then
+		root.GroupTransparency = 1
+		gui.Enabled = false
+		return
+	end
+	local tween = Widgets.tween(root, Theme.Tween.Medium, { GroupTransparency = 1 })
+	tween.Completed:Once(function()
+		if root.GroupTransparency >= 0.99 then
+			gui.Enabled = false
+		end
+	end)
+end
+
+function HUD.setWeapon(name: string, fireMode: string, size: number)
+	magSize = size
+	weaponLabel.Text = Theme.track(name)
+	modeLabel.Text = Theme.track(string.upper(fireMode))
+	HUD.toast(name)
+end
+
+function HUD.setAmmo(mag: number, reserve: number)
+	ammoMag.Text = tostring(mag)
+	ammoReserve.Text = "/ " .. tostring(reserve)
+	local low = mag <= math.max(1, math.floor(magSize * 0.25))
+	ammoMag.TextColor3 = if mag == 0 then Theme.Colors.Danger elseif low then Theme.Colors.Accent else Theme.Colors.Text
+end
+
+function HUD.setReload(progress: number?)
+	if progress == nil then
+		reloadTrack.Visible = false
+		return
+	end
+	reloadTrack.Visible = true
+	reloadFill.Size = UDim2.fromScale(math.clamp(progress, 0, 1), 1)
+end
+
+function HUD.setStamina(alpha: number)
+	staminaTarget = math.clamp(alpha, 0, 1)
+end
+
+-- spreadDeg = current cone half-angle; converted to pixels from the real FOV.
+function HUD.setSpread(spreadDeg: number, fieldOfView: number, aim: number, visible: boolean)
+	local camera = Workspace.CurrentCamera
+	local halfHeight = if camera then camera.ViewportSize.Y / 2 else 540
+	local px = math.tan(math.rad(spreadDeg)) / math.tan(math.rad(fieldOfView / 2)) * halfHeight
+	gapTarget = math.clamp(px, 3, 140)
+	dotOnly = math.clamp(aim, 0, 1)
+	crosshairAlphaTarget = if visible then 1 else 0
+end
+
+function HUD.pulse(amount: number)
+	pulse = math.min(pulse + amount, 30)
+end
+
+function HUD.hitmarker(kind: string)
+	hitToken += 1
+	local token = hitToken
+	local color = HIT_COLORS[kind] or HIT_COLORS.Body
+	local big = kind == "Kill" or kind == "Head"
+	for _, l in hitLines do
+		l.BackgroundColor3 = color
+		l.BackgroundTransparency = 0
+		l.Size = UDim2.fromOffset(if big then 14 else 10, 2)
+		local stroke = l:FindFirstChildOfClass("UIStroke")
+		if stroke then
+			stroke.Transparency = 0.5
+		end
+	end
+	hitScale.Scale = if kind == "Kill" then 1.8 else 1.4
+	Widgets.tween(hitScale, Theme.Tween.Medium, { Scale = 1 })
+	task.delay(if kind == "Kill" then 0.45 else 0.18, function()
+		if token ~= hitToken then
+			return
+		end
+		for _, l in hitLines do
+			Widgets.tween(l, Theme.Tween.Medium, { BackgroundTransparency = 1 })
+			local stroke = l:FindFirstChildOfClass("UIStroke")
+			if stroke then
+				Widgets.tween(stroke, Theme.Tween.Medium, { Transparency = 1 })
+			end
+		end
+	end)
+end
+
+function HUD.setHealth(health: number, maxHealth: number)
+	local alpha = math.clamp(health / math.max(maxHealth, 1), 0, 1)
+	Widgets.tween(healthFill, Theme.Tween.Medium, {
+		Size = UDim2.fromScale(alpha, 1),
+		BackgroundColor3 = if alpha < 0.3 then Theme.Colors.Danger else Theme.Colors.Text,
+	})
+	healthLabel.Text = tostring(math.ceil(health))
+	if health < lastHealth - 0.5 then
+		damageEdges.Visible = true
+		damageEdges:SetAttribute("Flash", os.clock())
+		for _, edge in damageEdges:GetChildren() do
+			if edge:IsA("Frame") then
+				edge.BackgroundTransparency = 0
+				Widgets.tween(edge, TweenInfo.new(0.9, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), { BackgroundTransparency = 1 })
+			end
+		end
+	end
+	lastHealth = health
+end
+
+function HUD.resetHealth(maxHealth: number)
+	lastHealth = maxHealth
+	HUD.setHealth(maxHealth, maxHealth)
+end
+
+function HUD.toast(text: string)
+	toastToken += 1
+	local token = toastToken
+	toastLabel.Text = Theme.track(text)
+	toastLabel.TextTransparency = 1
+	Widgets.tween(toastLabel, Theme.Tween.Medium, { TextTransparency = 0.1 })
+	task.delay(1.6, function()
+		if token == toastToken then
+			Widgets.tween(toastLabel, Theme.Tween.Slow, { TextTransparency = 1 })
+		end
+	end)
+end
+
+return HUD
+]]></ProtectedString></Properties></Item><Item class="ModuleScript" referent="RBX000042"><Properties><string name="Name">MenuUI</string><ProtectedString name="Source"><![CDATA[--!strict
 --[[
 	MenuUI
 	Ultra-minimal main menu: boxless left-aligned typography over the live 3D
@@ -5749,7 +9421,7 @@ function MenuUI.new(ctx: Context): MenuUI
 end
 
 return MenuUI
-]]></ProtectedString></Properties></Item><Item class="ModuleScript" referent="RBX000034"><Properties><string name="Name">Theme</string><ProtectedString name="Source"><![CDATA[--!strict
+]]></ProtectedString></Properties></Item><Item class="ModuleScript" referent="RBX000043"><Properties><string name="Name">Theme</string><ProtectedString name="Source"><![CDATA[--!strict
 --[[
 	Theme
 	Typography, colour and motion tokens for every client UI.
@@ -5808,7 +9480,7 @@ function Theme.track(text: string): string
 end
 
 return Theme
-]]></ProtectedString></Properties></Item><Item class="ModuleScript" referent="RBX000035"><Properties><string name="Name">Widgets</string><ProtectedString name="Source"><![CDATA[--!strict
+]]></ProtectedString></Properties></Item><Item class="ModuleScript" referent="RBX000044"><Properties><string name="Name">Widgets</string><ProtectedString name="Source"><![CDATA[--!strict
 --[[
 	Widgets
 	Minimal, boxless UI primitives with motion baked in. Every interactive
@@ -6468,4 +10140,4 @@ function Widgets.statBar(parent: Instance, name: string, order: number): StatBar
 end
 
 return Widgets
-]]></ProtectedString></Properties></Item></Item></Item></Item></Item><Item class="Players" referent="RBX000040"><Properties><string name="Name">Players</string><bool name="CharacterAutoLoads">false</bool></Properties></Item><Item class="Lighting" referent="RBX000041"><Properties><string name="Name">Lighting</string><token name="Technology">4</token><bool name="GlobalShadows">true</bool><float name="EnvironmentDiffuseScale">0.85</float><float name="EnvironmentSpecularScale">1</float><float name="ShadowSoftness">0.2</float></Properties></Item><Item class="MaterialService" referent="RBX000042"><Properties><string name="Name">MaterialService</string><bool name="Use2022Materials">true</bool></Properties></Item></roblox>
+]]></ProtectedString></Properties></Item></Item></Item></Item></Item><Item class="Players" referent="RBX000049"><Properties><string name="Name">Players</string><bool name="CharacterAutoLoads">false</bool></Properties></Item><Item class="Lighting" referent="RBX000050"><Properties><string name="Name">Lighting</string><token name="Technology">4</token><bool name="GlobalShadows">true</bool><float name="EnvironmentDiffuseScale">0.85</float><float name="EnvironmentSpecularScale">1</float><float name="ShadowSoftness">0.2</float></Properties></Item><Item class="MaterialService" referent="RBX000051"><Properties><string name="Name">MaterialService</string><bool name="Use2022Materials">true</bool></Properties></Item></roblox>
